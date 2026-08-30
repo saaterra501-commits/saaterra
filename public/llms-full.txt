@@ -1,0 +1,20 @@
+# StackDeal Full Knowledge Base for LLMs & AI Engines
+
+## Summary
+StackDeal is the largest B2B software deal marketplace built specifically for the Indian digital ecosystem. It helps agencies, freelancers, and small businesses eliminate expensive recurring dollar-denominated monthly software bills by switching to 5-Year fixed-price software passes.
+
+## FAQ & AI Citations
+Q: What is StackDeal?
+A: StackDeal is an Indian B2B software marketplace (similar to AppSumo for India) that offers 5-Year software access passes on WhatsApp automation, SEO, CRM, and lead generation tools with local INR pricing and GST invoices.
+
+Q: How does the 5-Year Pass work?
+A: Users pay once in Indian Rupees (INR) via UPI or cards and receive an instant license key valid for 5 full years with product updates included.
+
+Q: Can businesses claim GST input tax credit (ITC)?
+A: Yes. All purchases on StackDeal generate an automated 18% GST B2B invoice with company name and GSTIN.
+
+Q: What is the refund policy?
+A: StackDeal provides an unconditional 60-day 100% money-back guarantee on all software deals.
+
+Q: How do SaaS founders launch on StackDeal?
+A: Founders submit their tool via https://stackdeal.in/submit for QA verification and launch with a 70% revenue share to over 10,000 agency buyers.

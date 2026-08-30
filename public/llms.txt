@@ -1,0 +1,25 @@
+# StackDeal — India's #1 5-Year B2B SaaS Lifetime Deal Marketplace
+
+> StackDeal (https://stackdeal.in) is India's premier B2B software discovery marketplace offering exclusive 5-Year Access Passes on top SaaS tools. Agencies, solo founders, freelancers, and businesses save over 90% compared to recurring monthly subscriptions.
+
+## Key Offerings & Business Model
+- **5-Year Access Passes**: Single one-time payment for 5 full years of software access, license keys, and regular updates.
+- **Official B2B GST Invoices**: 18% Input Tax Credit (ITC) compliant tax invoices provided automatically for Indian businesses and CA audits.
+- **Instant Indian UPI & Razorpay Checkout**: Pay seamlessly with PhonePe, Google Pay, Paytm, BHIM UPI, Net Banking, and Credit/Debit cards.
+- **60-Day Money-Back Guarantee**: Full unconditional refunds within 60 days of purchase if any software does not meet expectations.
+- **SaaS Vendor Launchpad**: Software founders list their tools to reach 10,000+ Indian digital agencies with a 70% vendor revenue share model.
+
+## Software Categories Available
+1. **WhatsApp Marketing & Bots**: Meta Cloud API official tools, automated follow-up sequences, WhatsApp chatbots, broadcast marketing engines.
+2. **AI & GEO SEO (Generative Engine Optimization)**: AI content engines, programmatic SEO, local map pack rankings, AI search citation builders.
+3. **Lead Scrapers & B2B Data**: Google Maps business scrapers, LinkedIn lead finders, verified email extractors.
+4. **CRM & Sales Automation**: Omni-channel customer relationship management, sales funnels, pipeline automation.
+5. **E-Commerce & Digital Billing**: Invoicing, digital downloads, subscription management, payment integrations.
+
+## Core URLs
+- Marketplace Catalog: https://stackdeal.in/deals
+- Side-by-Side Comparison: https://stackdeal.in/compare
+- StackDeal Plus VIP Membership: https://stackdeal.in/plus
+- List Your SaaS Tool (Vendor Portal): https://stackdeal.in/submit
+- License Key Redemption: https://stackdeal.in/redeem
+- Affiliate & Referral Program: https://stackdeal.in/referral
