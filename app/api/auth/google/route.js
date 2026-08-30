@@ -5,8 +5,9 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
-import { generateToken, setAuthCookie } from '@/lib/auth';
+import { generateToken, setAuthCookie, ADMIN_EMAILS } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { addWalletCredits } from '@/lib/walletEngine';
 
 export async function POST(request) {
   try {
@@ -67,6 +68,7 @@ export async function POST(request) {
 
     const cleanEmail = email.toLowerCase().trim();
     const cleanName = (name || cleanEmail.split('@')[0]).trim();
+    const isAdmin = ADMIN_EMAILS && ADMIN_EMAILS.includes(cleanEmail);
 
     await dbConnect();
 
@@ -76,15 +78,37 @@ export async function POST(request) {
       // Create user if signing up via Google for the first time
       const randomSecret = crypto.randomBytes(24).toString('hex');
       const hashedPassword = await bcrypt.hash(randomSecret, 10);
+      const uniqueRefToken = 'ST-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+
       user = await User.create({
         name: cleanName,
         email: cleanEmail,
         password: hashedPassword,
         avatar: avatar || null,
-        role: 'user',
+        role: isAdmin ? 'admin' : 'user',
+        referralCode: uniqueRefToken,
       });
-    } else if (avatar && !user.avatar) {
-      user.avatar = avatar;
+
+      // Grant ₹250 instant welcome credit
+      try {
+        await addWalletCredits({
+          userId: user._id,
+          amount: 250,
+          source: 'welcome_bonus',
+          description: 'Welcome bonus for joining StackDeal via Google',
+          referenceId: String(user._id),
+          expiresDays: 60,
+        });
+      } catch (creditErr) {
+        console.warn('[Welcome Credit Warning]:', creditErr.message);
+      }
+    } else {
+      if (isAdmin && user.role !== 'admin') {
+        user.role = 'admin';
+      }
+      if (avatar && !user.avatar) {
+        user.avatar = avatar;
+      }
       await user.save();
     }
 

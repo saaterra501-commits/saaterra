@@ -6,6 +6,7 @@ import Footer from '../../components/Footer';
 import Link from 'next/link';
 import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import StackDealLogo from '../../components/StackDealLogo';
+import GoogleAuthButton from '../../components/GoogleAuthButton';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -59,6 +60,17 @@ export default function LoginPage() {
             </div>
             <h1 className="text-2xl font-black text-slate-950">Log In to StackDeal</h1>
             <p className="text-xs text-slate-500 font-medium">Access your purchased 5-Year Passes, wallet credits, and invoices</p>
+          </div>
+
+          {/* 1. Google 1-Click Login Button */}
+          <GoogleAuthButton mode="login" />
+
+          {/* OR Divider */}
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-slate-200 w-full" />
+            <span className="bg-white px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider relative">
+              OR EMAIL
+            </span>
           </div>
 
           {error && (

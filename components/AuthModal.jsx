@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Mail, Lock, User, Gift, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 import StackDealLogo from './StackDealLogo';
+import GoogleAuthButton from './GoogleAuthButton';
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSuccess }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'signup'
@@ -58,7 +59,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative space-y-6">
+      <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative space-y-5">
         
         {/* Close button */}
         <button
@@ -69,7 +70,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
         </button>
 
         {/* Brand Header */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-1.5">
           <div className="flex justify-center mb-1">
             <StackDealLogo className="w-[140px] h-[40px]" />
           </div>
@@ -81,6 +82,23 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
               ? 'Log in to access your 5-Year Passes and credits'
               : 'Join 50,000+ Indian founders & agencies'}
           </p>
+        </div>
+
+        {/* Google 1-Click Button */}
+        <GoogleAuthButton
+          mode={mode}
+          onSuccess={(user) => {
+            if (onSuccess) onSuccess(user);
+            onClose();
+          }}
+        />
+
+        {/* OR Divider */}
+        <div className="relative flex items-center justify-center">
+          <div className="border-t border-slate-200 w-full" />
+          <span className="bg-white px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider relative">
+            OR WITH EMAIL
+          </span>
         </div>
 
         {/* Mode Switch Tabs */}

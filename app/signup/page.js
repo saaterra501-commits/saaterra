@@ -7,6 +7,7 @@ import Footer from '../../components/Footer';
 import Link from 'next/link';
 import { User, Mail, Lock, Gift, ArrowRight, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import StackDealLogo from '../../components/StackDealLogo';
+import GoogleAuthButton from '../../components/GoogleAuthButton';
 
 function SignupForm() {
   const searchParams = useSearchParams();
@@ -40,9 +41,9 @@ function SignupForm() {
         return;
       }
 
-      setSuccess('Account created successfully! Welcome to SaaTerra 🎉');
+      setSuccess('Account created successfully! Welcome to StackDeal 🎉');
       setTimeout(() => {
-        window.location.href = '/profile';
+        window.location.href = data.user?.role === 'admin' ? '/sd-ops-vault-9839' : '/profile';
       }, 800);
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');
@@ -57,10 +58,21 @@ function SignupForm() {
         <div className="flex justify-center mb-1">
           <StackDealLogo className="w-[150px] h-[45px]" />
         </div>
-        <h1 className="text-2xl font-black text-slate-950">Join SaaTerra</h1>
+        <h1 className="text-2xl font-black text-slate-950">Join StackDeal</h1>
         <p className="text-xs text-slate-500 font-medium">
           Get ₹250 instant welcome credits & access 5-Year software pass deals
         </p>
+      </div>
+
+      {/* 1. Google 1-Click Sign Up */}
+      <GoogleAuthButton mode="signup" />
+
+      {/* OR Divider */}
+      <div className="relative flex items-center justify-center">
+        <div className="border-t border-slate-200 w-full" />
+        <span className="bg-white px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider relative">
+          OR EMAIL
+        </span>
       </div>
 
       {error && (
