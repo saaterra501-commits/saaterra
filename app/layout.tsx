@@ -53,6 +53,9 @@ export const metadata: Metadata = {
     shortcut: "/stackdeal-icon.png",
     apple: "/stackdeal-icon.png",
   },
+  verification: {
+    google: "tjrhKK8lic4LxbLxJmyjnemqrwbHQh61k9zbqNeg5O0",
+  },
   openGraph: {
     title: "StackDeal — India's #1 B2B SaaS 5-Year Deal Marketplace",
     description:
@@ -130,6 +133,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full overflow-x-hidden w-full max-w-full" suppressHydrationWarning>
       <head>
+        <meta name="google-site-verification" content="tjrhKK8lic4LxbLxJmyjnemqrwbHQh61k9zbqNeg5O0" />
         <link rel="icon" type="image/png" href="/stackdeal-icon.png" />
         <link rel="shortcut icon" href="/stackdeal-icon.png" />
         {/* Google Fonts — Fraunces & Inter (New Kansas Web Pairing) */}
