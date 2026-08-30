@@ -29,6 +29,7 @@ const FOOTER_LINKS = {
     { label: 'Radar (Coming Soon)', href: '/deals' },
   ],
   Support: [
+    { label: 'Contact Us (hello@stackdeal.in)', href: 'mailto:hello@stackdeal.in' },
     { label: '60-Day Refund Policy', href: '#' },
     { label: 'GST Invoice Support', href: '#' },
     { label: 'Privacy Policy', href: '#' },
@@ -61,9 +62,9 @@ const TRUST_POINTS = [
 ];
 
 const SOCIAL_ICONS = [
-  { emoji: '𝕏', label: 'Twitter / X' },
-  { emoji: 'in', label: 'LinkedIn' },
-  { emoji: '📧', label: 'Email' },
+  { emoji: '𝕏', label: 'Twitter / X', href: 'https://twitter.com/stackdeal_in' },
+  { emoji: 'in', label: 'LinkedIn', href: 'https://linkedin.com/company/stackdeal' },
+  { emoji: '📧', label: 'Email', href: 'mailto:hello@stackdeal.in' },
 ];
 
 export default function Footer() {
@@ -136,17 +137,32 @@ export default function Footer() {
               India's premier B2B software discovery marketplace. 5-Year Access Passes for digital agencies & solopreneurs.
             </p>
 
+            {/* Direct Email Contact Badge */}
+            <div className="pt-0.5">
+              <a
+                href="mailto:hello@stackdeal.in"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-amber-300 hover:text-amber-200 text-xs font-bold transition-colors"
+              >
+                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                <span>hello@stackdeal.in</span>
+              </a>
+            </div>
+
             {/* Social Icons */}
             <div className="flex items-center gap-2 pt-1">
               {SOCIAL_ICONS.map((s) => (
-                <button
+                <a
                   key={s.label}
+                  href={s.href || 'mailto:hello@stackdeal.in'}
                   aria-label={s.label}
+                  title={s.label}
+                  target={s.href?.startsWith('http') ? '_blank' : '_self'}
+                  rel="noreferrer"
                   className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-[#2475FF] hover:border-[#2475FF] flex items-center justify-center transition-all text-xs font-black"
                   suppressHydrationWarning
                 >
                   {s.emoji}
-                </button>
+                </a>
               ))}
             </div>
           </div>
@@ -181,7 +197,7 @@ export default function Footer() {
             ⚖️ Legal Safe Harbor & Beta Testing Notice:
           </p>
           <p>
-            StackDeal.in is an independent software discovery platform operating in public preview & testing mode. All brand names, software titles, logos, product marks, and trademarks referenced on this platform are the sole intellectual property of their respective trademark holders. The display of these software tools is solely for user-interface mock demonstration, sandbox testing, and software discovery workflow preview. StackDeal makes no claim of endorsement, formal partnership, or direct sponsorship with any unlisted third-party SaaS vendors during this beta evaluation period. For legal queries, trademark inquiries, or listing requests, contact <span className="text-amber-400 font-mono">support@stackdeal.in</span>.
+            StackDeal.in is an independent software discovery platform operating in public preview & testing mode. All brand names, software titles, logos, product marks, and trademarks referenced on this platform are the sole intellectual property of their respective trademark holders. The display of these software tools is solely for user-interface mock demonstration, sandbox testing, and software discovery workflow preview. StackDeal makes no claim of endorsement, formal partnership, or direct sponsorship with any unlisted third-party SaaS vendors during this beta evaluation period. For legal queries, trademark inquiries, or listing requests, contact <a href="mailto:hello@stackdeal.in" className="text-amber-400 font-mono underline hover:text-amber-300">hello@stackdeal.in</a>.
           </p>
         </div>
       </div>
