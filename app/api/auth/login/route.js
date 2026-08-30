@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
-import { generateToken, setAuthCookie, logAuditAction } from '@/lib/auth';
+import { generateToken, setAuthCookie, logAuditAction, ADMIN_EMAILS } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(request) {
@@ -26,7 +26,8 @@ export async function POST(request) {
 
     await dbConnect();
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password.' },
@@ -47,6 +48,14 @@ export async function POST(request) {
         { error: 'Invalid email or password.' },
         { status: 401 }
       );
+    }
+
+    // Auto-promote Whitelisted Admin Emails
+    if (ADMIN_EMAILS && ADMIN_EMAILS.includes(cleanEmail)) {
+      if (user.role !== 'admin') {
+        user.role = 'admin';
+        await user.save();
+      }
     }
 
     // Feature 2: Master Admin Secret Key Verification

@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
-import { generateToken, setAuthCookie } from '@/lib/auth';
+import { generateToken, setAuthCookie, ADMIN_EMAILS } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { validatePassword, validateEmail, sanitizeInput } from '@/lib/security';
 import { addWalletCredits } from '@/lib/walletEngine';
@@ -81,11 +81,13 @@ export async function POST(request) {
 
     // Generate unique referral code for new user e.g. "ST-A9B8C"
     const uniqueRefToken = 'ST-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+    const isAdminEmail = ADMIN_EMAILS && ADMIN_EMAILS.includes(emailValidation.sanitizedEmail.toLowerCase().trim());
 
     const newUser = await User.create({
       name: sanitizedName,
       email: emailValidation.sanitizedEmail,
       password: hashedPassword,
+      role: isAdminEmail ? 'admin' : 'user',
       referralCode: uniqueRefToken,
       referredBy: referrerUser ? referrerUser._id : null,
     });
