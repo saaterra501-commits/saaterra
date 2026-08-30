@@ -109,7 +109,7 @@ export default function ContactPage() {
             {[1, 2, 3, 4].map((_, i) => (
               <span key={i} className="inline-flex items-center gap-8">
                 <span className="flex items-center gap-1.5"><span>⚡</span> Avg Response: Under 2 Hours</span>
-                <span className="flex items-center gap-1.5"><span>🛡️</span> 60-Day Money-Back Guarantee</span>
+                <span className="flex items-center gap-1.5"><span>🔒</span> Direct Founder Support</span>
                 <span className="flex items-center gap-1.5"><span>✉️</span> hello@stackdeal.in</span>
                 <span className="flex items-center gap-1.5"><span>🧾</span> 18% GST Invoices on Every Deal</span>
                 <span className="flex items-center gap-1.5"><span>🇮🇳</span> Dedicated Indian Agency Desk</span>
@@ -204,19 +204,6 @@ export default function ContactPage() {
                 </div>
 
               </div>
-            </div>
-
-            {/* 60-Day Guarantee Card */}
-            <div className="bg-[#0A0F1E] text-white border border-slate-800 rounded-3xl p-6 shadow-md space-y-2.5">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <h3 className="text-sm font-black text-white">100% 60-Day Money-Back Guarantee</h3>
-              </div>
-              <p className="text-xs text-slate-300 font-medium leading-relaxed">
-                If any software doesn't fit your agency workflow, request a refund with your order ID. We process it via UPI instantly.
-              </p>
             </div>
 
           </div>
