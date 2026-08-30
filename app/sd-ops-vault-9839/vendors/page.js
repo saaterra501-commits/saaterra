@@ -1,123 +1,121 @@
-﻿'use client';
+'use client';
 
-import { useState } from 'react';
-import { Users, CheckCircle2, XCircle, DollarSign, ArrowUpRight, Calculator, Send } from 'lucide-react';
-
-const SUBMISSIONS = [
-  { id: 1, product: 'WhatsApp AutoBot AI', founder: 'Karan Malhotra', email: 'karan@autobot.in', cat: 'WhatsApp Bots', status: 'Pending Review', date: 'Today' },
-  { id: 2, product: 'NuwaRank SEO Tracker', founder: 'Anita Sharma', email: 'anita@nuwarank.com', cat: 'AI & GEO SEO', status: 'Pending Review', date: 'Yesterday' },
-];
-
-const PAYOUTS = [
-  { id: 'PAY-101', vendor: 'Chat Chacha AI', gross: '₹1,67,916', payout: '₹1,17,541 (70%)', fee: '₹50,375 (30%)', status: 'Paid', date: '25 Aug 2026' },
-  { id: 'PAY-102', vendor: 'Nuwatomic GEO SEO', gross: '₹1,02,459', payout: '₹71,721 (70%)', fee: '₹30,738 (30%)', status: 'Due 01 Sep', date: 'Pending' },
-];
+import { useState, useEffect } from 'react';
+import { Users, CheckCircle2, RefreshCw, ArrowUpRight, DollarSign } from 'lucide-react';
 
 export default function AdminVendorsPage() {
-  const [apps, setApps] = useState(SUBMISSIONS);
-  const [payoutList, setPayoutList] = useState(PAYOUTS);
+  const [pendingDeals, setPendingDeals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(null);
 
-  const approveApp = (id) => {
-    setApps(apps.map((a) => (a.id === id ? { ...a, status: 'Approved' } : a)));
+  const fetchVendors = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/overview');
+      const data = await res.json();
+      if (data?.success && Array.isArray(data.pendingDeals)) {
+        setPendingDeals(data.pendingDeals);
+      }
+    } catch (e) {
+      console.error('Failed to load vendors:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const processPayout = (id) => {
-    setPayoutList(payoutList.map((p) => (p.id === id ? { ...p, status: 'Paid' } : p)));
+  useEffect(() => {
+    fetchVendors();
+  }, []);
+
+  const handleApprove = async (dealSlug) => {
+    setProcessing(dealSlug);
+    try {
+      const res = await fetch(`/api/admin/deals`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: dealSlug, status: 'Active' }),
+      });
+      if (res.ok) {
+        setPendingDeals(pendingDeals.filter((d) => d.slug !== dealSlug));
+      }
+    } catch (e) {
+      console.error('Failed to approve deal:', e);
+    } finally {
+      setProcessing(null);
+    }
   };
 
   return (
     <div className="space-y-6 font-sans">
-      
       <div className="flex items-center justify-between bg-white/5 border border-white/10 p-5 rounded-2xl">
         <div>
-          <h2 className="text-xl font-black text-white">Vendor Partners & 70/30 Payouts Ledger</h2>
-          <p className="text-xs text-slate-400 font-medium">Review vendor applications and approve 70% bi-weekly revenue payouts.</p>
+          <h2 className="text-xl font-black text-white flex items-center gap-2">
+            <Users className="w-5 h-5 text-purple-400" /> Vendor Partners & 70/30 Payouts Ledger
+          </h2>
+          <p className="text-xs text-slate-400 font-medium">
+            Review live vendor SaaS listing applications and track automated 70% revenue share payouts.
+          </p>
         </div>
+
+        <button
+          onClick={fetchVendors}
+          className="p-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl border border-white/10 transition-colors cursor-pointer"
+          title="Refresh Vendors"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       {/* Applications Section */}
       <div className="bg-[#070B16] border border-white/10 rounded-2xl p-6 space-y-4">
-        <h3 className="text-base font-black text-white">Incoming Launch Applications ({apps.length})</h3>
+        <h3 className="text-base font-black text-white">Pending SaaS Launch Applications ({pendingDeals.length})</h3>
 
-        <div className="space-y-3">
-          {apps.map((app) => (
-            <div key={app.id} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-white">{app.product}</span>
-                  <span className="text-[10px] font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded">
-                    {app.status}
-                  </span>
+        {loading ? (
+          <div className="py-16 text-center text-slate-500 text-xs animate-pulse">
+            Checking pending applications in database...
+          </div>
+        ) : pendingDeals.length === 0 ? (
+          <div className="py-12 text-center space-y-3 bg-white/[0.02] border border-white/5 rounded-2xl">
+            <Users className="w-10 h-10 text-slate-600 mx-auto" />
+            <h4 className="text-sm font-bold text-white">No pending vendor applications</h4>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              When SaaS founders submit their software via the <strong>/submit</strong> portal, their review requests will appear here for QA verification.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {pendingDeals.map((app) => (
+              <div
+                key={app._id || app.slug}
+                className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-white">{app.title}</span>
+                    <span className="text-[10px] font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded">
+                      {app.status || 'Pending Review'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    Vendor: <strong className="text-slate-200">{app.vendorName || 'Unknown'}</strong> · Category: {app.category}
+                  </div>
                 </div>
-                <div className="text-xs text-slate-400">
-                  Founder: <strong className="text-slate-200">{app.founder}</strong> ({app.email}) · Category: {app.cat}
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => handleApprove(app.slug)}
+                    disabled={processing === app.slug}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-xs font-black text-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{processing === app.slug ? 'Approving...' : 'Approve & Go Live'}</span>
+                  </button>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                {app.status === 'Pending Review' ? (
-                  <>
-                    <button
-                      onClick={() => approveApp(app.id)}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-xs font-black text-white rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Approve Deal
-                    </button>
-                  </>
-                ) : (
-                  <span className="text-xs font-black text-emerald-400">✅ Approved & Listed</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Payouts Table */}
-      <div className="bg-[#070B16] border border-white/10 rounded-2xl p-6 space-y-4">
-        <h3 className="text-base font-black text-white">70/30 Vendor Revenue Payout Ledger</h3>
-
-        <table className="w-full text-left text-xs font-medium text-slate-300">
-          <thead className="bg-white/5 text-slate-400 uppercase tracking-wider text-[10px] font-black">
-            <tr>
-              <th className="p-3">Payout ID</th>
-              <th className="p-3">SaaS Vendor</th>
-              <th className="p-3">Gross Sales</th>
-              <th className="p-3">Vendor 70% Share</th>
-              <th className="p-3">StackDeal 30% Fee</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {payoutList.map((p) => (
-              <tr key={p.id} className="hover:bg-white/5 transition-colors">
-                <td className="p-3 font-mono font-bold text-[#2475FF]">{p.id}</td>
-                <td className="p-3 font-bold text-white">{p.vendor}</td>
-                <td className="p-3 text-slate-300">{p.gross}</td>
-                <td className="p-3 font-black text-emerald-400">{p.payout}</td>
-                <td className="p-3 font-bold text-slate-400">{p.fee}</td>
-                <td className="p-3">
-                  <span className={`text-[10px] font-black px-2 py-0.5 rounded ${p.status === 'Paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                    {p.status}
-                  </span>
-                </td>
-                <td className="p-3">
-                  {p.status !== 'Paid' && (
-                    <button
-                      onClick={() => processPayout(p.id)}
-                      className="px-3 py-1 bg-[#2475FF] hover:bg-blue-600 text-xs font-bold text-white rounded-lg transition-all"
-                    >
-                      Release Payout
-                    </button>
-                  )}
-                </td>
-              </tr>
             ))}
-          </tbody>
-        </table>
+          </div>
+        )}
       </div>
-
     </div>
   );
 }
