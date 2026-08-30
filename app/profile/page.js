@@ -40,21 +40,10 @@ export default function ProfilePage() {
           setUser(meData.user);
         }
 
-        if (ordersData?.orders && ordersData.orders.length > 0) {
+        if (ordersData?.orders && Array.isArray(ordersData.orders)) {
           setOrders(ordersData.orders);
         } else {
-          setOrders([
-            {
-              _id: 'ord_1088',
-              dealTitle: 'Chat Chacha — WhatsApp AI Marketing & Automation',
-              tierTitle: 'Starter Pass',
-              redemptionCode: 'ST-CHATCHA-99018A',
-              purchasedAt: '2026-08-28T10:00:00Z',
-              totalAmount: 1999,
-              vendorRedeemUrl: 'https://chatchacha.in/redeem',
-              paymentStatus: 'PAID',
-            },
-          ]);
+          setOrders([]);
         }
 
         if (notifsData?.notifications) {
@@ -194,6 +183,28 @@ export default function ProfilePage() {
               <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 p-8">
                 <div className="w-8 h-8 border-4 border-[#2475FF] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 <p className="text-xs font-bold text-slate-500">Loading your passes from MongoDB Atlas...</p>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="bg-white border border-slate-200/90 rounded-3xl p-10 text-center space-y-4 shadow-sm">
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mx-auto text-[#2475FF]">
+                  <Key className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-base font-black text-slate-950">No Active 5-Year Passes Yet</h4>
+                  <p className="text-xs text-slate-500 font-medium max-w-md mx-auto leading-relaxed">
+                    You haven't purchased any SaaS software passes yet under <strong className="text-slate-800">{user?.email || 'your account'}</strong>.
+                    Once a verified Razorpay payment is completed, your license redemption code and B2B GST tax invoice will appear here in real-time.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <Link
+                    href="/deals"
+                    className="inline-flex items-center gap-2 btn-primary px-6 py-2.5 text-xs font-black rounded-xl shadow-md"
+                  >
+                    <span>Browse 5-Year SaaS Deals</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
             ) : (
               orders.map((pass) => {
