@@ -274,12 +274,12 @@ export default function Navbar() {
 
                   {currentUser.role === 'admin' && (
                     <Link
-                      href="/admin"
+                      href="/sd-ops-vault-9839"
                       onClick={() => setUserDropdown(false)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-purple-700 transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-amber-50 text-amber-600 font-bold transition-colors"
                     >
                       <Shield className="w-4 h-4" />
-                      <span>Admin Portal</span>
+                      <span>Ops Vault (Admin)</span>
                     </Link>
                   )}
 

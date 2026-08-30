@@ -37,7 +37,7 @@ export default function LoginPage() {
 
       setSuccess('Logged in successfully! Redirecting...');
       setTimeout(() => {
-        window.location.href = data.user?.role === 'admin' ? '/admin' : '/profile';
+        window.location.href = data.user?.role === 'admin' ? '/sd-ops-vault-9839' : '/profile';
       }, 800);
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
@@ -57,7 +57,7 @@ export default function LoginPage() {
             <div className="flex justify-center mb-1">
               <StackDealLogo className="w-[150px] h-[45px]" />
             </div>
-            <h1 className="text-2xl font-black text-slate-950">Log In to SaaTerra</h1>
+            <h1 className="text-2xl font-black text-slate-950">Log In to StackDeal</h1>
             <p className="text-xs text-slate-500 font-medium">Access your purchased 5-Year Passes, wallet credits, and invoices</p>
           </div>
 
