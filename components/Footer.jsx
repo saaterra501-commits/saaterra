@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {
-  ShieldCheck, Zap, Receipt, Heart, ArrowRight, Mail
+  Heart, ArrowRight, Mail
 } from 'lucide-react';
 
 import StackDealLogo from './StackDealLogo';
@@ -37,30 +37,6 @@ const FOOTER_LINKS = {
     { label: 'Terms of Service', href: '#' },
   ],
 };
-
-const TRUST_POINTS = [
-  {
-    Icon: ShieldCheck,
-    title: '60-Day Guarantee',
-    desc: "100% money-back if the software doesn't fit your needs.",
-    iconColor: 'text-emerald-400',
-    iconBg: 'bg-emerald-500/10',
-  },
-  {
-    Icon: Zap,
-    title: 'Instant UPI Checkout',
-    desc: 'Pay via PhonePe, GPay, Paytm, or Debit/Credit cards.',
-    iconColor: 'text-amber-400',
-    iconBg: 'bg-amber-500/10',
-  },
-  {
-    Icon: Receipt,
-    title: 'GST Tax Invoice',
-    desc: 'Automated B2B GST invoices for your chartered accountant.',
-    iconColor: 'text-[#2475FF]',
-    iconBg: 'bg-blue-500/10',
-  },
-];
 
 const SOCIAL_ICONS = [
   { emoji: '𝕏', label: 'Twitter / X', href: 'https://twitter.com/stackdeal_in' },
@@ -97,28 +73,6 @@ export default function Footer() {
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Trust Points Strip ── */}
-      <div className="border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {TRUST_POINTS.map((tp) => (
-              <div
-                key={tp.title}
-                className="flex items-center gap-3.5 bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4"
-              >
-                <div className={`w-10 h-10 rounded-xl ${tp.iconBg} flex items-center justify-center shrink-0`}>
-                  <tp.Icon className={`w-5 h-5 ${tp.iconColor}`} />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black text-white">{tp.title}</h4>
-                  <p className="text-xs text-slate-400 font-medium mt-0.5 leading-snug">{tp.desc}</p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
