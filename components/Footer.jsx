@@ -174,6 +174,18 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* ── Formal Legal & Beta Demonstration Notice ── */}
+      <div className="border-t border-white/[0.06] bg-black/40 py-5 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto text-[10px] text-slate-400/80 leading-relaxed space-y-1">
+          <p className="font-bold text-slate-300">
+            ⚖️ Legal Safe Harbor & Beta Testing Notice:
+          </p>
+          <p>
+            StackDeal.in is an independent software discovery platform operating in public preview & testing mode. All brand names, software titles, logos, product marks, and trademarks referenced on this platform are the sole intellectual property of their respective trademark holders. The display of these software tools is solely for user-interface mock demonstration, sandbox testing, and software discovery workflow preview. StackDeal makes no claim of endorsement, formal partnership, or direct sponsorship with any unlisted third-party SaaS vendors during this beta evaluation period. For legal queries, trademark inquiries, or listing requests, contact <span className="text-amber-400 font-mono">support@stackdeal.in</span>.
+          </p>
+        </div>
+      </div>
+
       {/* ── Bottom Bar ── */}
       <div className="border-t border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500 font-medium">

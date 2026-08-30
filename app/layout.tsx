@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import LegalBetaDisclaimer from "@/components/LegalBetaDisclaimer";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://stackdeal.in";
 
@@ -154,6 +155,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         style={{ fontFamily: "'New Kansas', 'newKansas', 'Fraunces', 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif" }}
         suppressHydrationWarning
       >
+        <LegalBetaDisclaimer />
         {children}
       </body>
     </html>
