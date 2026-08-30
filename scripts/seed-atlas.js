@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
-const MONGODB_URI = 'mongodb+srv://saasgrid101_db_user:2IaQ5bSNGo4cTEJc@cluster0.j1kriot.mongodb.net/saasgrid?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI is not defined in environment variables.');
+  process.exit(1);
+}
 
 const DealSchema = new mongoose.Schema(
   {
