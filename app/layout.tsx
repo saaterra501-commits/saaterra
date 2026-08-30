@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import LegalBetaDisclaimer from "@/components/LegalBetaDisclaimer";
 
@@ -136,6 +137,23 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <meta name="google-site-verification" content="tjrhKK8lic4LxbLxJmyjnemqrwbHQh61k9zbqNeg5O0" />
         <link rel="icon" type="image/png" href="/stackdeal-icon.png" />
         <link rel="shortcut icon" href="/stackdeal-icon.png" />
+
+        {/* Google Analytics GA4 Tag */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-Y59B5WRHRG"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics-ga4" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-Y59B5WRHRG', {
+              page_path: window.location.pathname,
+            });
+          `}
+        </Script>
+
         {/* Google Fonts — Fraunces & Inter (New Kansas Web Pairing) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
