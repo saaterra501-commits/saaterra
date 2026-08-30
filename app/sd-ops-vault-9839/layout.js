@@ -12,7 +12,7 @@ import StackDealLogo from '../../components/StackDealLogo';
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/sd-ops-vault-9839', icon: LayoutDashboard },
-  { label: 'Support Inquiries', href: '/sd-ops-vault-9839/inbox', icon: Mail },
+  { label: 'Support Inquiries', href: '/sd-ops-vault-9839/inbox', icon: Mail, showPendingBadge: true },
   { label: 'Deals & Tiers', href: '/sd-ops-vault-9839/deals', icon: Tag, showPendingBadge: true },
   { label: 'Orders & GST Invoices', href: '/sd-ops-vault-9839/orders', icon: ShoppingBag },
   { label: 'Vendor Payouts (70/30)', href: '/sd-ops-vault-9839/vendors', icon: Users },
@@ -289,11 +289,13 @@ export default function SecretAdminLayout({ children }) {
                           <p className="text-[11px] text-slate-300 leading-snug">{notif.message}</p>
                           <div className="pt-1.5 flex justify-end">
                             <Link
-                              href="/sd-ops-vault-9839/deals"
+                              href={notif.link || (notif.type === 'contact_inquiry' ? '/sd-ops-vault-9839/inbox' : '/sd-ops-vault-9839/deals')}
                               onClick={() => setShowNotifsDropdown(false)}
-                              className="text-[10px] font-black text-[#FF6B35] hover:underline flex items-center gap-1"
+                              className={`text-[10px] font-black hover:underline flex items-center gap-1 ${
+                                notif.type === 'contact_inquiry' ? 'text-amber-400' : 'text-[#FF6B35]'
+                              }`}
                             >
-                              <span>Review & Approve</span>
+                              <span>{notif.type === 'contact_inquiry' ? 'Open & Reply via Email' : 'Review & Approve'}</span>
                               <ArrowRight className="w-3 h-3" />
                             </Link>
                           </div>
@@ -302,13 +304,20 @@ export default function SecretAdminLayout({ children }) {
                     )}
                   </div>
 
-                  <div className="pt-2 border-t border-white/10">
+                  <div className="pt-2 border-t border-white/10 grid grid-cols-2 gap-2">
+                    <Link
+                      href="/sd-ops-vault-9839/inbox"
+                      onClick={() => setShowNotifsDropdown(false)}
+                      className="text-center py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 text-[11px] font-black rounded-xl transition-all"
+                    >
+                      Support Inbox 💬
+                    </Link>
                     <Link
                       href="/sd-ops-vault-9839/deals"
                       onClick={() => setShowNotifsDropdown(false)}
-                      className="block text-center py-2 bg-[#FF6B35] hover:bg-[#E85A24] text-white text-xs font-black rounded-xl transition-all"
+                      className="text-center py-2 bg-[#FF6B35] hover:bg-[#E85A24] text-white text-[11px] font-black rounded-xl transition-all"
                     >
-                      Go to Deals Moderation Center
+                      Deals Moderation 🚀
                     </Link>
                   </div>
                 </div>
