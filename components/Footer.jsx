@@ -29,9 +29,10 @@ const FOOTER_LINKS = {
     { label: 'Radar (Coming Soon)', href: '/deals' },
   ],
   Support: [
-    { label: 'Contact Us (hello@stackdeal.in)', href: 'mailto:hello@stackdeal.in' },
-    { label: '60-Day Refund Policy', href: '#' },
-    { label: 'GST Invoice Support', href: '#' },
+    { label: 'Contact & Support Desk 💬', href: '/contact' },
+    { label: 'Email Us (hello@stackdeal.in)', href: 'mailto:hello@stackdeal.in' },
+    { label: '60-Day Refund Policy', href: '/contact' },
+    { label: 'GST Invoice Support', href: '/contact' },
     { label: 'Privacy Policy', href: '#' },
     { label: 'Terms of Service', href: '#' },
   ],

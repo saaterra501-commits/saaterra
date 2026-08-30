@@ -198,6 +198,10 @@ export default function Navbar() {
             </span>
           </Link>
 
+          <Link href="/contact" className="hover:text-slate-950 transition-colors font-bold">
+            Contact
+          </Link>
+
           <Link href="/plus" className="flex items-center gap-1 bg-[#1A1828] text-amber-400 font-black px-2.5 py-1 rounded-md text-[10px] tracking-wider uppercase hover:bg-slate-900 transition-colors">
             PLUS
           </Link>
@@ -323,6 +327,7 @@ export default function Navbar() {
           <Link href="/deals" className="block py-2 text-slate-900 font-black">Ending soon</Link>
           <Link href="/compare" className="block py-2 text-slate-900 font-black">Compare Software</Link>
           <Link href="/plus" className="block py-2 text-amber-600 font-black">StackDeal PLUS (10% OFF)</Link>
+          <Link href="/contact" className="block py-2 text-slate-900 font-black">Contact Support 💬</Link>
           <Link href="/redeem" className="block py-2 text-slate-700">Redeem License Code</Link>
           <Link href="/submit" className="block py-2 text-slate-700">List Your SaaS Tool</Link>
           <Link href="/profile" className="block py-2 text-slate-700">My Passes Dashboard</Link>
