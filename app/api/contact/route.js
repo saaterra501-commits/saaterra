@@ -3,6 +3,7 @@ import dbConnect from '@/lib/dbConnect';
 import ContactMessage from '@/models/ContactMessage';
 import Notification from '@/models/Notification';
 import { rateLimit } from '@/lib/rateLimit';
+import { sendContactNotification } from '@/lib/emailService';
 
 export async function POST(request) {
   try {
@@ -64,6 +65,21 @@ export async function POST(request) {
       });
     } catch (e) {
       // Non-blocking notification
+    }
+
+    // Trigger instant email notification dispatch to hello@stackdeal.in
+    try {
+      await sendContactNotification({
+        ticketId,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone ? phone.trim() : '',
+        category: category || 'general',
+        subject: subject.trim(),
+        message: message.trim(),
+      });
+    } catch (e) {
+      console.warn('Email dispatch warning (non-blocking):', e);
     }
 
     return NextResponse.json({

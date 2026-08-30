@@ -6,12 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Tag, ShoppingBag, Users, MessageSquare, Gift,
   Crown, ExternalLink, ShieldCheck, Settings, LogOut, Bell, Clock,
-  CheckCircle2, ArrowRight, X, Lock, AlertTriangle
+  CheckCircle2, ArrowRight, X, Lock, AlertTriangle, Mail
 } from 'lucide-react';
 import StackDealLogo from '../../components/StackDealLogo';
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/sd-ops-vault-9839', icon: LayoutDashboard },
+  { label: 'Support Inquiries', href: '/sd-ops-vault-9839/inbox', icon: Mail },
   { label: 'Deals & Tiers', href: '/sd-ops-vault-9839/deals', icon: Tag, showPendingBadge: true },
   { label: 'Orders & GST Invoices', href: '/sd-ops-vault-9839/orders', icon: ShoppingBag },
   { label: 'Vendor Payouts (70/30)', href: '/sd-ops-vault-9839/vendors', icon: Users },
