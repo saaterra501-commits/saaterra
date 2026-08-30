@@ -97,18 +97,17 @@ export default function ProfilePage() {
 
           <div className="flex items-center gap-3">
             {user ? (
-              <div className="bg-white border border-emerald-200 rounded-2xl p-4 shadow-sm flex items-center gap-4">
-                <div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ST Wallet Balance</div>
-                  <div className="text-xl font-black text-emerald-700">₹{user.walletBalance || 250} ST</div>
+              <div className="bg-white border border-slate-200/90 rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
-                <button
-                  onClick={() => copyRefLink(user.referralCode)}
-                  className="px-3.5 py-2 bg-[#FF6B35] hover:bg-[#E85A24] text-white text-xs rounded-xl font-black transition-all flex items-center gap-1 cursor-pointer"
-                >
-                  <Gift className="w-3.5 h-3.5" />
-                  {copiedRef ? 'Link Copied!' : 'Refer & Earn'}
-                </button>
+                <div>
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Status</div>
+                  <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                    <span>Verified Agency Account</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                </div>
               </div>
             ) : (
               <button

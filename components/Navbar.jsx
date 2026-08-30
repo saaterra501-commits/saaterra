@@ -267,15 +267,6 @@ export default function Navbar() {
                     <span>My 5-Year Passes</span>
                   </Link>
 
-                  <Link
-                    href="/referral"
-                    onClick={() => setUserDropdown(false)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-800 transition-colors"
-                  >
-                    <Wallet className="w-4 h-4 text-emerald-600" />
-                    <span>Referrals & Credits</span>
-                  </Link>
-
                   {currentUser.role === 'admin' && (
                     <Link
                       href="/sd-ops-vault-9839"

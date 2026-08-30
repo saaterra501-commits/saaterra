@@ -17,7 +17,6 @@ const NAV_ITEMS = [
   { label: 'Orders & GST Invoices', href: '/sd-ops-vault-9839/orders', icon: ShoppingBag },
   { label: 'Vendor Payouts (70/30)', href: '/sd-ops-vault-9839/vendors', icon: Users },
   { label: 'Q&A & Moderation', href: '/sd-ops-vault-9839/qa', icon: MessageSquare },
-  { label: 'Referral Rewards', href: '/sd-ops-vault-9839/referrals', icon: Gift },
   { label: 'StackDeal Plus VIP', href: '/sd-ops-vault-9839/plus', icon: Crown },
 ];
 
