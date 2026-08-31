@@ -108,26 +108,6 @@ export default function Navbar() {
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50 font-sans">
-      
-      {/* ── Top Announcement Bar (#FFD519 & Slate-950) ── */}
-      <div className="bg-slate-950 text-white text-[11px] font-bold py-1.5 px-4 border-b border-slate-800">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 truncate">
-            <span className="inline-flex items-center gap-1.5 bg-[#FFD519] text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-2xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              LIVE ON STACKDEAL.IN
-            </span>
-            <span className="truncate text-slate-300 font-medium">
-              India's #1 B2B SaaS 5-Year Pass Marketplace · Save 90%+ with Zero Monthly Fees
-            </span>
-          </div>
-          <div className="hidden sm:flex items-center gap-4 text-slate-300 text-[10px] font-bold shrink-0">
-            <span className="flex items-center gap-1"><span className="text-emerald-400">🛡️</span> 60-Day Guarantee</span>
-            <span className="flex items-center gap-1"><span className="text-amber-400">⚡</span> Instant Razorpay UPI</span>
-            <span className="flex items-center gap-1"><span className="text-blue-400">📄</span> 18% GST Invoices</span>
-          </div>
-        </div>
-      </div>
 
       {/* Main Header Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[68px] flex items-center justify-between gap-4">
