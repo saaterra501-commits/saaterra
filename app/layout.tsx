@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import LegalBetaDisclaimer from "@/components/LegalBetaDisclaimer";
+import GuestAuthNudge from "@/components/GuestAuthNudge";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://stackdeal.in";
 
@@ -184,6 +185,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         suppressHydrationWarning
       >
         <LegalBetaDisclaimer />
+        <GuestAuthNudge />
         {children}
       </body>
     </html>

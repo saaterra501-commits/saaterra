@@ -4,11 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import {
   X, ShieldCheck, Zap, CheckCircle2, Copy, ArrowRight,
   Sparkles, CreditCard, QrCode, Smartphone, Lock,
-  Clock, Flame, Check, Star, Gift
+  Clock, Flame, Check, Star, Gift, User
 } from 'lucide-react';
+import AuthModal from './AuthModal';
 
 export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClose, onSuccess }) {
   const [step, setStep] = useState('checkout');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [paymentMode, setPaymentMode] = useState('qr');
   const [upiId, setUpiId] = useState('');
   const [cardNo, setCardNo] = useState('');
@@ -20,6 +23,18 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
   const [scanStatus, setScanStatus] = useState('idle');
   const [scanProgress, setScanProgress] = useState(0);
   const autoScanRef = useRef(null);
+
+  // Fetch logged in user
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.authenticated && data?.user) {
+          setCurrentUser(data.user);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   let tierPrice = deal?.tier1Price || 1999;
   let tierTitle = deal?.tier1Title || 'Starter Pass';
@@ -94,8 +109,8 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
           tier: selectedTier,
           gstNumber,
           amount: tierPrice,
-          userEmail: 'agency@saaterra.in',
-          userName: 'Indian Agency Owner',
+          userEmail: currentUser?.email || 'buyer@stackdeal.in',
+          userName: currentUser?.name || 'Verified Agency Buyer',
         }),
       });
       const data = await res.json();
@@ -239,14 +254,50 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
               />
             </div>
 
+            {/* Account Status / Login Gate */}
+            {!currentUser ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-black text-amber-900">
+                  <Lock className="w-4 h-4 text-amber-600" /> Account Required for License Code
+                </div>
+                <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                  Please log in or sign up before completing checkout so your 5-Year activation license code and B2B GST tax invoice are securely saved in your verified profile.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-950 truncate">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="truncate">Buying as: <strong>{currentUser.email}</strong></span>
+                </div>
+                <span className="text-[10px] font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full uppercase shrink-0">Verified</span>
+              </div>
+            )}
+
             {/* CTA */}
             <button
-              onClick={() => setStep('razorpay_modal')}
-              className="w-full btn-primary justify-center py-4 text-sm rounded-2xl"
+              onClick={() => {
+                if (!currentUser) {
+                  setShowAuthModal(true);
+                  return;
+                }
+                setStep('razorpay_modal');
+              }}
+              className="w-full btn-primary justify-center py-4 text-sm rounded-2xl cursor-pointer"
             >
-              <CreditCard className="w-4 h-4" />
-              <span>Pay ₹{tierPrice.toLocaleString('en-IN')} via Razorpay</span>
-              <ArrowRight className="w-4 h-4" />
+              {currentUser ? (
+                <>
+                  <CreditCard className="w-4 h-4" />
+                  <span>Pay ₹{tierPrice.toLocaleString('en-IN')} via Razorpay</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              ) : (
+                <>
+                  <User className="w-4 h-4" />
+                  <span>Log In / Sign Up to Pay ₹{tierPrice.toLocaleString('en-IN')}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
 
             {/* Trust strip */}
@@ -491,6 +542,19 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
         )}
 
       </div>
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          initialMode="signup"
+          onSuccess={(u) => {
+            setCurrentUser(u);
+            setShowAuthModal(false);
+            setStep('razorpay_modal');
+          }}
+        />
+      )}
     </div>
   );
 }

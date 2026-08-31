@@ -29,6 +29,11 @@ const UserSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    userType: {
+      type: String,
+      enum: ['agency_buyer', 'saas_founder', 'solopreneur'],
+      default: 'agency_buyer',
+    },
     avatar: {
       type: String,
       default: null,

@@ -10,6 +10,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userType, setUserType] = useState('agency_buyer'); // 'agency_buyer' | 'saas_founder' | 'solopreneur'
   const [refCode, setRefCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +28,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
       const payload = mode === 'login'
         ? { email, password }
-        : { name, email, password, refCode };
+        : { name, email, password, userType, refCode };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -139,22 +140,50 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
         {/* Form Fields */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
-            <div>
-              <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider block mb-1">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Ujjawal Tiwari"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-[#2475FF] focus:outline-none"
-                />
+            <>
+              <div>
+                <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider block mb-1.5">
+                  I am a / Joining as:
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { id: 'agency_buyer', label: '🏢 Agency' },
+                    { id: 'saas_founder', label: '🚀 Founder' },
+                    { id: 'solopreneur', label: '💡 Marketer' },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setUserType(t.id)}
+                      className={`py-2 px-1 rounded-xl border text-center transition-all cursor-pointer ${
+                        userType === t.id
+                          ? 'bg-[#2475FF] border-[#2475FF] text-white shadow-xs'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="text-[11px] font-black truncate">{t.label}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              <div>
+                <label className="text-[11px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rahul Sharma"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-[#2475FF] focus:outline-none"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           <div>

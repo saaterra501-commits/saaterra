@@ -80,12 +80,15 @@ export async function POST(request) {
       const hashedPassword = await bcrypt.hash(randomSecret, 10);
       const uniqueRefToken = 'ST-' + crypto.randomBytes(3).toString('hex').toUpperCase();
 
+      const validUserType = ['agency_buyer', 'saas_founder', 'solopreneur'].includes(userType) ? userType : 'agency_buyer';
+
       user = await User.create({
         name: cleanName,
         email: cleanEmail,
         password: hashedPassword,
         avatar: avatar || null,
         role: isAdmin ? 'admin' : 'user',
+        userType: validUserType,
         referralCode: uniqueRefToken,
       });
 

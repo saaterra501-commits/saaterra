@@ -19,7 +19,7 @@ export async function POST(request) {
         { status: 429 }
       );
     }
-    const { name, email, password, refCode } = await request.json();
+    const { name, email, password, refCode, userType = 'agency_buyer' } = await request.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -83,11 +83,14 @@ export async function POST(request) {
     const uniqueRefToken = 'ST-' + crypto.randomBytes(3).toString('hex').toUpperCase();
     const isAdminEmail = ADMIN_EMAILS && ADMIN_EMAILS.includes(emailValidation.sanitizedEmail.toLowerCase().trim());
 
+    const validUserType = ['agency_buyer', 'saas_founder', 'solopreneur'].includes(userType) ? userType : 'agency_buyer';
+
     const newUser = await User.create({
       name: sanitizedName,
       email: emailValidation.sanitizedEmail,
       password: hashedPassword,
       role: isAdminEmail ? 'admin' : 'user',
+      userType: validUserType,
       referralCode: uniqueRefToken,
       referredBy: referrerUser ? referrerUser._id : null,
     });
@@ -120,6 +123,7 @@ export async function POST(request) {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
+          userType: newUser.userType,
         },
       },
       { status: 201 }
