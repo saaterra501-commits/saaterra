@@ -50,9 +50,12 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/stackdeal-icon.png",
-    shortcut: "/stackdeal-icon.png",
-    apple: "/stackdeal-icon.png",
+    icon: [
+      { url: "/icon", sizes: "48x48", type: "image/png" },
+      { url: "/stackdeal-icon.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
   },
   verification: {
     google: "tjrhKK8lic4LxbLxJmyjnemqrwbHQh61k9zbqNeg5O0",
@@ -135,8 +138,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className="h-full overflow-x-hidden w-full max-w-full" suppressHydrationWarning>
       <head>
         <meta name="google-site-verification" content="tjrhKK8lic4LxbLxJmyjnemqrwbHQh61k9zbqNeg5O0" />
-        <link rel="icon" type="image/png" href="/stackdeal-icon.png" />
-        <link rel="shortcut icon" href="/stackdeal-icon.png" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/icon" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/stackdeal-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon" />
+        <link rel="shortcut icon" href="/favicon.ico" />
 
         {/* Google Analytics GA4 Tag */}
         <Script
