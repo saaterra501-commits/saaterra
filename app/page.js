@@ -11,6 +11,7 @@ import EndingSoonSliderSection from '../components/EndingSoonSliderSection';
 import LTDCheckoutModal from '../components/LTDCheckoutModal';
 import SalesTicker from '../components/SalesTicker';
 import SavingsCalculator from '../components/SavingsCalculator';
+import HomeFAQ from '../components/HomeFAQ';
 import Link from 'next/link';
 import {
   Sparkles, Flame, ShieldCheck, Clock, Check, ArrowRight, Zap, Users,
@@ -210,6 +211,9 @@ export default function Home() {
 
         {/* ── 4D. 5-Year Savings Math Calculator ── */}
         <SavingsCalculator />
+
+        {/* ── 4E. Verified FAQ Accordion with Schema.org SEO ── */}
+        <HomeFAQ />
 
       </main>
 
