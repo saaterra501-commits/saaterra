@@ -12,10 +12,11 @@ import StackDealLogo from '../../components/StackDealLogo';
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/sd-ops-vault-9839', icon: LayoutDashboard },
+  { label: 'Registered Users', href: '/sd-ops-vault-9839/users', icon: Users },
   { label: 'Support Inquiries', href: '/sd-ops-vault-9839/inbox', icon: Mail, showPendingBadge: true },
   { label: 'Deals & Tiers', href: '/sd-ops-vault-9839/deals', icon: Tag, showPendingBadge: true },
   { label: 'Orders & GST Invoices', href: '/sd-ops-vault-9839/orders', icon: ShoppingBag },
-  { label: 'Vendor Payouts (70/30)', href: '/sd-ops-vault-9839/vendors', icon: Users },
+  { label: 'Vendor Payouts (70/30)', href: '/sd-ops-vault-9839/vendors', icon: ShieldCheck },
   { label: 'Q&A & Moderation', href: '/sd-ops-vault-9839/qa', icon: MessageSquare },
   { label: 'StackDeal Plus VIP', href: '/sd-ops-vault-9839/plus', icon: Crown },
 ];

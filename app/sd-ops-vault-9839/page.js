@@ -76,12 +76,12 @@ export default function VaultDashboardPage() {
       bg: 'bg-orange-500/10',
     },
     {
-      label: 'Vendor Payouts Due (70%)',
-      value: data.metrics.vendorPayouts,
-      change: 'Bi-Weekly',
+      label: 'Registered Accounts',
+      value: `${data.metrics.totalUsers || 0} Users`,
+      change: 'Live Database',
       icon: Users,
-      color: 'text-purple-400',
-      bg: 'bg-purple-500/10',
+      color: 'text-[#2475FF]',
+      bg: 'bg-blue-500/10',
     },
   ];
 
@@ -105,6 +105,12 @@ export default function VaultDashboardPage() {
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <Link
+            href="/sd-ops-vault-9839/users"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-xl transition-all shadow-md"
+          >
+            <Users className="w-4 h-4" /> Users Directory ({data.metrics.totalUsers || 0})
+          </Link>
+          <Link
             href="/sd-ops-vault-9839/inbox"
             className="flex items-center gap-2 px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black rounded-xl transition-all shadow-md"
           >
@@ -114,7 +120,7 @@ export default function VaultDashboardPage() {
             href="/sd-ops-vault-9839/deals"
             className="flex items-center gap-2 px-4 py-2.5 bg-[#FF6B35] hover:bg-[#e55a27] text-white text-xs font-black rounded-xl transition-all shadow-md"
           >
-            <Plus className="w-4 h-4" /> Add New SaaS Deal
+            <Plus className="w-4 h-4" /> Add Deal
           </Link>
         </div>
       </div>
