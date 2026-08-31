@@ -123,10 +123,11 @@ export default function Navbar() {
           </div>
           <div className="hidden sm:flex items-center gap-4 text-slate-300 text-[10px] font-bold shrink-0">
             <a
-              href="https://www.producthunt.com/products/stackdeal"
+              href="https://www.producthunt.com/products/stackdeal-2?launch=stackdeal-2"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 bg-[#DA552F]/20 text-[#FF8562] border border-[#DA552F]/40 px-2 py-0.5 rounded-md hover:bg-[#DA552F] hover:text-white transition-all font-black"
+              title="Support StackDeal on Product Hunt"
             >
               <span>😻 Product Hunt</span>
               <span className="text-[9px]">➔</span>
