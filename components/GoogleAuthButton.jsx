@@ -180,7 +180,7 @@ export default function GoogleAuthButton({ mode = 'login', onSuccess }) {
         type="button"
         onClick={triggerOAuthPopup}
         disabled={loading}
-        className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 rounded-xl text-slate-800 text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50"
+        className="w-full py-2.5 px-4 bg-white hover:bg-slate-50/90 border border-slate-200/90 hover:border-slate-300 rounded-2xl text-slate-800 text-xs font-semibold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
       >
         {/* Google 'G' Official Logo SVG */}
         <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -204,7 +204,7 @@ export default function GoogleAuthButton({ mode = 'login', onSuccess }) {
 
         <span>
           {loading
-            ? 'Opening Google Account Chooser...'
+            ? 'Connecting Google...'
             : mode === 'signup'
             ? 'Sign up with Google'
             : 'Continue with Google'}
