@@ -1,6 +1,5 @@
 import { ImageResponse } from 'next/og';
 
-// Image metadata for Google Search Favicon requirements (48x48 multiple)
 export const size = {
   width: 48,
   height: 48,
@@ -12,29 +11,55 @@ export default function Icon() {
     (
       <div
         style={{
-          fontSize: 26,
-          background: 'linear-gradient(135deg, #0A0F1E 0%, #171E36 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: 12,
-          border: '2px solid #FFD519',
+          position: 'relative',
+          background: 'transparent',
         }}
       >
+        {/* Purple rounded background */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #FF6B35 0%, #FFD519 100%)',
-            width: 30,
-            height: 30,
-            borderRadius: 8,
+            position: 'absolute',
+            bottom: 2,
+            left: 2,
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            background: '#6C38CC',
+          }}
+        />
+        {/* Pink middle shadow */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 5,
+            right: 2,
+            width: 34,
+            height: 34,
+            borderRadius: '50%',
+            background: '#E93D82',
+          }}
+        />
+        {/* Orange top circle with white % */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 2,
+            right: 4,
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: '#FF6B35',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#0A0F1E',
+            color: '#FFFFFF',
             fontWeight: 900,
-            fontSize: 18,
+            fontSize: 20,
           }}
         >
           %
