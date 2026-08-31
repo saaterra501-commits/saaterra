@@ -4,7 +4,6 @@ import User from '@/models/User';
 import Software from '@/models/Software';
 import Deal from '@/models/Deal';
 import Review from '@/models/Review';
-import WalletTransaction from '@/models/WalletTransaction';
 import { getAuthUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -37,8 +36,9 @@ export async function POST(request) {
     const cleanSlug = (softwareSlug || '').toLowerCase().trim();
     const titleToSave = (headline || reviewTitle || '').trim();
     const contentToSave = (content || feedbackPros || '').trim();
-    const consToSave = (feedbackCons || '').trim() || 'Overall a smooth experience.';
+    const consToSave = (feedbackCons || '').trim() || 'No major issues observed.';
     const nameToSave = (authUser?.name || userName || 'Verified Buyer').trim();
+    const userEmail = (authUser?.email || '').toLowerCase().trim();
 
     // ─── 3. Validation ─────────────────────────────────────────────────────────
     if (!cleanSlug) {
@@ -51,7 +51,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Please provide a review headline.' }, { status: 400 });
     }
     if (!contentToSave || contentToSave.length < 5) {
-      return NextResponse.json({ error: 'Review content must be at least 5 characters.' }, { status: 400 });
+      return NextResponse.json({ error: 'What you like (Pros) must be at least 5 characters.' }, { status: 400 });
     }
 
     await dbConnect();
@@ -61,20 +61,18 @@ export async function POST(request) {
 
     if (authUser.userId || authUser._id || authUser.id) {
       const rawId = authUser.userId || authUser._id || authUser.id;
-      const userById = await User.findById(rawId).select('_id walletBalance');
+      const userById = await User.findById(rawId).select('_id');
       if (userById) {
         resolvedUserId = userById._id;
       }
     }
 
-    if (!resolvedUserId && authUser.email) {
-      const userByEmail = await User.findOne({ email: authUser.email.toLowerCase() }).select('_id walletBalance');
+    if (!resolvedUserId && userEmail) {
+      const userByEmail = await User.findOne({ email: userEmail }).select('_id');
       if (userByEmail) {
         resolvedUserId = userByEmail._id;
       }
     }
-
-    console.log('[Review API] Auth user:', authUser?.email, '| Resolved userId:', resolvedUserId?.toString());
 
     // ─── 5. Resolve Software or Deal from Database ─────────────────────────────
     let softwareDoc = await Software.findOne({
@@ -91,7 +89,6 @@ export async function POST(request) {
       ],
     });
 
-    // If deal exists in memory (global.STORED_DEALS)
     let memoryDeal = null;
     if (!dealDoc && global.STORED_DEALS) {
       memoryDeal = global.STORED_DEALS.find((d) => d.slug?.toLowerCase() === cleanSlug);
@@ -99,7 +96,6 @@ export async function POST(request) {
 
     const matchedDeal = dealDoc || memoryDeal;
 
-    // If softwareDoc doesn't exist yet, auto-create/upsert one so review has a valid softwareId
     if (!softwareDoc) {
       const softwareName = matchedDeal?.title || matchedDeal?.vendorName || cleanSlug.replace(/-/g, ' ').toUpperCase();
       const softwareTagline = matchedDeal?.tagline || '5-Year SaaS Access Pass';
@@ -119,36 +115,58 @@ export async function POST(request) {
           { upsert: true, new: true }
         );
       } catch (upsertErr) {
-        console.warn('[Review API] Software upsert fallback:', upsertErr.message);
-        // If unique constraint or other error, retry find
         softwareDoc = await Software.findOne({ slug: cleanSlug });
       }
     }
 
     if (!softwareDoc) {
-      return NextResponse.json({ error: 'Software could not be initialized for review.' }, { status: 404 });
+      return NextResponse.json({ error: 'Software could not be found for review.' }, { status: 404 });
     }
 
-    // ─── 6. Create Review Record ───────────────────────────────────────────────
+    // ─── 6. STRICT DUPLICATE CHECK: 1 Review Per Email / Account ──────────────
+    const existingConditions = [];
+    if (userEmail) existingConditions.push({ userEmail });
+    if (resolvedUserId) existingConditions.push({ userId: resolvedUserId });
+
+    if (existingConditions.length > 0) {
+      const existingReview = await Review.findOne({
+        softwareId: softwareDoc._id,
+        $or: existingConditions,
+      });
+
+      if (existingReview) {
+        return NextResponse.json(
+          {
+            error: 'You have already submitted a review for this software. Each account/email can only write 1 review per tool.',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // ─── 7. Create Review Record ───────────────────────────────────────────────
     const newReview = await Review.create({
       softwareId: softwareDoc._id,
       userId: resolvedUserId,
-      userEmail: authUser.email || '',
+      userEmail: userEmail,
       userName: nameToSave,
-      userDesignation: userDesignation?.trim() || null,
+      userDesignation: userDesignation?.trim() || 'Agency Founder',
       rating: Number(rating),
       reviewTitle: titleToSave,
       feedbackPros: contentToSave,
-      feedbackCons: consToSave || 'Smooth experience overall',
+      feedbackCons: consToSave,
       status: 'approved',
       isVerifiedBuyer: true,
     });
 
-    // ─── 7. Append Review to Deal Record (for Single Deal Page Display) ─────────
+    // ─── 8. Append Structured Review to Deal Record (Pros & Cons) ──────────────
     const reviewFormatted = {
       name: nameToSave,
       role: 'Verified Purchaser',
       rating: Number(rating),
+      headline: titleToSave,
+      pros: contentToSave,
+      cons: consToSave,
       text: `${titleToSave}: ${contentToSave}`,
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
     };
@@ -164,7 +182,6 @@ export async function POST(request) {
       console.warn('[Review API] Deal reviews update error:', dealUpdateErr.message);
     }
 
-    // Also update in-memory deal if present
     if (global.STORED_DEALS) {
       const inMem = global.STORED_DEALS.find((d) => d.slug?.toLowerCase() === cleanSlug);
       if (inMem) {
@@ -174,82 +191,15 @@ export async function POST(request) {
       }
     }
 
-    // ─── 8. Add ₹100 ST Credits (Wallet Reward) ────────────────────────────────
-    let creditsAdded = 0;
-
-    if (resolvedUserId) {
-      try {
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 60);
-
-        await WalletTransaction.create({
-          userId: resolvedUserId,
-          type: 'credit',
-          amount: 100,
-          source: 'review_reward',
-          description: `Reward for reviewing ${softwareDoc.name}`,
-          referenceId: String(newReview._id),
-          status: 'active',
-          expiresAt,
-        });
-
-        await User.findByIdAndUpdate(resolvedUserId, {
-          $inc: { walletBalance: 100 },
-        });
-
-        creditsAdded = 100;
-        console.log('[Review API] ₹100 ST Credits added to user:', resolvedUserId.toString());
-      } catch (creditErr) {
-        console.error('[Review API] Credit Reward FAILED:', creditErr.message);
-      }
-    } else {
-      console.warn('[Review API] Could not resolve userId — credits NOT added.');
-    }
-
-    // ─── 9. Update Software Rating Stats ───────────────────────────────────────
-    try {
-      const [stats] = await Review.aggregate([
-        { $match: { softwareId: softwareDoc._id, status: { $ne: 'flagged' } } },
-        {
-          $group: {
-            _id: '$softwareId',
-            avgRating: { $avg: '$rating' },
-            count: { $sum: 1 },
-          },
-        },
-      ]);
-
-      if (stats) {
-        softwareDoc.averageRating = Math.round(stats.avgRating * 10) / 10;
-        softwareDoc.totalReviews = stats.count;
-        await softwareDoc.save();
-      }
-    } catch (aggErr) {
-      console.warn('[Review API] Rating aggregation warning:', aggErr.message);
-    }
-
-    // ─── 10. Return Success ────────────────────────────────────────────────────
-    return NextResponse.json(
-      {
-        success: true,
-        message: creditsAdded > 0
-          ? `Review published! ₹${creditsAdded} ST Credits have been added to your StackDeal Wallet.`
-          : 'Review published successfully! Thank you for sharing your experience.',
-        review: {
-          _id: newReview._id,
-          name: nameToSave,
-          rating: newReview.rating,
-          reviewTitle: newReview.reviewTitle,
-          text: `${titleToSave}: ${contentToSave}`,
-        },
-        creditsAdded,
-      },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      success: true,
+      message: 'Your verified review with Pros & Cons has been published successfully!',
+      review: newReview,
+    });
   } catch (error) {
-    console.error('[Review API POST Error]:', error);
+    console.error('[Review API Error]:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to submit review.' },
+      { error: error.message || 'Internal Server Error while saving review.' },
       { status: 500 }
     );
   }

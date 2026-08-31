@@ -1,83 +1,129 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Notification from '@/models/Notification';
+import Deal from '@/models/Deal';
+import LTDOrder from '@/models/LTDOrder';
+import { getAuthUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req) {
   try {
+    const authUser = await getAuthUser();
     const { searchParams } = new URL(req.url);
-    const email = searchParams.get('email')?.toLowerCase();
+    const queryEmail = searchParams.get('email')?.toLowerCase();
+    const userEmail = authUser?.email?.toLowerCase() || queryEmail;
 
-    let notifs = [];
-
-    // 1. Fetch vendor notifications from global in-memory store
-    if (global.VENDOR_NOTIFICATIONS && global.VENDOR_NOTIFICATIONS.length > 0) {
-      notifs = [...global.VENDOR_NOTIFICATIONS];
-      if (email) {
-        notifs = notifs.filter((n) => !n.userEmail || n.userEmail.toLowerCase() === email);
-      }
+    // If user is not logged in and has no email, return zero notifications
+    if (!userEmail) {
+      return NextResponse.json({ success: true, notifications: [] });
     }
 
-    // 2. Fetch from MongoDB Notification collection (Excluding any legacy cashback entries)
-    try {
-      const conn = await dbConnect();
-      if (conn) {
-        const query = {
-          type: { $nin: ['cashback_approved', 'cashback_rejected', 'cashback', 'voucher'] },
-          title: { $not: /cashback/i },
-          message: { $not: /cashback/i },
-          ...(email ? { $or: [{ userEmail: email }, { userEmail: '' }, { userEmail: { $exists: false } }] } : {}),
-        };
+    const notifs = [];
+    await dbConnect();
 
-        const dbNotifs = await Notification.find(query).sort({ createdAt: -1 }).limit(20).lean();
-        if (dbNotifs && dbNotifs.length > 0) {
-          const existingIds = new Set(notifs.map((n) => n.id));
-          for (const dbN of dbNotifs) {
-            if (!existingIds.has(String(dbN._id))) {
-              notifs.push({
-                id: String(dbN._id),
-                title: dbN.title,
-                message: dbN.message,
-                type: dbN.type,
-                link: dbN.link,
-                time: dbN.createdAt ? new Date(dbN.createdAt).toISOString() : new Date().toISOString(),
-                isRead: dbN.isRead,
-              });
-            }
+    // 1. BUYER NOTIFICATIONS: Fetch real purchased 5-Year Passes for this user
+    try {
+      const userOrders = await LTDOrder.find({
+        userEmail: userEmail,
+        status: 'paid',
+      })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean();
+
+      for (const ord of userOrders) {
+        notifs.push({
+          id: 'ord-notif-' + ord._id,
+          type: 'order_completed',
+          title: `🎟️ 5-Year Pass Activated: ${ord.dealTitle || 'Software Pass'}`,
+          message: `Your lifetime pass is active! Unique License Code: ${ord.licenseCode || 'Generated'}. Redeem on vendor site.`,
+          link: '/profile',
+          time: ord.purchasedAt ? new Date(ord.purchasedAt).toISOString() : new Date(ord.createdAt).toISOString(),
+          isRead: false,
+        });
+      }
+    } catch (ordErr) {
+      console.warn('Error querying user orders for notifications:', ordErr.message);
+    }
+
+    // 2. VENDOR NOTIFICATIONS: Fetch real SaaS listings submitted by this specific user
+    try {
+      const userDeals = await Deal.find({
+        $or: [
+          { 'founderContact.email': userEmail },
+          { founderEmail: userEmail },
+          { vendorEmail: userEmail },
+          ...(authUser?.userId ? [{ userId: authUser.userId }] : []),
+        ],
+      })
+        .sort({ updatedAt: -1 })
+        .lean();
+
+      for (const deal of userDeals) {
+        if (deal.status === 'Active') {
+          notifs.push({
+            id: 'deal-live-' + deal.slug,
+            type: 'submission_approved',
+            title: `🎉 Software Approved & Live: ${deal.title}`,
+            message: `Your software "${deal.title}" has passed QA verification and is now LIVE on StackDeal marketplace!`,
+            link: `/deals/${deal.slug}`,
+            slug: deal.slug,
+            time: deal.launchDate ? new Date(deal.launchDate).toISOString() : new Date(deal.updatedAt || deal.createdAt).toISOString(),
+            isRead: false,
+          });
+        } else if (deal.status === 'Pending') {
+          notifs.push({
+            id: 'deal-pend-' + deal.slug,
+            type: 'submission_pending',
+            title: `⏳ Submission Under QA Review: ${deal.title}`,
+            message: `Your software "${deal.title}" was submitted successfully and is currently under QA verification.`,
+            link: `/deals/${deal.slug}`,
+            slug: deal.slug,
+            time: deal.createdAt ? new Date(deal.createdAt).toISOString() : new Date().toISOString(),
+            isRead: false,
+          });
+        }
+
+        // 3. Direct Customer Questions for this Founder
+        if (deal.questions && Array.isArray(deal.questions)) {
+          for (const q of deal.questions.slice(0, 5)) {
+            notifs.push({
+              id: 'q-notif-' + (q._id || Math.random().toString(36).slice(2)),
+              type: 'customer_question',
+              title: `💬 Question on ${deal.title} from ${q.userName || 'Buyer'}`,
+              message: `"${(q.question || '').slice(0, 90)}..."`,
+              link: `/deals/${deal.slug}`,
+              time: q.createdAt ? new Date(q.createdAt).toISOString() : new Date().toISOString(),
+              isRead: false,
+            });
           }
         }
       }
-    } catch (err) {
-      console.warn('MongoDB user notifications fetch error:', err.message);
+    } catch (dealErr) {
+      console.warn('Error querying user deals for notifications:', dealErr.message);
     }
 
-    // 3. Strict JS filter to guarantee ZERO cashback / voucher notifications
-    notifs = notifs.filter((n) => {
-      const type = (n.type || '').toLowerCase();
-      const title = (n.title || '').toLowerCase();
-      const msg = (n.message || '').toLowerCase();
-      if (type.includes('cashback') || type === 'voucher') return false;
-      if (title.includes('cashback') || msg.includes('cashback')) return false;
-      return true;
+    // 4. In-Memory vendor notifications for this user
+    if (global.VENDOR_NOTIFICATIONS && global.VENDOR_NOTIFICATIONS.length > 0) {
+      const matched = global.VENDOR_NOTIFICATIONS.filter(
+        (n) => n.userEmail && n.userEmail.toLowerCase() === userEmail
+      );
+      const existingIds = new Set(notifs.map((n) => n.id));
+      for (const m of matched) {
+        if (!existingIds.has(m.id)) {
+          notifs.push(m);
+        }
+      }
+    }
+
+    // Sort by timestamp descending
+    notifs.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+    return NextResponse.json({
+      success: true,
+      notifications: notifs,
     });
-
-    // Fallback sample notifications if empty
-    if (notifs.length === 0) {
-      notifs = [
-        {
-          id: 'notif-welcome',
-          title: '🎉 Welcome to StackDeal!',
-          message: 'Explore 5-Year Access Passes for top software or list your own SaaS with 70% revenue share.',
-          type: 'general',
-          link: '/deals',
-          time: new Date().toISOString(),
-          isRead: false,
-        },
-      ];
-    }
-
-    return NextResponse.json({ success: true, notifications: notifs });
   } catch (err) {
     console.error('API User Notifications Error:', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
@@ -88,15 +134,26 @@ export async function POST(req) {
   try {
     const { notifId, markAllRead } = await req.json();
 
-    if (markAllRead && global.VENDOR_NOTIFICATIONS) {
-      global.VENDOR_NOTIFICATIONS = global.VENDOR_NOTIFICATIONS.map((n) => ({ ...n, isRead: true }));
+    if (markAllRead) {
+      if (global.VENDOR_NOTIFICATIONS) {
+        global.VENDOR_NOTIFICATIONS = global.VENDOR_NOTIFICATIONS.map((n) => ({ ...n, isRead: true }));
+      }
     } else if (notifId && global.VENDOR_NOTIFICATIONS) {
       global.VENDOR_NOTIFICATIONS = global.VENDOR_NOTIFICATIONS.map((n) =>
         n.id === notifId ? { ...n, isRead: true } : n
       );
     }
 
-    return NextResponse.json({ success: true, message: 'Notification marked as read' });
+    return NextResponse.json({ success: true, message: 'Notifications marked as read' });
+  } catch (err) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req) {
+  try {
+    global.VENDOR_NOTIFICATIONS = [];
+    return NextResponse.json({ success: true, message: 'All notifications cleared successfully' });
   } catch (err) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

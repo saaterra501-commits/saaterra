@@ -17,11 +17,14 @@ const DealSchema = new mongoose.Schema(
     vendorName: { type: String, required: true },
     vendorLogo: { type: String, default: 'https://cdn-icons-png.flaticon.com/512/3670/3670051.png' },
     vendorLocation: { type: String, default: 'New Delhi, India' },
+    websiteUrl: { type: String, default: '' },
     foundedDate: { type: String, default: 'April 2022' },
     teamSize: { type: String, default: '1-10 employees' },
     founderName: { type: String, default: 'Ujjwal Sharma' },
     founderTitle: { type: String, default: 'Founder & CEO' },
     founderAvatar: { type: String, default: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' },
+    founderLinkedin: { type: String, default: '' },
+    founderTwitter: { type: String, default: '' },
     founderNote: { type: String, default: '' },
 
     videoUrl: { type: String, default: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
@@ -48,7 +51,11 @@ const DealSchema = new mongoose.Schema(
         tierName: String,
         price: Number,
         originalPrice: Number,
+        totalCodes: { type: Number, default: 100 },
+        soldCount: { type: Number, default: 0 },
         isRecommended: Boolean,
+        enabled: { type: Boolean, default: true },
+        licenseCodes: { type: [String], default: [] },
         features: [
           {
             text: String,
@@ -59,6 +66,19 @@ const DealSchema = new mongoose.Schema(
     ],
 
     terms: { type: [String], default: [] },
+    termsAgreed: { type: Boolean, default: true },
+
+    payoutDetails: {
+      payoutMethod: { type: String, default: 'UPI' },
+      upiId: { type: String, default: '' },
+      accountHolderName: { type: String, default: '' },
+      accountNumber: { type: String, default: '' },
+      ifscCode: { type: String, default: '' },
+      bankName: { type: String, default: '' },
+      panOrGstin: { type: String, default: '' },
+    },
+
+    licenseKeys: { type: [String], default: [] },
 
     faqs: [
       {
@@ -67,6 +87,18 @@ const DealSchema = new mongoose.Schema(
         askedBy: String,
         founderReply: String,
         upvotes: { type: Number, default: 0 },
+      },
+    ],
+
+    questions: [
+      {
+        userName: String,
+        userEmail: String,
+        userPhone: String,
+        question: String,
+        founderReply: String,
+        status: { type: String, default: 'Pending' },
+        createdAt: { type: Date, default: Date.now },
       },
     ],
 

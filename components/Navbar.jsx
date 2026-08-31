@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, Bell, ShoppingCart, User, Menu, X, LogIn, LogOut, Wallet, Shield } from 'lucide-react';
+import { Search, ChevronDown, Bell, ShoppingCart, User, Menu, X, LogIn, LogOut, Wallet, Shield, Sparkles } from 'lucide-react';
 import StackDealLogo from './StackDealLogo';
 import AuthModal from './AuthModal';
+import AiDealAssistantModal from './AiDealAssistantModal';
 
 const CATEGORIES = [
   { label: 'WhatsApp Tools', href: '/deals?cat=whatsapp' },
@@ -23,6 +24,7 @@ export default function Navbar() {
   const [notifsOpen, setNotifsOpen] = useState(false);
   const [userNotifs, setUserNotifs] = useState([]);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   const catRef = useRef(null);
@@ -367,20 +369,43 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* Sub-bar: Unread Count & Mark All Read */}
+            {/* Sub-bar: Unread Count & Actions */}
             <div className="px-5 py-3 bg-white border-b border-slate-100 flex items-center justify-between text-xs">
               <span className="text-[11px] font-black text-[#2475FF] bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full uppercase">
                 {userNotifs.filter((n) => !n.isRead).length} Unread Updates
               </span>
 
-              <button
-                onClick={() => {
-                  setUserNotifs(userNotifs.map((n) => ({ ...n, isRead: true })));
-                }}
-                className="text-slate-500 hover:text-slate-900 font-bold text-xs cursor-pointer"
-              >
-                Mark all as read
-              </button>
+              {userNotifs.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      setUserNotifs(userNotifs.map((n) => ({ ...n, isRead: true })));
+                      try {
+                        await fetch('/api/user/notifications', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ markAllRead: true }),
+                        });
+                      } catch (e) {}
+                    }}
+                    className="text-slate-500 hover:text-slate-900 font-bold text-xs cursor-pointer"
+                  >
+                    Mark all read
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      setUserNotifs([]);
+                      try {
+                        await fetch('/api/user/notifications', { method: 'DELETE' });
+                      } catch (e) {}
+                    }}
+                    className="text-red-500 hover:text-red-700 font-bold text-xs cursor-pointer"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Scrollable Notifications List */}
@@ -467,6 +492,24 @@ export default function Navbar() {
         onClose={() => setAuthModalOpen(false)}
         onSuccess={(user) => setCurrentUser(user)}
       />
+
+      {/* StackDeal AI Deal Matchmaker Copilot Modal */}
+      <AiDealAssistantModal
+        isOpen={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+      />
+
+      {/* Floating AI Deal Assistant Pill at Bottom Right */}
+      <button
+        type="button"
+        onClick={() => setAiModalOpen(true)}
+        className="fixed bottom-6 right-6 z-40 bg-[#070B16] hover:bg-[#0D1527] text-white border-2 border-[#FF6B35] px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 font-black text-xs transition-all hover:scale-105 cursor-pointer group"
+      >
+        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#FF6B35] to-[#2475FF] flex items-center justify-center text-[#FFD519]">
+          <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+        </div>
+        <span className="group-hover:text-[#FFD519] transition-colors">✨ Ask AI Matchmaker</span>
+      </button>
 
     </header>
   );

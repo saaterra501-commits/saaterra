@@ -1,7 +1,5 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
-
 // Image metadata for Google Search Favicon requirements (48x48 multiple)
 export const size = {
   width: 48,

@@ -1,151 +1,111 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Check, X, Plus, Trash2, Sparkles, Layers, HelpCircle } from 'lucide-react';
+import { Check, X, Plus, Trash2, Sparkles, Layers, HelpCircle, ToggleLeft, ToggleRight, Star } from 'lucide-react';
 
 const DEFAULT_ROWS = [
   {
     name: '5-Year Access to core software updates',
-    starter: true,
-    pro: true,
-    agency: true,
+    values: { 'Starter Pass': true, 'Pro Pass': true, 'Agency Pass': true },
   },
   {
     name: 'Workspaces / User Accounts',
-    starter: '1 User Account',
-    pro: '5 Team Seats',
-    agency: 'Unlimited Seats',
+    values: { 'Starter Pass': '1 User Account', 'Pro Pass': '5 Team Seats', 'Agency Pass': 'Unlimited Seats' },
   },
   {
     name: 'Unlimited Campaigns & Workflows',
-    starter: false,
-    pro: true,
-    agency: true,
+    values: { 'Starter Pass': false, 'Pro Pass': true, 'Agency Pass': true },
   },
   {
     name: 'Full API & Webhook Integrations',
-    starter: false,
-    pro: true,
-    agency: true,
+    values: { 'Starter Pass': false, 'Pro Pass': true, 'Agency Pass': true },
   },
   {
     name: 'Priority WhatsApp VIP Support',
-    starter: false,
-    pro: true,
-    agency: true,
+    values: { 'Starter Pass': false, 'Pro Pass': true, 'Agency Pass': true },
   },
   {
     name: 'Automated Data Export & CSV Reports',
-    starter: true,
-    pro: true,
-    agency: true,
+    values: { 'Starter Pass': true, 'Pro Pass': true, 'Agency Pass': true },
   },
   {
     name: '100% White-Label (Custom Domain Branding)',
-    starter: false,
-    pro: false,
-    agency: true,
+    values: { 'Starter Pass': false, 'Pro Pass': false, 'Agency Pass': true },
   },
   {
     name: 'Client Sub-Accounts & Reseller License',
-    starter: false,
-    pro: false,
-    agency: true,
+    values: { 'Starter Pass': false, 'Pro Pass': false, 'Agency Pass': true },
   },
   {
     name: 'Dedicated 1-on-1 Account Manager',
-    starter: false,
-    pro: false,
-    agency: true,
+    values: { 'Starter Pass': false, 'Pro Pass': false, 'Agency Pass': true },
   },
   {
     name: 'Monthly Usage / Broadcast Credits',
-    starter: '2,500 / month',
-    pro: '10,000 / month',
-    agency: '50,000 / month',
+    values: { 'Starter Pass': '2,500 / month', 'Pro Pass': '10,000 / month', 'Agency Pass': '50,000 / month' },
   },
 ];
 
-export default function PlanFeaturesBuilder({ pricingTiers, onChange }) {
-  // Initialize matrix rows from existing pricingTiers or defaults
-  const [matrixRows, setMatrixRows] = useState(() => {
-    return DEFAULT_ROWS;
-  });
-
+export default function PlanFeaturesBuilder({ pricingTiers = [], onChange }) {
+  const [matrixRows, setMatrixRows] = useState(() => DEFAULT_ROWS);
   const [newFeatureName, setNewFeatureName] = useState('');
 
-  // Sync rows into pricingTiers format
-  const syncToTiers = (rows) => {
-    const starterFeatures = rows.map((r) => {
-      const isIncluded = typeof r.starter === 'boolean' ? r.starter : Boolean(r.starter);
-      const text = typeof r.starter === 'string' && r.starter ? `${r.name}: ${r.starter}` : r.name;
-      return { text, included: isIncluded };
-    });
+  // Active tiers only
+  const activeTiers = pricingTiers.filter((t) => t.enabled !== false);
 
-    const proFeatures = rows.map((r) => {
-      const isIncluded = typeof r.pro === 'boolean' ? r.pro : Boolean(r.pro);
-      const text = typeof r.pro === 'string' && r.pro ? `${r.name}: ${r.pro}` : r.name;
-      return { text, included: isIncluded };
-    });
+  // Sync matrix rows into pricingTiers format
+  const syncToTiers = (rows, currentTiers) => {
+    const updatedTiers = currentTiers.map((tier) => {
+      const tierFeatures = rows.map((r) => {
+        const val = r.values?.[tier.tierName] ?? r.values?.[tier.id] ?? false;
+        const isIncluded = typeof val === 'boolean' ? val : Boolean(val);
+        const text = typeof val === 'string' && val ? `${r.name}: ${val}` : r.name;
+        return { text, included: isIncluded };
+      });
 
-    const agencyFeatures = rows.map((r) => {
-      const isIncluded = typeof r.agency === 'boolean' ? r.agency : Boolean(r.agency);
-      const text = typeof r.agency === 'string' && r.agency ? `${r.name}: ${r.agency}` : r.name;
-      return { text, included: isIncluded };
+      return {
+        ...tier,
+        features: tierFeatures,
+      };
     });
-
-    const updatedTiers = [
-      {
-        ...(pricingTiers[0] || {}),
-        tierName: 'Starter Pass',
-        price: pricingTiers[0]?.price || 1999,
-        isRecommended: false,
-        features: starterFeatures,
-      },
-      {
-        ...(pricingTiers[1] || {}),
-        tierName: 'Pro Pass',
-        price: pricingTiers[1]?.price || 3999,
-        isRecommended: true,
-        features: proFeatures,
-      },
-      {
-        ...(pricingTiers[2] || {}),
-        tierName: 'Agency Pass',
-        price: pricingTiers[2]?.price || 7999,
-        isRecommended: false,
-        features: agencyFeatures,
-      },
-    ];
 
     onChange(updatedTiers);
   };
 
-  // Toggle boolean or edit value
-  const handleToggleCell = (rowIdx, tierKey) => {
+  // Toggle boolean or edit value for a specific tier
+  const handleToggleCell = (rowIdx, tierName) => {
     const updated = matrixRows.map((row, idx) => {
       if (idx !== rowIdx) return row;
-      const currentVal = row[tierKey];
-      if (typeof currentVal === 'boolean') {
-        return { ...row, [tierKey]: !currentVal };
-      }
-      // If it's a string value, clicking toggles between empty string and original string
-      return { ...row, [tierKey]: currentVal ? '' : 'Included' };
+      const currentVal = row.values?.[tierName];
+      const newVal = typeof currentVal === 'boolean' ? !currentVal : (currentVal ? '' : true);
+      return {
+        ...row,
+        values: {
+          ...(row.values || {}),
+          [tierName]: newVal,
+        },
+      };
     });
 
     setMatrixRows(updated);
-    syncToTiers(updated);
+    syncToTiers(updated, pricingTiers);
   };
 
-  // Update text value directly
-  const handleValueChange = (rowIdx, tierKey, val) => {
+  // Update text value directly for a tier
+  const handleValueChange = (rowIdx, tierName, val) => {
     const updated = matrixRows.map((row, idx) => {
       if (idx !== rowIdx) return row;
-      return { ...row, [tierKey]: val };
+      return {
+        ...row,
+        values: {
+          ...(row.values || {}),
+          [tierName]: val,
+        },
+      };
     });
 
     setMatrixRows(updated);
-    syncToTiers(updated);
+    syncToTiers(updated, pricingTiers);
   };
 
   // Add custom feature row
@@ -153,16 +113,20 @@ export default function PlanFeaturesBuilder({ pricingTiers, onChange }) {
     e?.preventDefault();
     if (!newFeatureName.trim()) return;
 
+    const initialValues = {};
+    activeTiers.forEach((tier, idx) => {
+      // Default to included for higher tiers, excluded for starter
+      initialValues[tier.tierName] = idx > 0;
+    });
+
     const newRow = {
       name: newFeatureName.trim(),
-      starter: false,
-      pro: true,
-      agency: true,
+      values: initialValues,
     };
 
     const updated = [...matrixRows, newRow];
     setMatrixRows(updated);
-    syncToTiers(updated);
+    syncToTiers(updated, pricingTiers);
     setNewFeatureName('');
   };
 
@@ -170,12 +134,8 @@ export default function PlanFeaturesBuilder({ pricingTiers, onChange }) {
   const handleDeleteRow = (rowIdx) => {
     const updated = matrixRows.filter((_, idx) => idx !== rowIdx);
     setMatrixRows(updated);
-    syncToTiers(updated);
+    syncToTiers(updated, pricingTiers);
   };
-
-  const starterPrice = pricingTiers[0]?.price || 1999;
-  const proPrice = pricingTiers[1]?.price || 3999;
-  const agencyPrice = pricingTiers[2]?.price || 7999;
 
   return (
     <div className="space-y-4 bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm">
@@ -188,62 +148,62 @@ export default function PlanFeaturesBuilder({ pricingTiers, onChange }) {
             Plan Comparison & Features Matrix
           </h3>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Check the boxes for the features included in each plan. Changes automatically sync to your software page!
+            Toggle features for each active plan. Changes automatically sync to your software deal page!
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
             <Check className="w-3 h-3 text-emerald-600" />
-            Simple 1-Click Toggle
+            {activeTiers.length} Active {activeTiers.length === 1 ? 'Plan' : 'Plans'} Configured
           </span>
         </div>
       </div>
 
-      {/* ── MATRIX COMPARISON TABLE ── */}
-      <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-        <table className="w-full text-left border-collapse">
-          
-          {/* TABLE HEAD */}
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-xs font-black text-slate-900">
-              <th className="p-3 sm:p-4 min-w-[220px]">
-                <span>Feature / Capability</span>
-              </th>
+      {activeTiers.length === 0 ? (
+        <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+          <p className="text-xs font-bold text-slate-600">No active plans enabled in Step 1.</p>
+          <p className="text-[11px] text-slate-400">Please enable at least 1 plan in the Basic & Pricing step.</p>
+        </div>
+      ) : (
+        /* ── MATRIX COMPARISON TABLE ── */
+        <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+          <table className="w-full text-left border-collapse">
+            
+            {/* TABLE HEAD */}
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-xs font-black text-slate-900">
+                <th className="p-3 sm:p-4 min-w-[220px]">
+                  <span>Feature / Capability</span>
+                </th>
 
-              {/* Starter Column */}
-              <th className="p-3 sm:p-4 text-center min-w-[130px] border-l border-slate-200">
-                <div className="text-xs font-black text-slate-900">Starter Pass</div>
-                <div className="text-[11px] font-bold text-[#FF6B35]">₹{starterPrice.toLocaleString('en-IN')}</div>
-              </th>
+                {activeTiers.map((tier, tIdx) => (
+                  <th
+                    key={tIdx}
+                    className={`p-3 sm:p-4 text-center min-w-[140px] border-l border-slate-200 relative ${
+                      tier.isRecommended ? 'bg-orange-50/70' : ''
+                    }`}
+                  >
+                    {tier.isRecommended && (
+                      <span className="text-[9px] font-black bg-[#FF6B35] text-white px-2 py-0.5 rounded-full uppercase tracking-wider inline-block mb-1">
+                        MOST POPULAR
+                      </span>
+                    )}
+                    <div className="text-xs font-black text-slate-950">{tier.tierName}</div>
+                    <div className="text-[11px] font-bold text-[#FF6B35]">₹{(tier.price || 0).toLocaleString('en-IN')}</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">
+                      Max: {tier.totalCodes || 100} passes
+                    </div>
+                  </th>
+                ))}
 
-              {/* Pro Column (Recommended) */}
-              <th className="p-3 sm:p-4 text-center min-w-[140px] border-l border-slate-200 bg-orange-50/60 relative">
-                <span className="text-[9px] font-black bg-[#FF6B35] text-white px-2 py-0.5 rounded-full uppercase tracking-wider inline-block mb-0.5">
-                  POPULAR
-                </span>
-                <div className="text-xs font-black text-slate-950">Pro Pass</div>
-                <div className="text-[11px] font-bold text-[#FF6B35]">₹{proPrice.toLocaleString('en-IN')}</div>
-              </th>
+                <th className="p-3 text-center w-12"></th>
+              </tr>
+            </thead>
 
-              {/* Agency Column */}
-              <th className="p-3 sm:p-4 text-center min-w-[130px] border-l border-slate-200">
-                <div className="text-xs font-black text-slate-900">Agency Pass</div>
-                <div className="text-[11px] font-bold text-[#FF6B35]">₹{agencyPrice.toLocaleString('en-IN')}</div>
-              </th>
-
-              <th className="p-3 text-center w-12"></th>
-            </tr>
-          </thead>
-
-          {/* TABLE BODY */}
-          <tbody className="divide-y divide-slate-100 text-xs font-semibold">
-            {matrixRows.map((row, idx) => {
-              const isStarterString = typeof row.starter === 'string';
-              const isProString = typeof row.pro === 'string';
-              const isAgencyString = typeof row.agency === 'string';
-
-              return (
+            {/* TABLE BODY */}
+            <tbody className="divide-y divide-slate-100 text-xs font-semibold">
+              {matrixRows.map((row, idx) => (
                 <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                   
                   {/* Feature Name */}
@@ -251,83 +211,44 @@ export default function PlanFeaturesBuilder({ pricingTiers, onChange }) {
                     {row.name}
                   </td>
 
-                  {/* Starter Column */}
-                  <td className="p-3 sm:p-4 text-center border-l border-slate-200">
-                    {isStarterString ? (
-                      <input
-                        type="text"
-                        value={row.starter}
-                        onChange={(e) => handleValueChange(idx, 'starter', e.target.value)}
-                        placeholder="e.g. 1 Account"
-                        className="w-full text-center text-xs font-bold text-slate-800 bg-slate-100/80 border border-slate-200 rounded-lg py-1.5 px-2 focus:outline-none focus:border-[#FF6B35]"
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCell(idx, 'starter')}
-                        className={`w-7 h-7 mx-auto rounded-lg flex items-center justify-center transition-all cursor-pointer border ${
-                          row.starter
-                            ? 'bg-emerald-500 text-white border-emerald-600 shadow-xs'
-                            : 'bg-slate-100 text-slate-300 border-slate-200 hover:bg-slate-200 hover:text-slate-500'
-                        }`}
-                        title={row.starter ? 'Included in Starter (Click to Remove)' : 'Click to Include in Starter'}
-                      >
-                        {row.starter ? <Check className="w-4 h-4" /> : <X className="w-3.5 h-3.5" />}
-                      </button>
-                    )}
-                  </td>
+                  {/* Active Tiers Columns */}
+                  {activeTiers.map((tier, tIdx) => {
+                    const rawVal = row.values?.[tier.tierName];
+                    const isString = typeof rawVal === 'string';
+                    const isChecked = Boolean(rawVal);
 
-                  {/* Pro Column (Highlighted) */}
-                  <td className="p-3 sm:p-4 text-center border-l border-slate-200 bg-orange-50/30">
-                    {isProString ? (
-                      <input
-                        type="text"
-                        value={row.pro}
-                        onChange={(e) => handleValueChange(idx, 'pro', e.target.value)}
-                        placeholder="e.g. 5 Seats"
-                        className="w-full text-center text-xs font-bold text-slate-900 bg-white border border-orange-300 rounded-lg py-1.5 px-2 focus:outline-none focus:border-[#FF6B35]"
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCell(idx, 'pro')}
-                        className={`w-7 h-7 mx-auto rounded-lg flex items-center justify-center transition-all cursor-pointer border ${
-                          row.pro
-                            ? 'bg-emerald-500 text-white border-emerald-600 shadow-xs'
-                            : 'bg-slate-100 text-slate-300 border-slate-200 hover:bg-slate-200 hover:text-slate-500'
+                    return (
+                      <td
+                        key={tIdx}
+                        className={`p-3 sm:p-4 text-center border-l border-slate-200 ${
+                          tier.isRecommended ? 'bg-orange-50/20' : ''
                         }`}
-                        title={row.pro ? 'Included in Pro (Click to Remove)' : 'Click to Include in Pro'}
                       >
-                        {row.pro ? <Check className="w-4 h-4" /> : <X className="w-3.5 h-3.5" />}
-                      </button>
-                    )}
-                  </td>
-
-                  {/* Agency Column */}
-                  <td className="p-3 sm:p-4 text-center border-l border-slate-200">
-                    {isAgencyString ? (
-                      <input
-                        type="text"
-                        value={row.agency}
-                        onChange={(e) => handleValueChange(idx, 'agency', e.target.value)}
-                        placeholder="e.g. Unlimited"
-                        className="w-full text-center text-xs font-bold text-slate-800 bg-slate-100/80 border border-slate-200 rounded-lg py-1.5 px-2 focus:outline-none focus:border-[#FF6B35]"
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCell(idx, 'agency')}
-                        className={`w-7 h-7 mx-auto rounded-lg flex items-center justify-center transition-all cursor-pointer border ${
-                          row.agency
-                            ? 'bg-emerald-500 text-white border-emerald-600 shadow-xs'
-                            : 'bg-slate-100 text-slate-300 border-slate-200 hover:bg-slate-200 hover:text-slate-500'
-                        }`}
-                        title={row.agency ? 'Included in Agency (Click to Remove)' : 'Click to Include in Agency'}
-                      >
-                        {row.agency ? <Check className="w-4 h-4" /> : <X className="w-3.5 h-3.5" />}
-                      </button>
-                    )}
-                  </td>
+                        {isString ? (
+                          <input
+                            type="text"
+                            value={rawVal}
+                            onChange={(e) => handleValueChange(idx, tier.tierName, e.target.value)}
+                            placeholder="e.g. 1 Account"
+                            className="w-full text-center text-xs font-bold text-slate-800 bg-slate-100/80 border border-slate-200 rounded-lg py-1.5 px-2 focus:outline-none focus:border-[#FF6B35]"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCell(idx, tier.tierName)}
+                            className={`w-7 h-7 mx-auto rounded-lg flex items-center justify-center transition-all cursor-pointer border ${
+                              isChecked
+                                ? 'bg-emerald-500 text-white border-emerald-600 shadow-xs'
+                                : 'bg-slate-100 text-slate-300 border-slate-200 hover:bg-slate-200 hover:text-slate-500'
+                            }`}
+                            title={isChecked ? 'Included (Click to Remove)' : 'Click to Include'}
+                          >
+                            {isChecked ? <Check className="w-4 h-4" /> : <X className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                      </td>
+                    );
+                  })}
 
                   {/* Delete Row Button */}
                   <td className="p-3 text-center">
@@ -342,12 +263,12 @@ export default function PlanFeaturesBuilder({ pricingTiers, onChange }) {
                   </td>
 
                 </tr>
-              );
-            })}
-          </tbody>
+              ))}
+            </tbody>
 
-        </table>
-      </div>
+          </table>
+        </div>
+      )}
 
       {/* ── ADD CUSTOM FEATURE ROW ── */}
       <div className="flex items-center gap-2 pt-2">

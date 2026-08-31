@@ -142,6 +142,12 @@ function formatMarketplaceDeal(raw) {
   const durationDays = Number(raw.campaignDurationDays || 14);
   const campaignEndDate = raw.campaignEndDate ? new Date(raw.campaignEndDate).toISOString() : new Date(launchTime + durationDays * 24 * 60 * 60 * 1000).toISOString();
 
+  const reviewsList = Array.isArray(raw.reviews) ? raw.reviews : [];
+  const reviewsCount = reviewsList.length;
+  const avgRating = reviewsCount > 0
+    ? Number((reviewsList.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / reviewsCount).toFixed(1))
+    : (raw.rating || 5.0);
+
   return {
     id: raw._id || raw.id || raw.slug,
     slug: raw.slug,
@@ -160,9 +166,9 @@ function formatMarketplaceDeal(raw) {
     vendorLogo: raw.vendorLogo || 'https://cdn-icons-png.flaticon.com/512/3670/3670051.png',
     screenshot: screenshot,
     heroImage: screenshot,
-    tacoRating: raw.rating || 5.0,
-    rating: raw.rating || 5.0,
-    reviewsCount: raw.reviewsCount || (raw.reviews?.length) || 1,
+    tacoRating: avgRating,
+    rating: avgRating,
+    reviewsCount: reviewsCount,
     claimedPercent: raw.claimedPercent || 72,
     whiteLabel: raw.whiteLabel || false,
     reseller: raw.reseller || false,

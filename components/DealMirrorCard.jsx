@@ -66,7 +66,7 @@ export default function DealMirrorCard({ deal, onBuyClick }) {
               {deal.vendorName || 'SaaS Tool'}
             </div>
             <div className="text-[9px] sm:text-[10px] text-amber-300 font-bold flex items-center gap-1">
-              <span>🌮 {rating}</span>
+              <span>🍦 {rating}</span>
               <span className="text-slate-300">({reviewsCount})</span>
             </div>
           </div>

@@ -10,9 +10,9 @@ export default function TacoRating({ rating = 5, reviewsCount = 0, size = 'sm' }
           <span
             key={i}
             className={`${iconSize} ${i <= Math.round(rating) ? 'opacity-100 scale-100' : 'opacity-30 grayscale'} transition-all`}
-            title={`${rating} Tacos`}
+            title={`${rating} Ice Creams`}
           >
-            🌮
+            🍦
           </span>
         ))}
       </div>

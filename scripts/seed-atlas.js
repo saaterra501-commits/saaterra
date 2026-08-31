@@ -101,7 +101,9 @@ const SEED_DEALS = [
     teamSize: '1-10 employees',
     founderName: 'Ujjwal Sharma',
     founderTitle: 'Founder & CEO',
-    founderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    founderLinkedin: 'https://www.linkedin.com/in/ujjawal-kumar',
+    founderTwitter: 'https://x.com/ujjawal_dev',
+    websiteUrl: 'https://www.chatchacha.in',
     founderNote: 'After trying expensive foreign WhatsApp tools charging $100+/month with no Indian UPI or GST support, we built Chat Chacha. It brings your broadcasts, AI chatbot replies, and client management into one place — so you can focus on scaling your agency without recurring subscriptions!',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     screenshots: [
@@ -123,6 +125,7 @@ const SEED_DEALS = [
         tierName: 'Starter Pass',
         price: 1999,
         originalPrice: 24000,
+        totalCodes: 180,
         isRecommended: false,
         features: [
           { text: '1 User Account / Login', included: true },
@@ -136,6 +139,7 @@ const SEED_DEALS = [
         tierName: 'Pro Pass',
         price: 3999,
         originalPrice: 48000,
+        totalCodes: 91,
         isRecommended: true,
         features: [
           { text: '3 User Accounts / Logins', included: true },
@@ -150,6 +154,7 @@ const SEED_DEALS = [
         tierName: 'Agency Lifetime Pass (LTD)',
         price: 7999,
         originalPrice: 96000,
+        totalCodes: 30,
         isRecommended: false,
         isLifetime: true,
         features: [

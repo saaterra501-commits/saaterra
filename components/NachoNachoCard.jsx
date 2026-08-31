@@ -146,10 +146,10 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
           )}
         </div>
 
-        {/* Taco Rating + Urgent 7-Day Real-Time Live Countdown */}
+        {/* Ice Cream Rating + Urgent 7-Day Real-Time Live Countdown */}
         <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1.5" suppressHydrationWarning>
-          <span className="flex items-center gap-1 bg-black/75 backdrop-blur-sm text-amber-400 text-[10px] font-black px-2 py-0.5 rounded-lg shadow shrink-0">
-            🌮 {deal.tacoRating ?? 5.0}
+          <span className="flex items-center gap-1 bg-black/75 backdrop-blur-sm text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg shadow shrink-0">
+            🍦 {deal.rating ? Number(deal.rating).toFixed(1) : (deal.tacoRating ? Number(deal.tacoRating).toFixed(1) : '5.0')}
           </span>
           
           {mounted && isUnder7Days ? (

@@ -109,14 +109,25 @@ export async function GET(req, { params }) {
         'Must redeem license code within 60 days of purchase.',
         '60-Day Money-Back Guarantee — test it risk-free.',
       ],
-      reviews: [
+      faqs: [
         {
-          name: 'Verified Agency Founder',
-          rating: 5,
-          date: 'Recently',
-          text: 'Super easy setup and seamless integration with our agency workflow.',
+          question: 'How do I redeem my 5-Year Pass after purchase?',
+          answer: 'Immediately upon checkout, you will receive your unique license activation key on your order confirmation page and via email, along with the official redemption link to activate your SaaS account.'
         },
+        {
+          question: 'Are future software feature updates included in this pass?',
+          answer: 'Yes! All core product updates, security patches, and new feature rollouts released over the next 5 years are 100% included in your pass at zero recurring monthly fees.'
+        },
+        {
+          question: 'Can I stack or upgrade my license tier later?',
+          answer: 'Yes, you can upgrade from Starter to Pro or Agency tier anytime by simply paying the difference during the campaign window.'
+        },
+        {
+          question: 'How does the 60-day money-back guarantee work?',
+          answer: 'You have 60 days to test the software with your agency workflows. If it doesn’t meet your expectations, email support@stackdeal.in for a full, no-questions-asked refund.'
+        }
       ],
+      reviews: [],
     };
 
     return NextResponse.json({ success: true, deal: defaultDeal });
@@ -256,6 +267,7 @@ function formatDeal(raw) {
       vendorName: raw.vendorName || 'StackDeal Partner',
       vendorLogo: raw.vendorLogo || 'https://cdn-icons-png.flaticon.com/512/3670/3670051.png',
       vendorLocation: raw.vendorLocation || 'India',
+      websiteUrl: raw.websiteUrl || raw.vendorWebsite || '',
       foundedDate: raw.foundedDate || '2023',
       teamSize: raw.teamSize || '1-10 employees',
       videoUrl: raw.videoUrl || '',
@@ -269,14 +281,23 @@ function formatDeal(raw) {
       founderName: raw.founderName || raw.vendorName || 'Founder',
       founderTitle: raw.founderTitle || 'Founder & CEO',
       founderAvatar: raw.founderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      founderLinkedin: raw.founderLinkedin || raw.linkedinUrl || '',
+      founderTwitter: raw.founderTwitter || raw.twitterUrl || '',
       founderNote: raw.founderNote || `We created ${raw.title || raw.vendorName} to solve real bottlenecks for growing businesses and agencies without recurring subscription overhead.`,
-      reviews: raw.reviews || [
+      faqs: Array.isArray(raw.faqs) && raw.faqs.length > 0 ? raw.faqs : [
         {
-          name: 'Verified Agency Founder',
-          rating: 5,
-          date: 'Recently',
-          text: 'Outstanding software with fast support. The 5-Year Pass saved our team thousands of rupees vs monthly subscriptions.',
+          question: `How do I redeem my 5-Year Pass for ${raw.title || raw.vendorName || 'this software'}?`,
+          answer: 'Upon checkout, you will receive an instant unique activation key on your order confirmation screen and email, with direct instructions to redeem it.'
+        },
+        {
+          question: 'Are future software updates included?',
+          answer: 'Yes! All core updates, improvements, and new features released over the 5-year period are included at no extra cost.'
+        },
+        {
+          question: 'How does the 60-day money-back guarantee work?',
+          answer: 'You have 60 full days to test the software. If you are not satisfied, you can request a 100% full refund with zero questions asked.'
         }
       ],
+      reviews: raw.reviews || [],
     };
   }

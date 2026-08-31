@@ -13,8 +13,8 @@ import StackDealLogo from '../../components/StackDealLogo';
 const NAV_ITEMS = [
   { label: 'Overview', href: '/sd-ops-vault-9839', icon: LayoutDashboard },
   { label: 'Registered Users', href: '/sd-ops-vault-9839/users', icon: Users },
-  { label: 'Support Inquiries', href: '/sd-ops-vault-9839/inbox', icon: Mail, showPendingBadge: true },
-  { label: 'Deals & Tiers', href: '/sd-ops-vault-9839/deals', icon: Tag, showPendingBadge: true },
+  { label: 'Support Inquiries', href: '/sd-ops-vault-9839/inbox', icon: Mail, badgeKey: 'inquiries' },
+  { label: 'Deals & Tiers', href: '/sd-ops-vault-9839/deals', icon: Tag, badgeKey: 'deals' },
   { label: 'Orders & GST Invoices', href: '/sd-ops-vault-9839/orders', icon: ShoppingBag },
   { label: 'Vendor Payouts (70/30)', href: '/sd-ops-vault-9839/vendors', icon: ShieldCheck },
   { label: 'Q&A & Moderation', href: '/sd-ops-vault-9839/qa', icon: MessageSquare },
@@ -28,6 +28,8 @@ export default function SecretAdminLayout({ children }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingDealsCount, setPendingDealsCount] = useState(0);
+  const [pendingInquiriesCount, setPendingInquiriesCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [showNotifsDropdown, setShowNotifsDropdown] = useState(false);
 
@@ -66,6 +68,8 @@ export default function SecretAdminLayout({ children }) {
         const data = await res.json();
         if (data?.success) {
           setPendingCount(data.pendingCount || 0);
+          setPendingDealsCount(data.pendingDealsCount || 0);
+          setPendingInquiriesCount(data.pendingInquiriesCount || 0);
           setNotifications(data.notifications || []);
         }
       } catch (e) {}
@@ -161,7 +165,11 @@ export default function SecretAdminLayout({ children }) {
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             const Icon = item.icon;
-            const hasPending = item.showPendingBadge && pendingCount > 0;
+            const itemBadgeCount = item.badgeKey === 'inquiries'
+              ? pendingInquiriesCount
+              : item.badgeKey === 'deals'
+              ? pendingDealsCount
+              : 0;
 
             return (
               <Link
@@ -178,9 +186,9 @@ export default function SecretAdminLayout({ children }) {
                   <span>{item.label}</span>
                 </div>
 
-                {hasPending && (
+                {itemBadgeCount > 0 && (
                   <span className="bg-[#FFD519] text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs animate-pulse">
-                    {pendingCount}
+                    {itemBadgeCount}
                   </span>
                 )}
               </Link>
@@ -246,7 +254,7 @@ export default function SecretAdminLayout({ children }) {
               <button
                 onClick={() => setShowNotifsDropdown(!showNotifsDropdown)}
                 className="relative w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer"
-                title="Vendor Notifications"
+                title="Admin Notifications"
               >
                 <Bell className={`w-4 h-4 ${pendingCount > 0 ? 'text-[#FFD519]' : ''}`} />
                 {pendingCount > 0 && (
@@ -264,9 +272,32 @@ export default function SecretAdminLayout({ children }) {
                       <Bell className="w-4 h-4 text-[#FFD519]" />
                       <h4 className="text-xs font-black text-white">Admin Activity Alerts</h4>
                     </div>
-                    <span className="text-[10px] font-black bg-[#FFD519]/20 text-[#FFD519] px-2 py-0.5 rounded uppercase">
-                      {pendingCount} Pending
-                    </span>
+                    
+                    <div className="flex items-center gap-2">
+                      {pendingCount > 0 && (
+                        <button
+                          onClick={async () => {
+                            setPendingCount(0);
+                            setPendingDealsCount(0);
+                            setPendingInquiriesCount(0);
+                            setNotifications([]);
+                            try {
+                              await fetch('/api/admin/notifications', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ markAllRead: true }),
+                              });
+                            } catch (e) {}
+                          }}
+                          className="text-[10px] font-bold text-amber-400 hover:underline cursor-pointer"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                      <span className="text-[10px] font-black bg-[#FFD519]/20 text-[#FFD519] px-2 py-0.5 rounded uppercase">
+                        {pendingCount} Pending
+                      </span>
+                    </div>
                   </div>
 
                   <div className="space-y-2 max-h-72 overflow-y-auto">

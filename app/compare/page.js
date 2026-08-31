@@ -360,12 +360,12 @@ function CompareContent() {
                     ))}
                   </tr>
 
-                  {/* Taco Rating */}
+                  {/* Ice Cream Rating */}
                   <tr>
                     <td className="p-4 font-bold text-slate-500 bg-slate-50/40">Rating</td>
                     {selectedTools.map((tool) => (
                       <td key={tool.slug} className="p-4 font-black text-amber-600">
-                        🌮 {tool.tacoRating ?? 5.0} / 5.0 ({tool.reviewsCount || 1} reviews)
+                        🍦 {tool.rating ?? tool.tacoRating ?? 5.0} / 5.0 ({tool.reviewsCount || 0} reviews)
                       </td>
                     ))}
                   </tr>

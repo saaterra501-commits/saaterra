@@ -24,17 +24,17 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadProfileData() {
       try {
-        const [meRes, ordersRes, notifsRes, dealsRes] = await Promise.all([
+        const [meRes, ordersRes, notifsRes, listingsRes] = await Promise.all([
           fetch('/api/auth/me'),
           fetch('/api/user/deals'),
           fetch('/api/user/notifications'),
-          fetch('/api/admin/deals'),
+          fetch('/api/user/listings'),
         ]);
 
         const meData = await meRes.json();
         const ordersData = await ordersRes.json();
         const notifsData = await notifsRes.json();
-        const dealsData = await dealsRes.json();
+        const listingsData = await listingsRes.json();
 
         if (meData?.user) {
           setUser(meData.user);
@@ -46,13 +46,16 @@ export default function ProfilePage() {
           setOrders([]);
         }
 
-        if (notifsData?.notifications) {
+        if (notifsData?.notifications && Array.isArray(notifsData.notifications)) {
           setNotifications(notifsData.notifications);
+        } else {
+          setNotifications([]);
         }
 
-        if (dealsData?.deals) {
-          // Filter deals matching vendor name / email or all submitted deals
-          setVendorDeals(dealsData.deals);
+        if (listingsData?.listings && Array.isArray(listingsData.listings)) {
+          setVendorDeals(listingsData.listings);
+        } else {
+          setVendorDeals([]);
         }
       } catch (err) {
         console.error('Error fetching profile data:', err);
@@ -304,75 +307,98 @@ export default function ProfilePage() {
               </Link>
             </div>
 
-            <div className="space-y-4">
-              {vendorDeals.map((deal) => {
-                const isPending = deal.status === 'Pending';
-                const isRejected = deal.status === 'Rejected';
-                const isActive = deal.status === 'Active' || (!isPending && !isRejected);
-
-                return (
-                  <div
-                    key={deal.slug || deal.id}
-                    className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6"
+            {vendorDeals.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-4 shadow-xs">
+                <div className="w-14 h-14 rounded-2xl bg-orange-50 text-[#FF6B35] flex items-center justify-center mx-auto border border-orange-100">
+                  <Plus className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-base font-black text-slate-900">No SaaS Software Listed Yet</h4>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                    Are you a software founder? List your product on StackDeal to reach 50,000+ Indian agency founders and earn 70% revenue share per sale with zero upfront fees.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <Link
+                    href="/submit"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF6B35] hover:bg-[#E85A24] text-white text-xs font-black rounded-xl shadow-lg transition-all cursor-pointer"
                   >
-                    <div className="space-y-2 max-w-2xl">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {isPending ? (
-                          <span className="bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 animate-spin" /> ⏳ Under QA Review (Pending Approval)
+                    <Plus className="w-4 h-4" />
+                    <span>List Your First SaaS (70% Payout)</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {vendorDeals.map((deal) => {
+                  const isPending = deal.status === 'Pending';
+                  const isRejected = deal.status === 'Rejected';
+                  const isActive = deal.status === 'Active' || (!isPending && !isRejected);
+
+                  return (
+                    <div
+                      key={deal.slug || deal.id}
+                      className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6"
+                    >
+                      <div className="space-y-2 max-w-2xl">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isPending ? (
+                            <span className="bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 animate-spin" /> ⏳ Under QA Review (Pending Approval)
+                            </span>
+                          ) : isRejected ? (
+                            <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5">
+                              <AlertCircle className="w-3.5 h-3.5" /> ⚠️ Revision Requested
+                            </span>
+                          ) : (
+                            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> 🎉 Approved & Live on Marketplace
+                            </span>
+                          )}
+
+                          <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                            {deal.category}
                           </span>
-                        ) : isRejected ? (
-                          <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5" /> ⚠️ Revision Requested
-                          </span>
+                        </div>
+
+                        <h4 className="text-base font-black text-slate-950">{deal.title}</h4>
+                        <p className="text-xs text-slate-500 font-medium line-clamp-2">{deal.tagline}</p>
+
+                        <div className="text-xs font-bold text-slate-600 flex items-center gap-3 pt-1">
+                          <span>Starter Pass: <strong className="text-[#FF6B35]">₹{deal.tier1Price || 1999}</strong></span>
+                          <span>•</span>
+                          <span>Duration: <strong>{deal.campaignDurationDays || 14} Days</strong></span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isActive ? (
+                          <Link
+                            href={`/deals/${deal.slug}`}
+                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>View Live Page</span>
+                          </Link>
                         ) : (
-                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> 🎉 Approved & Live on Marketplace
+                          <span className="px-3.5 py-2 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-xl flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 animate-pulse" />
+                            <span>Awaiting Admin Approval</span>
                           </span>
                         )}
 
-                        <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                          {deal.category}
-                        </span>
-                      </div>
-
-                      <h4 className="text-base font-black text-slate-950">{deal.title}</h4>
-                      <p className="text-xs text-slate-500 font-medium line-clamp-2">{deal.tagline}</p>
-
-                      <div className="text-xs font-bold text-slate-600 flex items-center gap-3 pt-1">
-                        <span>Starter Pass: <strong className="text-[#FF6B35]">₹{deal.tier1Price || 1999}</strong></span>
-                        <span>•</span>
-                        <span>Duration: <strong>{deal.campaignDurationDays || 14} Days</strong></span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isActive ? (
                         <Link
-                          href={`/deals/${deal.slug}`}
-                          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-md flex items-center gap-1.5"
+                          href="/submit"
+                          className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-1"
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View Live Page</span>
+                          <Edit3 className="w-3.5 h-3.5" /> Edit
                         </Link>
-                      ) : (
-                        <span className="px-3.5 py-2 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-xl flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 animate-pulse" />
-                          <span>Awaiting Admin Approval</span>
-                        </span>
-                      )}
-
-                      <Link
-                        href="/submit"
-                        className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-1"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Edit
-                      </Link>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -381,58 +407,72 @@ export default function ProfilePage() {
           <div className="space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-[#0A0F1E]">All Notifications & Listing Updates ({notifications.length})</h3>
-              <button
-                onClick={() => setNotifications(notifications.map((n) => ({ ...n, isRead: true })))}
-                className="text-xs font-black text-[#2475FF] hover:underline cursor-pointer"
-              >
-                Mark all as read
-              </button>
+              {notifications.length > 0 && (
+                <button
+                  onClick={() => setNotifications(notifications.map((n) => ({ ...n, isRead: true })))}
+                  className="text-xs font-black text-[#2475FF] hover:underline cursor-pointer"
+                >
+                  Mark all as read
+                </button>
+              )}
             </div>
 
-            <div className="space-y-3">
-              {notifications.map((notif) => {
-                const isApproved = notif.type === 'submission_approved';
-                const isRejected = notif.type === 'submission_rejected';
+            {notifications.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-3 shadow-xs">
+                <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                  <Bell className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-bold text-slate-800">No Notifications Yet</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  You are all caught up! Real-time alerts regarding software approvals, QA reviews, and pass activations will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {notifications.map((notif) => {
+                  const isApproved = notif.type === 'submission_approved';
+                  const isRejected = notif.type === 'submission_rejected';
 
-                return (
-                  <div
-                    key={notif.id}
-                    className={`p-5 rounded-3xl border shadow-sm space-y-2 transition-all ${
-                      isApproved
-                        ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
-                        : isRejected
-                        ? 'bg-red-50/80 border-red-200 text-red-950'
-                        : 'bg-white border-slate-200 text-slate-900'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-black text-sm flex items-center gap-2">
-                        <span>{isApproved ? '🎉' : isRejected ? '⚠️' : '🔔'}</span>
-                        <span>{notif.title}</span>
-                      </h4>
-                      <span className="text-xs text-slate-400 font-mono">
-                        {new Date(notif.time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-600 font-medium leading-relaxed">{notif.message}</p>
-
-                    {notif.link && (
-                      <div className="pt-2 flex justify-end">
-                        <Link
-                          href={notif.link}
-                          className={`text-xs font-black underline flex items-center gap-1 ${
-                            isApproved ? 'text-emerald-700' : isRejected ? 'text-red-700' : 'text-[#2475FF]'
-                          }`}
-                        >
-                          {isApproved ? 'Go to Live Software Deal Page →' : isRejected ? 'Review Submission Details →' : 'View Link →'}
-                        </Link>
+                  return (
+                    <div
+                      key={notif.id}
+                      className={`p-5 rounded-3xl border shadow-sm space-y-2 transition-all ${
+                        isApproved
+                          ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
+                          : isRejected
+                          ? 'bg-red-50/80 border-red-200 text-red-950'
+                          : 'bg-white border-slate-200 text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-black text-sm flex items-center gap-2">
+                          <span>{isApproved ? '🎉' : isRejected ? '⚠️' : '🔔'}</span>
+                          <span>{notif.title}</span>
+                        </h4>
+                        <span className="text-xs text-slate-400 font-mono">
+                          {new Date(notif.time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed">{notif.message}</p>
+
+                      {notif.link && (
+                        <div className="pt-2 flex justify-end">
+                          <Link
+                            href={notif.link}
+                            className={`text-xs font-black underline flex items-center gap-1 ${
+                              isApproved ? 'text-emerald-700' : isRejected ? 'text-red-700' : 'text-[#2475FF]'
+                            }`}
+                          >
+                            {isApproved ? 'Go to Live Software Deal Page →' : isRejected ? 'Review Submission Details →' : 'View Link →'}
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

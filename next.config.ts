@@ -28,6 +28,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['mongoose', 'bcryptjs'],
   async headers() {
     return [
       {

@@ -250,7 +250,7 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
                   <span>Instant License Key Delivery</span>
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="text-base">🌮</span>
+                  <span className="text-base">🍦</span>
                   <span>Zero Regrets</span>
                 </span>
               </span>
