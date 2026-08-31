@@ -104,7 +104,7 @@ export default function Footer() {
               </a>
             </div>
 
-            {/* Social Icons */}
+            {/* Social Icons & Product Hunt Embed */}
             <div className="flex items-center gap-2 pt-1">
               {SOCIAL_ICONS.map((s) => (
                 <a
@@ -120,6 +120,25 @@ export default function Footer() {
                   {s.emoji}
                 </a>
               ))}
+            </div>
+
+            {/* Official Product Hunt Launch Badge */}
+            <div className="pt-2">
+              <a
+                href="https://www.producthunt.com/products/stackdeal"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-transform hover:scale-105"
+                title="Support StackDeal on Product Hunt"
+              >
+                <img
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=stackdeal&theme=dark"
+                  alt="StackDeal - Curated 5-Year SaaS Passes on Product Hunt"
+                  style={{ width: '210px', height: '45px' }}
+                  width="210"
+                  height="45"
+                />
+              </a>
             </div>
           </div>
 
