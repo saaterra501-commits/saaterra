@@ -58,7 +58,7 @@ export default function AboutPage() {
                 Why We Built an Indian-First SaaS Marketplace
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-                For years, Indian digital marketers and agency owners were forced to buy essential tools from US-based platforms like AppSumo. This meant paying in USD, suffering 3.5%–4% bank currency conversion charges, and never receiving an Indian GST invoice for input tax credit.
+                For years, Indian digital marketers and agency owners were forced to buy essential tools from US-based foreign websites. This meant paying in USD, suffering 3.5%–4% bank currency conversion charges, and never receiving an Indian GST invoice for input tax credit.
               </p>
               <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
                 StackDeal solves this by providing a localized, premium marketplace where digital agencies can discover, evaluate, and purchase curated 5-Year Passes on cutting-edge WhatsApp automation, AI SEO, and CRM tools directly in ₹ INR via UPI.

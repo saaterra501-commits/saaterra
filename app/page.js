@@ -10,7 +10,6 @@ import DealMirrorSliderSection from '../components/DealMirrorSliderSection';
 import EndingSoonSliderSection from '../components/EndingSoonSliderSection';
 import LTDCheckoutModal from '../components/LTDCheckoutModal';
 import SalesTicker from '../components/SalesTicker';
-import SavingsCalculator from '../components/SavingsCalculator';
 import HomeFAQ from '../components/HomeFAQ';
 import Link from 'next/link';
 import {
@@ -209,10 +208,7 @@ export default function Home() {
           <EndingSoonSliderSection deals={deals} onBuyClick={handleBuy} />
         )}
 
-        {/* ── 4D. 5-Year Savings Math Calculator ── */}
-        <SavingsCalculator />
-
-        {/* ── 4E. Verified FAQ Accordion with Schema.org SEO ── */}
+        {/* ── 4D. Verified FAQ Accordion with Schema.org SEO ── */}
         <HomeFAQ />
 
       </main>

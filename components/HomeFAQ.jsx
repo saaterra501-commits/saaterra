@@ -10,7 +10,7 @@ const FAQ_ITEMS = [
     a: 'A 5-Year Access Pass allows Indian digital agencies, SMBs, and freelancers to pay once upfront in ₹ INR and use premium software tools for 5 full years without paying recurring monthly subscription fees. This saves agency owners 85%–95% compared to standard monthly SaaS plans.'
   },
   {
-    q: 'How is StackDeal different from AppSumo or foreign deal sites?',
+    q: 'How is StackDeal different from foreign deal websites or monthly subscriptions?',
     a: 'Foreign platforms charge in USD ($) which incurs heavy 3.5%–4% bank currency conversion fees, requires international credit cards, and does not provide Indian GST tax invoices. StackDeal is built specifically for India: direct UPI/Card checkout via Razorpay in INR, zero forex markups, automated B2B GST tax invoices, and localized customer support.'
   },
   {
