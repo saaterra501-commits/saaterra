@@ -9,44 +9,62 @@ export default function GuestAuthNudge() {
   const [checkedAuth, setCheckedAuth] = useState(false);
   const timerRef = useRef(null);
 
-  // Check auth state on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        if (data?.authenticated && data?.user) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch {
+  const verifyUserSession = async () => {
+    try {
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      const data = await res.json();
+      if (data?.user || data?.authenticated) {
+        setIsAuthenticated(true);
+        setIsOpen(false);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        return true;
+      } else {
         setIsAuthenticated(false);
-      } finally {
-        setCheckedAuth(true);
+        return false;
       }
-    };
+    } catch {
+      setIsAuthenticated(false);
+      return false;
+    } finally {
+      setCheckedAuth(true);
+    }
+  };
 
-    checkAuth();
+  // Check auth state on mount and on window focus
+  useEffect(() => {
+    verifyUserSession();
+
+    const handleFocus = () => verifyUserSession();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
-  // Periodic Nudge Logic (Every 15-20 seconds for unauthenticated visitors)
+  // Periodic Nudge Logic (Only for unauthenticated visitors)
   useEffect(() => {
     if (!checkedAuth || isAuthenticated) {
       if (timerRef.current) clearTimeout(timerRef.current);
+      setIsOpen(false);
       return;
     }
 
-    const scheduleNudge = () => {
-      timerRef.current = setTimeout(() => {
-        // Only open if modal is not already open and not on admin vault
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/sd-ops-vault-9839')) {
-          setIsOpen(true);
-        }
-      }, 16000); // 16 seconds nudge
-    };
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+    // Skip on admin vault, login, signup, or profile pages
+    if (
+      pathname.startsWith('/sd-ops-vault-9839') ||
+      pathname === '/login' ||
+      pathname === '/signup' ||
+      pathname === '/profile'
+    ) {
+      return;
+    }
 
-    scheduleNudge();
+    timerRef.current = setTimeout(async () => {
+      // Re-verify right before opening to prevent race conditions
+      const isLogged = await verifyUserSession();
+      if (!isLogged) {
+        setIsOpen(true);
+      }
+    }, 18000); // 18 seconds interval
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -55,14 +73,22 @@ export default function GuestAuthNudge() {
 
   const handleClose = () => {
     setIsOpen(false);
-    // Schedule next nudge after 20 seconds if still not logged in
+    // Schedule next nudge after 25 seconds if still not logged in
     if (!isAuthenticated) {
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/sd-ops-vault-9839')) {
+      timerRef.current = setTimeout(async () => {
+        const isLogged = await verifyUserSession();
+        const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+        if (
+          !isLogged &&
+          !pathname.startsWith('/sd-ops-vault-9839') &&
+          pathname !== '/login' &&
+          pathname !== '/signup' &&
+          pathname !== '/profile'
+        ) {
           setIsOpen(true);
         }
-      }, 20000); // 20 seconds interval
+      }, 25000);
     }
   };
 
