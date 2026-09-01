@@ -4,7 +4,7 @@ import "./globals.css";
 import LegalBetaDisclaimer from "@/components/LegalBetaDisclaimer";
 import GuestAuthNudge from "@/components/GuestAuthNudge";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://stackdeal.in";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.stackdeal.in";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

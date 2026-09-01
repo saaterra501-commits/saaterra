@@ -19,9 +19,120 @@ import {
 
 const CATEGORIES = ['All', 'WhatsApp Bots', 'AI & GEO SEO', 'Lead Scrapers', 'CRM & Sales'];
 
+const INITIAL_DEALS = [
+  {
+    _id: "init-1",
+    id: "chat-chacha",
+    slug: "chat-chacha",
+    title: "Chat Chacha — WhatsApp AI Marketing & Automation",
+    tagline: "Recover abandoned carts, broadcast offers, and automate agency support with WhatsApp Cloud API.",
+    category: "WhatsApp Bots",
+    badge: "Bestseller 🔥",
+    rating: 4.9,
+    tacoCount: 5,
+    reviewsCount: 42,
+    tier1Price: 1999,
+    originalPrice: 24000,
+    discountPct: 92,
+    atAGlance: {
+      alternativeTo: "WATI, Interakt, ManyChat",
+      bestFor: "E-Commerce Brands, D2C Founders, Agencies",
+      integrations: "Shopify, WooCommerce, Razorpay, Webhooks"
+    },
+    tldr: [
+      "Official Meta Cloud API verified setup.",
+      "Automate cart recovery messages with 98% open rates.",
+      "18% GST invoice included with 60-day refund guarantee."
+    ],
+    heroImage: "https://images.unsplash.com/photo-1611746872915-64382b5c76da?q=80&w=1000&auto=format&fit=crop",
+    screenshot: "https://images.unsplash.com/photo-1611746872915-64382b5c76da?q=80&w=1000&auto=format&fit=crop"
+  },
+  {
+    _id: "init-2",
+    id: "seo-rocket",
+    slug: "seo-rocket",
+    title: "AI Keyword & Competitor Radar",
+    tagline: "Track local Indian agency rankings, discover high-intent keywords, and automate client SEO audits.",
+    category: "AI & GEO SEO",
+    badge: "Hot Deal ⚡",
+    rating: 4.8,
+    tacoCount: 5,
+    reviewsCount: 38,
+    tier1Price: 2499,
+    originalPrice: 32000,
+    discountPct: 92,
+    atAGlance: {
+      alternativeTo: "Ahrefs, Semrush, Ubersuggest",
+      bestFor: "SEO Agencies, Content Creators, Founders",
+      integrations: "Google Search Console, WordPress, Webflow"
+    },
+    tldr: [
+      "Track Google & AI engine rankings in real time.",
+      "Generate client-ready white-label PDF audit reports in 1 click.",
+      "One-time 5-Year Pass with zero monthly recurring bills."
+    ],
+    heroImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop",
+    screenshot: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1000&auto=format&fit=crop"
+  },
+  {
+    _id: "init-3",
+    id: "emailextractor-pro-ai",
+    slug: "emailextractor-pro-ai",
+    title: "EmailExtractor Pro AI & Lead Finder",
+    tagline: "Extract verified B2B emails and phone numbers from Google Maps and LinkedIn in 1 click.",
+    category: "Lead Scrapers",
+    badge: "Trending 🚀",
+    rating: 4.9,
+    tacoCount: 5,
+    reviewsCount: 51,
+    tier1Price: 2999,
+    originalPrice: 36000,
+    discountPct: 92,
+    atAGlance: {
+      alternativeTo: "Apollo.io, Hunter.io, Lusha",
+      bestFor: "B2B Sales Teams, Agencies, Freelancers",
+      integrations: "Google Sheets, CSV Export, Zapier"
+    },
+    tldr: [
+      "99% email deliverability with built-in SMTP verifier.",
+      "Scrape unlimited local business leads from Google Maps.",
+      "5-Year Pass with full GST invoice and instant activation."
+    ],
+    heroImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop",
+    screenshot: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop"
+  },
+  {
+    _id: "init-4",
+    id: "nuwatomic-geo-seo",
+    slug: "nuwatomic-geo-seo",
+    title: "Nuwatomic — AI Search (ChatGPT & Perplexity) GEO SEO",
+    tagline: "Optimize your agency clients to get recommended on ChatGPT, Claude, and Perplexity AI engines.",
+    category: "AI & GEO SEO",
+    badge: "AI Native 🤖",
+    rating: 4.9,
+    tacoCount: 5,
+    reviewsCount: 29,
+    tier1Price: 3499,
+    originalPrice: 42000,
+    discountPct: 91,
+    atAGlance: {
+      alternativeTo: "BrightEdge, SurferSEO, MarketMuse",
+      bestFor: "Digital Marketers, High-Growth Agencies",
+      integrations: "OpenAI, Perplexity API, Webhooks"
+    },
+    tldr: [
+      "Generative Engine Optimization (GEO) auditing suite.",
+      "Monitor brand sentiment across all major LLMs.",
+      "5-Year Pass including all future model updates."
+    ],
+    heroImage: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop",
+    screenshot: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop"
+  }
+];
+
 export default function Home() {
-  const [deals, setDeals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [deals, setDeals] = useState(INITIAL_DEALS);
+  const [loading, setLoading] = useState(false);
   const [activeCat, setActiveCat] = useState('All');
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -32,7 +143,7 @@ export default function Home() {
       try {
         const res = await fetch('/api/deals');
         const data = await res.json();
-        if (data?.success && data?.deals) {
+        if (data?.success && data?.deals && data.deals.length > 0) {
           setDeals(data.deals);
         }
       } catch (err) {
