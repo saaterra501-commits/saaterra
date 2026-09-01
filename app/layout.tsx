@@ -16,10 +16,14 @@ export const metadata: Metadata = {
     "India's premier B2B software discovery marketplace. Get exclusive 5-Year Access Passes on WhatsApp automation, AI & GEO SEO, CRM, and Lead Scrapers. Save 90%+ with instant UPI checkout & GST invoices.",
   keywords: [
     "StackDeal",
+    "stackdeal.in",
+    "Stack Deal",
     "SaaS deals India",
     "B2B software lifetime deals",
     "AppSumo India alternative",
+    "AppSumo alternative",
     "5-Year SaaS access passes",
+    "5 year software deals",
     "WhatsApp Meta Cloud API marketing software",
     "GEO SEO generative engine optimization tools",
     "AI SEO software India",
@@ -111,7 +115,9 @@ const organizationSchema = {
   },
   "sameAs": [
     "https://twitter.com/stackdeal_in",
-    "https://linkedin.com/company/stackdeal"
+    "https://linkedin.com/company/stackdeal",
+    "https://www.producthunt.com/products/stackdeal-2",
+    "https://peerlist.io/stackdeal30"
   ],
   "contactPoint": {
     "@type": "ContactPoint",
