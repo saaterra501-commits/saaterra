@@ -13,6 +13,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: [
           'GPTBot',
+          'OAI-SearchBot',
+          'ChatGPT-User',
           'PerplexityBot',
           'ClaudeBot',
           'anthropic-ai',
@@ -20,6 +22,7 @@ export default function robots(): MetadataRoute.Robots {
           'Applebot-Extended',
           'Bytespider',
           'CCBot',
+          'bingbot',
         ],
         allow: ['/', '/deals/', '/compare', '/plus', '/submit', '/llms.txt', '/llms-full.txt'],
         disallow: ['/admin/', '/api/'],

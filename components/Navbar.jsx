@@ -18,6 +18,9 @@ const CATEGORIES = [
 
 export default function Navbar() {
   const [search, setSearch] = useState('');
+  const [dealsCatalog, setDealsCatalog] = useState([]);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
@@ -30,6 +33,8 @@ export default function Navbar() {
   const catRef = useRef(null);
   const userRef = useRef(null);
   const notifRef = useRef(null);
+  const searchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
 
   // Fetch logged in user and notifications on mount
   useEffect(() => {
@@ -61,8 +66,21 @@ export default function Navbar() {
       }
     }
 
+    async function loadCatalog() {
+      try {
+        const res = await fetch('/api/deals');
+        const data = await res.json();
+        if (isMounted && data?.deals && Array.isArray(data.deals)) {
+          setDealsCatalog(data.deals);
+        }
+      } catch (err) {
+        // Silently handled
+      }
+    }
+
     checkAuth();
     loadNotifications();
+    loadCatalog();
     const interval = setInterval(loadNotifications, 15000);
     return () => {
       isMounted = false;
@@ -80,16 +98,41 @@ export default function Navbar() {
     }
   };
 
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!search.trim()) return;
+    setSearchFocused(false);
+    setMobileSearchOpen(false);
+    window.location.href = `/deals?q=${encodeURIComponent(search.trim())}`;
+  };
+
+  const matchedSuggestions = search.trim().length > 0 ? dealsCatalog.filter((d) => {
+    const q = search.toLowerCase().trim();
+    return (
+      (d.title || '').toLowerCase().includes(q) ||
+      (d.tagline || '').toLowerCase().includes(q) ||
+      (d.category || '').toLowerCase().includes(q) ||
+      (d.vendorName || '').toLowerCase().includes(q) ||
+      (d.slug || '').toLowerCase().includes(q) ||
+      (d.atAGlance?.alternativeTo || '').toLowerCase().includes(q) ||
+      (d.atAGlance?.bestFor || '').toLowerCase().includes(q) ||
+      (Array.isArray(d.tldr) && d.tldr.some((t) => (t || '').toLowerCase().includes(q)))
+    );
+  }).slice(0, 5) : [];
+
   useEffect(() => {
     const handleKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         document.getElementById('nav-search')?.focus();
+        setSearchFocused(true);
       }
       if (e.key === 'Escape') {
         setCatOpen(false);
         setUserDropdown(false);
         setNotifsOpen(false);
+        setSearchFocused(false);
+        setMobileSearchOpen(false);
       }
     };
     window.addEventListener('keydown', handleKey);
@@ -101,6 +144,8 @@ export default function Navbar() {
       if (catRef.current && !catRef.current.contains(e.target)) setCatOpen(false);
       if (userRef.current && !userRef.current.contains(e.target)) setUserDropdown(false);
       if (notifRef.current && !notifRef.current.contains(e.target)) setNotifsOpen(false);
+      if (searchRef.current && !searchRef.current.contains(e.target)) setSearchFocused(false);
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target)) setMobileSearchOpen(false);
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -117,18 +162,121 @@ export default function Navbar() {
           <StackDealLogo className="w-[170px] sm:w-[185px] h-[48px] sm:h-[52px]" />
         </Link>
 
-        {/* 2. AppSumo Search Input Box with (⌘+k) Pill */}
-        <div className="hidden md:flex items-center flex-1 max-w-md relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            id="nav-search"
-            type="text"
-            placeholder="Search products (⌘+k)"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 text-xs font-medium text-slate-900 bg-[#EEF2F6] border border-transparent rounded-full focus:outline-none focus:bg-white focus:border-slate-300 transition-all placeholder:text-slate-500"
-            suppressHydrationWarning
-          />
+        {/* 2. Search Input Box with Live Keyword Autocomplete & Dropdown */}
+        <div className="hidden md:flex items-center flex-1 max-w-md relative" ref={searchRef}>
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              id="nav-search"
+              type="text"
+              placeholder="Search by keyword, tool, competitor (⌘+k)"
+              value={search}
+              onFocus={() => setSearchFocused(true)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setSearchFocused(true);
+              }}
+              className="w-full pl-11 pr-9 py-2.5 text-xs font-medium text-slate-900 bg-[#EEF2F6] border border-transparent rounded-full focus:outline-none focus:bg-white focus:border-slate-300 transition-all placeholder:text-slate-500 shadow-xs"
+              suppressHydrationWarning
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full cursor-pointer text-xs"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </form>
+
+          {/* Live Search Suggestions Dropdown */}
+          {searchFocused && search.trim().length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl p-2 z-50 animate-fadeIn max-h-[420px] overflow-y-auto">
+              <div className="px-3 py-1.5 text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-100">
+                <span>Matching Deals ({matchedSuggestions.length})</span>
+                <span className="text-slate-400 font-normal">Press Enter ↵</span>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {matchedSuggestions.length > 0 ? (
+                  matchedSuggestions.map((d) => (
+                    <Link
+                      key={d.slug || d.id}
+                      href={`/deals/${d.slug}`}
+                      onClick={() => setSearchFocused(false)}
+                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-200/60 flex items-center justify-center">
+                        {d.screenshot || d.heroImage || d.vendorLogo ? (
+                          <img
+                            src={d.screenshot || d.heroImage || d.vendorLogo}
+                            alt={d.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs">⚡</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[9px] font-black text-[#2475FF] bg-blue-50 px-1.5 py-0.5 rounded uppercase">
+                            {d.category || 'SaaS'}
+                          </span>
+                          {d.atAGlance?.alternativeTo && (
+                            <span className="text-[9px] font-medium text-slate-400 truncate">
+                              vs {d.atAGlance.alternativeTo}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-900 truncate group-hover:text-[#FF6B35] transition-colors">
+                          {d.title}
+                        </h4>
+                        <p className="text-[10px] text-slate-400 truncate">
+                          {d.tagline}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-xs font-black text-slate-950">
+                          ₹{(d.tier1Price || d.price || 1999).toLocaleString('en-IN')}
+                        </div>
+                        <div className="text-[9px] font-bold text-emerald-600">
+                          5-Year Pass
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="py-6 px-4 text-center space-y-2">
+                    <p className="text-xs text-slate-500 font-medium">
+                      No direct deals found for &ldquo;{search}&rdquo;
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchFocused(false);
+                        setAiModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-black text-[#FF6B35] bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Ask AI Matchmaker for suggestions</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSearchSubmit}
+                className="w-full mt-1 pt-2 pb-1 text-center text-[11px] font-black text-[#2475FF] hover:text-blue-700 hover:bg-blue-50/50 rounded-xl transition-colors cursor-pointer border-t border-slate-100 flex items-center justify-center gap-1"
+              >
+                <span>View all search results for &ldquo;{search}&rdquo;</span>
+                <span>➔</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 3. Center Nav Links */}
@@ -280,6 +428,16 @@ export default function Navbar() {
             </button>
           )}
 
+          {/* Mobile Search Toggle Button */}
+          <button
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            className="md:hidden p-1 text-slate-700 hover:text-slate-950 transition-colors"
+            aria-label="Search deals"
+            title="Search"
+          >
+            <Search className="w-5 h-5" />
+          </button>
+
           {/* Mobile Menu Trigger */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -291,6 +449,62 @@ export default function Navbar() {
         </div>
 
       </div>
+
+      {/* Mobile Search Bar Dropdown */}
+      {mobileSearchOpen && (
+        <div className="md:hidden border-t border-slate-200 bg-white p-3 shadow-md animate-fadeIn" ref={mobileSearchRef}>
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              autoFocus
+              placeholder="Search keyword (e.g. WhatsApp, SEO, WATI)..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-9 py-2 text-xs font-medium text-slate-900 bg-[#EEF2F6] border border-transparent rounded-full focus:outline-none focus:bg-white focus:border-slate-300"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </form>
+
+          {/* Quick suggestions on mobile */}
+          {matchedSuggestions.length > 0 && (
+            <div className="mt-2 divide-y divide-slate-100 bg-slate-50 rounded-xl p-1.5 max-h-48 overflow-y-auto">
+              {matchedSuggestions.map((d) => (
+                <Link
+                  key={d.slug || d.id}
+                  href={`/deals/${d.slug}`}
+                  onClick={() => setMobileSearchOpen(false)}
+                  className="flex items-center justify-between p-2 hover:bg-white rounded-lg text-xs"
+                >
+                  <div className="truncate mr-2 font-bold text-slate-900">
+                    {d.title}
+                  </div>
+                  <div className="text-right shrink-0 text-[10px] font-black text-[#FF6B35]">
+                    ₹{(d.tier1Price || d.price || 1999).toLocaleString('en-IN')}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {search.trim().length > 0 && (
+            <button
+              onClick={handleSearchSubmit}
+              className="w-full mt-2 py-2 bg-[#FF6B35] text-white text-xs font-black rounded-xl text-center cursor-pointer shadow-sm"
+            >
+              Search &ldquo;{search}&rdquo; ➔
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Mobile Drawer */}
       {menuOpen && (

@@ -145,6 +145,20 @@ export default function DealsPage() {
       }
     }
     fetchDeals();
+
+    // Read initial search query & category from URL
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlQ = params.get('q');
+      const urlCat = params.get('cat');
+      if (urlQ) setSearchQuery(urlQ);
+      if (urlCat) {
+        const lower = urlCat.toLowerCase();
+        if (lower.includes('whatsapp')) setActiveCat('WhatsApp Bots');
+        else if (lower.includes('seo') || lower.includes('ai')) setActiveCat('AI & GEO SEO');
+        else if (lower.includes('lead') || lower.includes('scrap')) setActiveCat('Lead Scrapers');
+      }
+    }
   }, []);
 
   const handleBuy = (deal) => {
@@ -166,9 +180,22 @@ export default function DealsPage() {
 
   const filteredDeals = deals.filter((d) => {
     const matchesCat = activeCat === 'All' || d.category === activeCat;
-    const matchesSearch = (d.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (d.tagline || '').toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
+    if (!matchesCat) return false;
+
+    if (!searchQuery.trim()) return true;
+
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      (d.title || '').toLowerCase().includes(q) ||
+      (d.tagline || '').toLowerCase().includes(q) ||
+      (d.category || '').toLowerCase().includes(q) ||
+      (d.vendorName || '').toLowerCase().includes(q) ||
+      (d.slug || '').toLowerCase().includes(q) ||
+      (d.atAGlance?.alternativeTo || '').toLowerCase().includes(q) ||
+      (d.atAGlance?.bestFor || '').toLowerCase().includes(q) ||
+      (d.atAGlance?.integrations || '').toLowerCase().includes(q) ||
+      (Array.isArray(d.tldr) && d.tldr.some((t) => (t || '').toLowerCase().includes(q)))
+    );
   });
 
   const catalogSchema = {
@@ -233,14 +260,23 @@ export default function DealsPage() {
 
           {/* Search Box */}
           <div className="max-w-md mx-auto pt-4 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by keyword or tool name..."
+              placeholder="Search by keyword, tool, or competitor (e.g. WhatsApp, SEO, Apollo, WATI)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded-full shadow-md focus:outline-none focus:border-[#2475FF]"
+              className="w-full pl-11 pr-10 py-3 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded-full shadow-md focus:outline-none focus:border-[#FF6B35] transition-colors"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-black bg-slate-100 hover:bg-slate-200 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer transition-colors"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -248,6 +284,24 @@ export default function DealsPage() {
       {/* Deals Grid Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full">
         
+        {/* Active Search Result Indicator */}
+        {searchQuery.trim() && (
+          <div className="flex items-center justify-between bg-white border border-slate-200 rounded-2xl px-5 py-3.5 shadow-xs mb-8">
+            <div className="text-xs font-bold text-slate-700 flex items-center gap-2">
+              <span className="text-base">🔍</span>
+              <span>
+                Found <span className="text-[#FF6B35] font-black text-sm">{filteredDeals.length}</span> {filteredDeals.length === 1 ? 'deal' : 'deals'} matching &ldquo;<span className="text-slate-950 font-black">{searchQuery}</span>&rdquo;
+              </span>
+            </div>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-xs font-black text-[#FF6B35] hover:underline cursor-pointer"
+            >
+              Reset Search ✕
+            </button>
+          </div>
+        )}
+
         {/* Category Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide mb-8 py-1">
           {dynamicCategories.map((cat) => (
