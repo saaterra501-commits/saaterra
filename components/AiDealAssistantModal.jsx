@@ -103,8 +103,8 @@ export default function AiDealAssistantModal({ isOpen, onClose }) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm sm:text-base font-black text-white">StackDeal AI Deal Matchmaker</h3>
-                <span className="bg-[#2475FF]/20 text-[#38BDF8] border border-[#2475FF]/30 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
-                  GPT-4o / Gemini RAG
+                <span className="bg-[#FF6B35]/20 text-[#FF8243] border border-[#FF6B35]/40 text-[9px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1">
+                  ⚡ Powered by Groq AI
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
