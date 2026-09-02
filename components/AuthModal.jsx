@@ -91,6 +91,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onSu
         <div className="w-full">
           <GoogleAuthButton
             mode={mode}
+            userType={userType}
             onSuccess={(user) => {
               if (onSuccess) onSuccess(user);
               onClose();

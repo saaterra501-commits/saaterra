@@ -21,7 +21,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    let { credential, email, name, avatar } = body;
+    let { credential, email, name, avatar, userType = 'agency_buyer' } = body;
 
     // 2. Cryptographic Google ID Token Verification via Google TokenInfo API
     if (credential) {

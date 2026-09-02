@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '880398633054-jngmmtq22quaf7pc1dvsruvha2eaplhf.apps.googleusercontent.com';
 
-export default function GoogleAuthButton({ mode = 'login', onSuccess }) {
+export default function GoogleAuthButton({ mode = 'login', userType = 'agency_buyer', onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const googleBtnRef = useRef(null);
@@ -70,7 +70,7 @@ export default function GoogleAuthButton({ mode = 'login', onSuccess }) {
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: response.credential }),
+        body: JSON.stringify({ credential: response.credential, userType }),
       });
 
       const data = await res.json();
@@ -124,6 +124,7 @@ export default function GoogleAuthButton({ mode = 'login', onSuccess }) {
                 email: userInfo.email,
                 name: userInfo.name || userInfo.email.split('@')[0],
                 avatar: userInfo.picture || null,
+                userType,
               }),
             });
 
