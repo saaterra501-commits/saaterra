@@ -113,9 +113,17 @@ export default function Footer() {
 
           {/* Brand Column */}
           <div className="md:col-span-1 space-y-4">
-            {/* StackDeal Logo Component */}
+            {/* StackDeal Logo Component (Dark Background Variant) */}
             <div className="flex items-center gap-2">
-              <StackDealLogo className="h-8" />
+              <Link href="/" className="inline-block transition-opacity hover:opacity-90">
+                <img
+                  src="/stackdeal-footer-logo.png"
+                  alt="StackDeal"
+                  width={150}
+                  height={45}
+                  className="h-9 w-auto object-contain"
+                />
+              </Link>
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">

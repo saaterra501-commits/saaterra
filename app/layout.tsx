@@ -87,7 +87,7 @@ export const metadata: Metadata = {
     title: "StackDeal — 5-Year SaaS Passes for Indian Agencies",
     description:
       "Stop paying monthly subscriptions. Get 5-Year software passes with instant UPI checkout and GST invoices.",
-    creator: "@stackdeal_in",
+    creator: "@stackdealIN",
     images: ["/stackdeal-logo.png"],
   },
   other: {
@@ -104,7 +104,14 @@ const organizationSchema = {
   "name": "StackDeal",
   "alternateName": "StackDeal India",
   "url": siteUrl,
-  "logo": `${siteUrl}/stackdeal-logo.png`,
+  "logo": {
+    "@type": "ImageObject",
+    "url": `${siteUrl}/stackdeal-logo.png`,
+    "width": 389,
+    "height": 132,
+    "caption": "StackDeal — India's #1 B2B SaaS 5-Year Deal Marketplace Logo"
+  },
+  "image": `${siteUrl}/stackdeal-logo.png`,
   "description": "India's premier B2B SaaS discovery marketplace offering 5-Year Access Passes for digital agencies, SMBs, and solopreneurs.",
   "foundingLocation": {
     "@type": "Place",
@@ -114,8 +121,9 @@ const organizationSchema = {
     }
   },
   "sameAs": [
-    "https://twitter.com/stackdeal_in",
-    "https://linkedin.com/company/stackdeal",
+    "https://x.com/stackdealIN",
+    "https://www.linkedin.com/company/stack-deal-/",
+    "https://www.instagram.com/stackdeal.in/",
     "https://www.producthunt.com/products/stackdeal-2",
     "https://peerlist.io/stackdeal30"
   ],

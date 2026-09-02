@@ -114,7 +114,7 @@ export default function Navbar() {
         
         {/* 1. Logo */}
         <Link href="/" className="flex items-center shrink-0 hover:opacity-95 transition-opacity mr-2">
-          <StackDealLogo className="w-[150px] h-[45px]" />
+          <StackDealLogo className="w-[170px] sm:w-[185px] h-[48px] sm:h-[52px]" />
         </Link>
 
         {/* 2. AppSumo Search Input Box with (⌘+k) Pill */}
