@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, Bell, ShoppingCart, User, Menu, X, LogIn, LogOut, Wallet, Shield, Sparkles } from 'lucide-react';
+import { Search, ChevronDown, Bell, ShoppingCart, User, Menu, X, LogIn, LogOut, Wallet, Shield, Sparkles, Flame, KeyRound, UploadCloud, Layers } from 'lucide-react';
 import StackDealLogo from './StackDealLogo';
 import AuthModal from './AuthModal';
 import AiDealAssistantModal from './AiDealAssistantModal';
@@ -336,7 +336,21 @@ export default function Navbar() {
         </nav>
 
         {/* 4. Right Utility Icons */}
-        <div className="flex items-center gap-3 shrink-0 text-slate-800">
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 text-slate-800">
+
+          {/* WhatsApp VIP Community Button */}
+          <a
+            href="https://chat.whatsapp.com/GmWT9MGU8LX2PFGEtl1Z7f"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 border border-emerald-200/90 text-xs font-bold transition-all shadow-xs hover:scale-105"
+            title="Join StackDeal VIP WhatsApp Community"
+          >
+            <svg className="w-3.5 h-3.5 fill-current text-emerald-600 shrink-0" viewBox="0 0 24 24">
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.699c.971.53 1.761.815 2.796.815 3.18 0 5.766-2.587 5.767-5.766.001-3.181-2.585-5.768-5.767-5.768zm3.397 8.21c-.141.396-.714.726-1.074.77-.361.045-.826.068-2.673-.699-2.223-.924-3.642-3.182-3.753-3.329-.111-.148-.908-1.209-.908-2.306 0-1.097.575-1.637.778-1.859.203-.223.443-.278.591-.278.148 0 .296.002.425.008.136.006.319-.052.499.38.188.452.641 1.564.697 1.677.056.113.093.245.018.394-.075.148-.112.241-.223.371-.111.13-.233.29-.333.39-.111.111-.227.232-.098.454.129.222.574.947 1.233 1.535.849.758 1.565.993 1.787 1.104.222.111.352.093.481-.056.129-.148.556-.649.704-.871.148-.222.296-.185.499-.111.204.074 1.296.611 1.518.722.222.111.37.167.425.26.056.093.056.538-.085.934zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.438 5.178L2 22l4.98-1.306C8.423 21.492 10.153 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+            </svg>
+            <span>VIP Club</span>
+          </a>
           
           {/* Live User & Vendor Notification Bell */}
           <button
@@ -505,34 +519,200 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Mobile Drawer */}
+      {/* ── CLEAN, MODERN MOBILE DRAWER ── */}
       {menuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white p-4 space-y-3 font-bold text-xs">
-          <Link href="/cart" onClick={() => setMenuOpen(false)} className="flex items-center justify-between py-2 text-slate-900 font-black">
-            <span>View Cart</span>
-            {cartCount > 0 ? (
-              <span className="bg-[#FF6B35] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                {cartCount} {cartCount === 1 ? 'Item' : 'Items'}
-              </span>
-            ) : (
-              <span className="text-slate-400 font-medium text-[11px]">Empty</span>
-            )}
-          </Link>
-          <Link href="/deals" className="block py-2 text-slate-900 font-black">New arrivals</Link>
-          <Link href="/compare" className="block py-2 text-slate-900 font-black">Compare Software</Link>
-          <Link href="/plus" className="block py-2 text-amber-600 font-black">StackDeal PLUS (10% OFF)</Link>
-          <Link href="/redeem" className="block py-2 text-slate-700">Redeem License Code</Link>
-          <Link href="/submit" className="block py-2 text-slate-700">List Your SaaS Tool</Link>
-          <Link href="/profile" className="block py-2 text-slate-700">My Passes Dashboard</Link>
+        <div className="lg:hidden border-t border-slate-200/80 bg-white p-4 space-y-3.5 font-sans text-xs shadow-2xl animate-fadeIn">
+          
+          {/* 1. User Header / Guest Welcome Card */}
           {currentUser ? (
-            <button onClick={handleLogout} className="block py-2 text-red-600 font-black text-left">
-              Log Out ({currentUser.name})
-            </button>
+            <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FF6B35] to-[#2475FF] text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
+                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-slate-900 truncate">
+                    {currentUser.name}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium truncate">
+                    {currentUser.email}
+                  </div>
+                </div>
+              </div>
+              <Link
+                href="/profile"
+                onClick={() => setMenuOpen(false)}
+                className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[11px] font-bold text-slate-700 hover:text-slate-900 shadow-2xs shrink-0 transition-colors"
+              >
+                My Passes
+              </Link>
+            </div>
           ) : (
-            <button onClick={() => { setMenuOpen(false); setAuthModalOpen(true); }} className="block py-2 text-[#FF6B35] font-black text-left">
-              Log In / Sign Up
-            </button>
+            <div className="p-3.5 bg-gradient-to-r from-orange-50/80 to-amber-50/80 border border-orange-200/60 rounded-2xl flex items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-bold text-slate-900">Welcome to StackDeal! 👋</div>
+                <div className="text-[10px] text-slate-600 font-medium mt-0.5">Explore 5-Year SaaS Passes with GST invoices</div>
+              </div>
+              <button
+                onClick={() => { setMenuOpen(false); setAuthModalOpen(true); }}
+                className="px-3 py-1.5 bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold rounded-xl shadow-xs shrink-0 transition-colors cursor-pointer"
+              >
+                Log In
+              </button>
+            </div>
           )}
+
+          {/* 2. Main Navigation 2x2 Grid Cards */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* View Cart */}
+            <Link
+              href="/cart"
+              onClick={() => setMenuOpen(false)}
+              className="p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200/60 flex items-center justify-between transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-orange-100/80 text-[#FF6B35] flex items-center justify-center shrink-0">
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-bold text-slate-800 group-hover:text-slate-950">Cart</span>
+              </div>
+              {cartCount > 0 ? (
+                <span className="bg-[#FF6B35] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                  {cartCount}
+                </span>
+              ) : (
+                <span className="text-slate-400 text-[10px] font-medium">0</span>
+              )}
+            </Link>
+
+            {/* New Arrivals / All Deals */}
+            <Link
+              href="/deals"
+              onClick={() => setMenuOpen(false)}
+              className="p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200/60 flex items-center justify-between transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-rose-100/80 text-rose-600 flex items-center justify-center shrink-0">
+                  <Flame className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-bold text-slate-800 group-hover:text-slate-950">All Deals</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-bold">5-Yr</span>
+            </Link>
+
+            {/* Compare Software */}
+            <Link
+              href="/compare"
+              onClick={() => setMenuOpen(false)}
+              className="p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200/60 flex items-center justify-between transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-100/80 text-[#2475FF] flex items-center justify-center shrink-0">
+                  <Layers className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-bold text-slate-800 group-hover:text-slate-950">Compare</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-bold">vs $</span>
+            </Link>
+
+            {/* StackDeal PLUS Club */}
+            <Link
+              href="/plus"
+              onClick={() => setMenuOpen(false)}
+              className="p-3 rounded-2xl bg-[#0A0F1E] hover:bg-slate-900 border border-slate-800 text-amber-400 flex items-center justify-between transition-all group shadow-xs"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-black text-amber-300">PLUS Club</span>
+              </div>
+              <span className="text-[9px] bg-amber-400/20 text-amber-300 font-black px-1.5 py-0.5 rounded">
+                -10%
+              </span>
+            </Link>
+          </div>
+
+          {/* 3. Sleek VIP WhatsApp Community Banner */}
+          <a
+            href="https://chat.whatsapp.com/GmWT9MGU8LX2PFGEtl1Z7f"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMenuOpen(false)}
+            className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-teal-500/10 border border-emerald-500/30 flex items-center justify-between group transition-all hover:bg-emerald-500/15"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.699c.971.53 1.761.815 2.796.815 3.18 0 5.766-2.587 5.767-5.766.001-3.181-2.585-5.768-5.767-5.768zm3.397 8.21c-.141.396-.714.726-1.074.77-.361.045-.826.068-2.673-.699-2.223-.924-3.642-3.182-3.753-3.329-.111-.148-.908-1.209-.908-2.306 0-1.097.575-1.637.778-1.859.203-.223.443-.278.591-.278.148 0 .296.002.425.008.136.006.319-.052.499.38.188.452.641 1.564.697 1.677.056.113.093.245.018.394-.075.148-.112.241-.223.371-.111.13-.233.29-.333.39-.111.111-.227.232-.098.454.129.222.574.947 1.233 1.535.849.758 1.565.993 1.787 1.104.222.111.352.093.481-.056.129-.148.556-.649.704-.871.148-.222.296-.185.499-.111.204.074 1.296.611 1.518.722.222.111.37.167.425.26.056.093.056.538-.085.934zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.438 5.178L2 22l4.98-1.306C8.423 21.492 10.153 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+                </svg>
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-900">VIP WhatsApp Community</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <p className="text-[10px] text-slate-500 font-medium">48h Early Drops & Secret Coupons</p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-emerald-700 bg-white px-2 py-1 rounded-lg border border-emerald-200/80 shadow-2xs group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+              Join ➔
+            </span>
+          </a>
+
+          {/* 4. Secondary Actions / Utility Rows */}
+          <div className="divide-y divide-slate-100 border border-slate-200/70 rounded-2xl overflow-hidden bg-white">
+            <Link
+              href="/redeem"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-between p-3 hover:bg-slate-50 transition-colors text-slate-700 font-semibold"
+            >
+              <div className="flex items-center gap-2.5">
+                <KeyRound className="w-4 h-4 text-slate-400" />
+                <span>Redeem License Code</span>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 -rotate-90" />
+            </Link>
+
+            <Link
+              href="/submit"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-between p-3 hover:bg-slate-50 transition-colors text-slate-700 font-semibold"
+            >
+              <div className="flex items-center gap-2.5">
+                <UploadCloud className="w-4 h-4 text-slate-400" />
+                <span>List Your SaaS Tool (70% Payout)</span>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 -rotate-90" />
+            </Link>
+
+            {currentUser?.role === 'admin' && (
+              <Link
+                href="/sd-ops-vault-9839"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-between p-3 hover:bg-amber-50 transition-colors text-amber-700 font-bold"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Shield className="w-4 h-4 text-amber-500" />
+                  <span>Ops Vault (Admin)</span>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-amber-500 -rotate-90" />
+              </Link>
+            )}
+
+            {currentUser && (
+              <button
+                onClick={() => { setMenuOpen(false); handleLogout(); }}
+                className="w-full flex items-center justify-between p-3 hover:bg-red-50 transition-colors text-red-600 font-bold text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <LogOut className="w-4 h-4 text-red-500" />
+                  <span>Log Out ({currentUser.name?.split(' ')[0]})</span>
+                </div>
+              </button>
+            )}
+          </div>
+
         </div>
       )}
 
@@ -699,17 +879,29 @@ export default function Navbar() {
         onClose={() => setAiModalOpen(false)}
       />
 
-      {/* Floating AI Deal Assistant Pill at Bottom Right */}
-      <button
-        type="button"
-        onClick={() => setAiModalOpen(true)}
-        className="fixed bottom-6 right-6 z-40 bg-[#070B16] hover:bg-[#0D1527] text-white border-2 border-[#FF6B35] px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 font-black text-xs transition-all hover:scale-105 cursor-pointer group"
-      >
-        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#FF6B35] to-[#2475FF] flex items-center justify-center text-[#FFD519]">
-          <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-        </div>
-        <span className="group-hover:text-[#FFD519] transition-colors">✨ Ask AI Matchmaker</span>
-      </button>
+      {/* Floating Stacky AI Assistant Pill at Bottom Right */}
+      {!aiModalOpen && (
+        <button
+          type="button"
+          onClick={() => setAiModalOpen(true)}
+          className="fixed bottom-6 right-6 z-40 bg-white/95 hover:bg-white backdrop-blur-md text-slate-900 border-2 border-[#FF6B35] px-4 py-2.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_35px_rgba(255,107,53,0.3)] flex items-center gap-2.5 font-black text-xs transition-all hover:scale-105 cursor-pointer group"
+        >
+          <div className="w-7 h-7 rounded-lg bg-[#FFF4EE] border border-[#FFE2D5] p-0.5 flex items-center justify-center shadow-xs shrink-0">
+            <img
+              src="/stackdeal-icon.png"
+              alt="StackDeal"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="flex flex-col items-start leading-tight">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-900 group-hover:text-[#FF6B35] transition-colors font-bold text-xs">Stacky</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <span className="text-[9px] text-slate-500 font-semibold">Ask FAQs & Deals</span>
+          </div>
+        </button>
+      )}
 
     </header>
   );

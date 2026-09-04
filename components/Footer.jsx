@@ -23,10 +23,10 @@ const FOOTER_LINKS = {
     { label: '70% Revenue Share', href: '/submit' },
   ],
   Members: [
+    { label: 'Join VIP WhatsApp Club 💬', href: 'https://chat.whatsapp.com/GmWT9MGU8LX2PFGEtl1Z7f' },
     { label: 'StackDeal Plus ⭐', href: '/plus' },
     { label: 'Redeem License Code', href: '/redeem' },
     { label: 'My Passes Dashboard', href: '/profile' },
-    { label: 'Radar (Coming Soon)', href: '/deals' },
   ],
   Support: [
     { label: 'About StackDeal 🏢', href: '/about' },
@@ -40,6 +40,15 @@ const FOOTER_LINKS = {
 };
 
 const SOCIAL_ICONS = [
+  {
+    label: 'WhatsApp VIP Community',
+    href: 'https://chat.whatsapp.com/GmWT9MGU8LX2PFGEtl1Z7f',
+    icon: (
+      <svg className="w-3.5 h-3.5 fill-current text-emerald-400" viewBox="0 0 24 24">
+        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.699c.971.53 1.761.815 2.796.815 3.18 0 5.766-2.587 5.767-5.766.001-3.181-2.585-5.768-5.767-5.768zm3.397 8.21c-.141.396-.714.726-1.074.77-.361.045-.826.068-2.673-.699-2.223-.924-3.642-3.182-3.753-3.329-.111-.148-.908-1.209-.908-2.306 0-1.097.575-1.637.778-1.859.203-.223.443-.278.591-.278.148 0 .296.002.425.008.136.006.319-.052.499.38.188.452.641 1.564.697 1.677.056.113.093.245.018.394-.075.148-.112.241-.223.371-.111.13-.233.29-.333.39-.111.111-.227.232-.098.454.129.222.574.947 1.233 1.535.849.758 1.565.993 1.787 1.104.222.111.352.093.481-.056.129-.148.556-.649.704-.871.148-.222.296-.185.499-.111.204.074 1.296.611 1.518.722.222.111.37.167.425.26.056.093.056.538-.085.934zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.438 5.178L2 22l4.98-1.306C8.423 21.492 10.153 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+      </svg>
+    ),
+  },
   {
     label: 'X (Twitter)',
     href: 'https://x.com/stackdealIN',
@@ -131,13 +140,25 @@ export default function Footer() {
             </p>
 
             {/* Direct Email Contact Badge */}
-            <div className="pt-0.5">
+            <div className="pt-0.5 flex flex-col gap-2">
               <a
                 href="mailto:hello@stackdeal.in"
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-amber-300 hover:text-amber-200 text-xs font-bold transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-amber-300 hover:text-amber-200 text-xs font-bold transition-colors w-fit"
               >
                 <Mail className="w-3.5 h-3.5 text-amber-400" />
                 <span>hello@stackdeal.in</span>
+              </a>
+
+              {/* Direct VIP WhatsApp Community CTA */}
+              <a
+                href="https://chat.whatsapp.com/GmWT9MGU8LX2PFGEtl1Z7f"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:text-emerald-300 text-xs font-bold transition-all shadow-xs group w-fit"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span>Join VIP WhatsApp Club</span>
+                <span className="text-xs group-hover:translate-x-0.5 transition-transform">➔</span>
               </a>
             </div>
 
@@ -188,12 +209,24 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-xs text-slate-400 font-medium hover:text-white transition-colors"
-                    >
-                      {link.label}
-                    </Link>
+                    {link.href?.startsWith('http') ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-slate-400 font-medium hover:text-emerald-400 transition-colors flex items-center gap-1"
+                      >
+                        <span>{link.label}</span>
+                        <span className="text-[10px] text-emerald-400">↗</span>
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-xs text-slate-400 font-medium hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
