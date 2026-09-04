@@ -281,13 +281,13 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
             {/* ── Real-Time 14-Day Flash Countdown Timer ── */}
             <HeroSlideCountdown deal={deal} />
 
-            {/* Pricing Line: Exact AppSumo format (₹1,999/lifetime ₹24,000) */}
+            {/* Pricing Line: 5-Year Pass format (₹1,999/5-year ₹24,000) */}
             <div className="flex items-baseline gap-2 pt-1">
               <span className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight">
                 ₹{Number(deal.price).toLocaleString('en-IN')}
               </span>
               <span className="text-slate-700 font-bold text-sm">
-                /lifetime
+                /5-year
               </span>
               <span className="text-slate-500 font-semibold text-base line-through ml-2">
                 ₹{Number(deal.originalPrice).toLocaleString('en-IN')}
