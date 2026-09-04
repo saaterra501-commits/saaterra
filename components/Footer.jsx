@@ -18,9 +18,9 @@ const FOOTER_LINKS = {
   ],
   Founders: [
     { label: 'List Your SaaS Tool', href: '/submit' },
+    { label: 'Vendor Partner Badges', href: '/badges' },
+    { label: 'AppSumo Alternative India', href: '/appsumo-alternative-india' },
     { label: '70% Revenue Share', href: '/submit' },
-    { label: '5-Year Pass Economics', href: '/submit' },
-    { label: 'Partner Dashboard', href: '/submit' },
   ],
   Members: [
     { label: 'StackDeal Plus ⭐', href: '/plus' },

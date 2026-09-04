@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 54" width="220" height="54">
+  <rect width="220" height="54" rx="12" fill="#0F172A" stroke="#FF6B35" stroke-width="1.5"/>
+  <text x="20" y="22" fill="#94A3B8" font-family="sans-serif" font-size="9" font-weight="bold">FEATURED ON</text>
+  <text x="20" y="42" font-family="sans-serif" font-size="20" font-weight="900" fill="#FFFFFF">Stack<tspan fill="#FF6B35">Deal</tspan></text>
+  <rect x="135" y="17" width="70" height="20" rx="10" fill="#FF6B35"/>
+  <text x="170" y="31" fill="#FFFFFF" font-family="sans-serif" font-size="9" font-weight="bold" text-anchor="middle">5-YR PASS</text>
+</svg>
