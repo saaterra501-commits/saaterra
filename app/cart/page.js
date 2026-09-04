@@ -11,6 +11,13 @@ import {
   Trash2, Plus, Minus, Tag, Check, ShieldCheck, Zap, FileText,
   ArrowRight, Crown, AlertCircle, ShoppingBag, Gift, Sparkles, RefreshCw
 } from 'lucide-react';
+import {
+  getCartItems,
+  saveCartItems,
+  updateCartQuantity,
+  removeFromCart,
+  clearCart as clearCartStorage,
+} from '../../lib/cart';
 
 const KNOWN_DEALS = {
   'chat-chacha': {
@@ -55,18 +62,14 @@ const KNOWN_DEALS = {
   },
 };
 
-const DEFAULT_CART = [
-  KNOWN_DEALS['chat-chacha'],
-  KNOWN_DEALS['duprun'],
-];
-
 function CartContent() {
   const searchParams = useSearchParams();
   const dealParam = searchParams.get('deal');
   const tierParam = searchParams.get('tier');
   const priceParam = searchParams.get('price');
 
-  const [cartItems, setCartItems] = useState(DEFAULT_CART);
+  const [cartItems, setCartItems] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
@@ -75,35 +78,57 @@ function CartContent() {
   const [walletBalance, setWalletBalance] = useState(250);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
-  // If URL has ?deal=..., load that specific deal into cart dynamically
+  // Initialize cart from localStorage & listen for cross-tab updates
   useEffect(() => {
-    if (dealParam) {
-      async function loadCartDeal() {
-        try {
-          const res = await fetch(`/api/deals/${dealParam}`);
-          const data = await res.json();
-          if (data?.success && data?.deal) {
-            const d = data.deal;
-            const chosenTier = tierParam || d.pricingTiers?.[0]?.tierName || 'Starter Pass (5-Year Access)';
-            const chosenPrice = priceParam ? Number(priceParam) : (d.pricingTiers?.[0]?.price || d.price || 1999);
-            
-            setCartItems([{
-              id: d.id || `deal-${d.slug}`,
-              slug: d.slug,
-              title: d.title,
-              tierName: chosenTier,
-              price: chosenPrice,
-              originalPrice: d.originalPrice || (chosenPrice * 10),
-              screenshot: d.heroImage || d.screenshot || d.screenshots?.[0] || 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=400&auto=format&fit=crop&q=80',
-              vendorName: d.vendorName || 'SaaS Partner',
-              quantity: 1,
-            }]);
-            return;
-          }
-        } catch (err) {
-          console.warn('Cart deal fetch error:', err);
-        }
+    const stored = getCartItems();
+    if (stored && stored.length > 0) {
+      setCartItems(stored);
+    }
+    setIsLoaded(true);
 
+    const handleCartUpdate = () => {
+      setCartItems(getCartItems());
+    };
+
+    window.addEventListener('stackdeal_cart_updated', handleCartUpdate);
+    window.addEventListener('storage', handleCartUpdate);
+    return () => {
+      window.removeEventListener('stackdeal_cart_updated', handleCartUpdate);
+      window.removeEventListener('storage', handleCartUpdate);
+    };
+  }, []);
+
+  // If URL has ?deal=..., load that specific deal into cart and persist
+  useEffect(() => {
+    if (!dealParam) return;
+
+    async function loadCartDeal() {
+      let dealToAdd = null;
+      try {
+        const res = await fetch(`/api/deals/${dealParam}`);
+        const data = await res.json();
+        if (data?.success && data?.deal) {
+          const d = data.deal;
+          const chosenTier = tierParam || d.pricingTiers?.[0]?.tierName || 'Starter Pass (5-Year Access)';
+          const chosenPrice = priceParam ? Number(priceParam) : (d.pricingTiers?.[0]?.price || d.price || 1999);
+          
+          dealToAdd = {
+            id: `${d.slug || d.id}-${chosenTier.replace(/\s+/g, '-').toLowerCase()}`,
+            slug: d.slug,
+            title: d.title,
+            tierName: chosenTier,
+            price: chosenPrice,
+            originalPrice: d.originalPrice || (chosenPrice * 10),
+            screenshot: d.heroImage || d.screenshot || d.screenshots?.[0] || 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=400&auto=format&fit=crop&q=80',
+            vendorName: d.vendorName || 'SaaS Partner',
+            quantity: 1,
+          };
+        }
+      } catch (err) {
+        console.warn('Cart deal fetch error:', err);
+      }
+
+      if (!dealToAdd) {
         const matched = KNOWN_DEALS[dealParam] || {
           id: `deal-${dealParam}`,
           slug: dealParam,
@@ -118,35 +143,41 @@ function CartContent() {
         if (tierParam) matched.tierName = tierParam;
         if (priceParam) matched.price = Number(priceParam);
 
-        setCartItems([{ ...matched, quantity: 1 }]);
+        dealToAdd = { ...matched, quantity: 1 };
       }
 
-      loadCartDeal();
+      if (dealToAdd) {
+        const currentItems = getCartItems();
+        const existingIdx = currentItems.findIndex(i => i.id === dealToAdd.id || (i.slug === dealToAdd.slug && i.tierName === dealToAdd.tierName));
+        let updated;
+        if (existingIdx > -1) {
+          updated = [...currentItems];
+        } else {
+          updated = [dealToAdd, ...currentItems];
+        }
+        saveCartItems(updated);
+        setCartItems(updated);
+      }
     }
+
+    loadCartDeal();
   }, [dealParam, tierParam, priceParam]);
 
   // Update item quantity
   const updateQuantity = (id, delta) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) => {
-          if (item.id === id) {
-            const newQty = item.quantity + delta;
-            return newQty > 0 ? { ...item, quantity: newQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean)
-    );
+    const updated = updateCartQuantity(id, delta);
+    setCartItems(updated);
   };
 
   // Remove single item
   const removeItem = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    const updated = removeFromCart(id);
+    setCartItems(updated);
   };
 
   // Clear entire cart
   const clearCart = () => {
+    clearCartStorage();
     setCartItems([]);
   };
 
@@ -206,7 +237,12 @@ function CartContent() {
         </Link>
       </div>
 
-      {cartItems.length === 0 ? (
+      {!isLoaded ? (
+        <div className="bg-white rounded-3xl p-16 text-center border border-slate-200 shadow-sm space-y-4 max-w-lg mx-auto">
+          <div className="w-10 h-10 border-4 border-[#FF6B35] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-500">Loading your saved software passes...</p>
+        </div>
+      ) : cartItems.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm space-y-4 max-w-lg mx-auto">
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
             <ShoppingBag className="w-8 h-8" />

@@ -9,8 +9,9 @@ import Link from 'next/link';
 import {
   Sparkles, Flame, ShieldCheck, Clock, Check, X, MessageSquare, ThumbsUp,
   User, Play, Star, ChevronDown, ChevronRight, Copy, Share2, HelpCircle, ArrowRight,
-  ExternalLink, Search, Filter, Globe, Building2, MapPin, Calendar, Users
+  ExternalLink, Search, Filter, Globe, Building2, MapPin, Calendar, Users, ShoppingCart
 } from 'lucide-react';
+import { addToCart, isInCart } from '@/lib/cart';
 
 function LinkedInIcon({ className = "w-3.5 h-3.5" }) {
   return (
@@ -176,6 +177,14 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
   const [showAllFeatures, setShowAllFeatures] = useState({});
   const [activeTab, setActiveTab] = useState('Reviews');
   const [termsOpen, setTermsOpen] = useState(false);
+  const [isAddedToCart, setIsAddedToCart] = useState(false);
+
+  const handleAddToCart = () => {
+    if (!deal) return;
+    addToCart(deal, selectedTierIndex);
+    setIsAddedToCart(true);
+    setTimeout(() => setIsAddedToCart(false), 3000);
+  };
   
   // Question / Founder message states
   const [questionName, setQuestionName] = useState('');
@@ -655,14 +664,39 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
                   </select>
                 </div>
 
-                {/* Bright Orange Buy Now CTA Button */}
-                <Link
-                  href={`/cart?deal=${deal.slug || 'chat-chacha'}&tier=${encodeURIComponent(currentTier.tierName)}&price=${currentTier.price}`}
-                  className="w-full py-4 bg-[#FF6B35] hover:bg-[#E85A24] text-white font-black text-base rounded-xl shadow-lg transition-all transform hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <span>Buy now</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {/* Action Buttons: Buy Now & Add to Cart */}
+                <div className="space-y-2.5">
+                  <Link
+                    href={`/cart?deal=${deal.slug || 'chat-chacha'}&tier=${encodeURIComponent(currentTier.tierName)}&price=${currentTier.price}`}
+                    onClick={() => addToCart(deal, selectedTierIndex)}
+                    className="w-full py-3.5 bg-[#FF6B35] hover:bg-[#E85A24] text-white font-black text-sm rounded-xl shadow-lg transition-all transform hover:scale-[1.01] cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>Buy now</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    className={`w-full py-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      isAddedToCart
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                        : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800 shadow-xs'
+                    }`}
+                  >
+                    {isAddedToCart ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span>Added to Cart! (View in Header)</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-4 h-4 text-[#FF6B35]" />
+                        <span>Add to Cart (Save for Later)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
 
                 {/* Trust Bullet Items */}
                 <div className="space-y-2 pt-2 border-t border-slate-100 text-xs font-medium text-slate-700">

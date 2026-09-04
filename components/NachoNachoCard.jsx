@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Tag, Star, Scale, Check, Plus } from 'lucide-react';
+import { Tag, Star, Scale, Check, Plus, ShoppingCart } from 'lucide-react';
+import { addToCart } from '@/lib/cart';
 
 export default function NachoNachoCard({ deal, onBuyClick }) {
   const [isCompared, setIsCompared] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
 
   const starterTier = deal.pricingTiers && deal.pricingTiers.length > 0 ? deal.pricingTiers[0] : null;
   const starterTierName = starterTier?.tierName || 'Starter Pass';
@@ -61,6 +63,14 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
       localStorage.setItem('stackdeal_compare_items', JSON.stringify(saved));
       window.dispatchEvent(new Event('stackdeal_compare_updated'));
     } catch (err) {}
+  };
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    addToCart(deal, 0);
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleCardClick = () => {
@@ -208,19 +218,32 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
         </div>
 
         {/* CTA Row */}
-        <div className="flex items-center gap-2 mt-1 pt-2 border-t border-slate-100">
+        <div className="flex items-center gap-1.5 mt-1 pt-2 border-t border-slate-100">
           <Link
             href={`/deals/${deal.slug || 'chat-chacha'}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 text-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition-all"
+            className="flex-1 text-center px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition-all"
           >
             Details
           </Link>
 
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            title={isAdded ? 'Added to Cart!' : 'Add to Cart (Save for future)'}
+            className={`px-2 py-1.5 rounded-lg border transition-all flex items-center justify-center cursor-pointer shrink-0 ${
+              isAdded 
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-600' 
+                : 'bg-slate-50 hover:bg-orange-50 border-slate-200 hover:border-[#FF6B35] text-slate-600 hover:text-[#FF6B35]'
+            }`}
+          >
+            {isAdded ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+          </button>
+
           <Link
             href={`/cart?deal=${deal.slug || deal.id || 'chat-chacha'}&tier=Starter Pass&price=${price}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 px-3 py-1.5 bg-[#FF6B35] hover:bg-[#e06000] text-white font-black text-[11px] rounded-lg shadow transition-all cursor-pointer flex items-center justify-center gap-1"
+            className="flex-1 px-2.5 py-1.5 bg-[#FF6B35] hover:bg-[#e06000] text-white font-black text-[11px] rounded-lg shadow transition-all cursor-pointer flex items-center justify-center gap-1"
           >
             <Tag className="w-3 h-3" />
             Get Pass

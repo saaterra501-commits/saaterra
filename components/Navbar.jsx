@@ -6,6 +6,7 @@ import { Search, ChevronDown, Bell, ShoppingCart, User, Menu, X, LogIn, LogOut, 
 import StackDealLogo from './StackDealLogo';
 import AuthModal from './AuthModal';
 import AiDealAssistantModal from './AiDealAssistantModal';
+import { getCartCount } from '@/lib/cart';
 
 const CATEGORIES = [
   { label: 'WhatsApp Tools', href: '/deals?cat=whatsapp' },
@@ -29,6 +30,7 @@ export default function Navbar() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
 
   const catRef = useRef(null);
   const userRef = useRef(null);
@@ -81,10 +83,20 @@ export default function Navbar() {
     checkAuth();
     loadNotifications();
     loadCatalog();
+    setCartCount(getCartCount());
+
+    const handleCartSync = () => {
+      setCartCount(getCartCount());
+    };
+    window.addEventListener('stackdeal_cart_updated', handleCartSync);
+    window.addEventListener('storage', handleCartSync);
+
     const interval = setInterval(loadNotifications, 15000);
     return () => {
       isMounted = false;
       clearInterval(interval);
+      window.removeEventListener('stackdeal_cart_updated', handleCartSync);
+      window.removeEventListener('storage', handleCartSync);
     };
   }, []);
 
@@ -313,23 +325,8 @@ export default function Navbar() {
             New arrivals
           </Link>
 
-          <Link href="/deals" className="hover:text-slate-950 transition-colors">
-            Ending soon
-          </Link>
-
           <Link href="/compare" className="hover:text-slate-950 transition-colors">
             Compare
-          </Link>
-
-          <Link href="/deals" className="hover:text-slate-950 transition-colors flex items-center gap-1.5">
-            <span>Radar</span>
-            <span className="bg-blue-100 text-blue-700 text-[9px] font-black px-1.5 py-0.5 rounded border border-blue-200 uppercase">
-              NEW
-            </span>
-          </Link>
-
-          <Link href="/contact" className="hover:text-slate-950 transition-colors font-bold">
-            Contact
           </Link>
 
           <Link href="/plus" className="flex items-center gap-1 bg-[#1A1828] text-amber-400 font-black px-2.5 py-1 rounded-md text-[10px] tracking-wider uppercase hover:bg-slate-900 transition-colors">
@@ -359,9 +356,11 @@ export default function Navbar() {
           {/* Shopping Cart */}
           <Link href="/cart" className="hover:text-slate-950 transition-colors p-1 relative hidden sm:block" title="Shopping Cart">
             <ShoppingCart className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-              2
-            </span>
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-fadeIn">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           {/* User Auth Cluster */}
@@ -509,12 +508,19 @@ export default function Navbar() {
       {/* Mobile Drawer */}
       {menuOpen && (
         <div className="lg:hidden border-t border-slate-200 bg-white p-4 space-y-3 font-bold text-xs">
-          <Link href="/cart" className="block py-2 text-slate-900 font-black">View Cart (2 Items)</Link>
+          <Link href="/cart" onClick={() => setMenuOpen(false)} className="flex items-center justify-between py-2 text-slate-900 font-black">
+            <span>View Cart</span>
+            {cartCount > 0 ? (
+              <span className="bg-[#FF6B35] text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                {cartCount} {cartCount === 1 ? 'Item' : 'Items'}
+              </span>
+            ) : (
+              <span className="text-slate-400 font-medium text-[11px]">Empty</span>
+            )}
+          </Link>
           <Link href="/deals" className="block py-2 text-slate-900 font-black">New arrivals</Link>
-          <Link href="/deals" className="block py-2 text-slate-900 font-black">Ending soon</Link>
           <Link href="/compare" className="block py-2 text-slate-900 font-black">Compare Software</Link>
           <Link href="/plus" className="block py-2 text-amber-600 font-black">StackDeal PLUS (10% OFF)</Link>
-          <Link href="/contact" className="block py-2 text-slate-900 font-black">Contact Support 💬</Link>
           <Link href="/redeem" className="block py-2 text-slate-700">Redeem License Code</Link>
           <Link href="/submit" className="block py-2 text-slate-700">List Your SaaS Tool</Link>
           <Link href="/profile" className="block py-2 text-slate-700">My Passes Dashboard</Link>
