@@ -179,11 +179,31 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
   const [termsOpen, setTermsOpen] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
 
+  useEffect(() => {
+    if (!deal && !dealSlug) return;
+    const targetSlug = deal?.slug || dealSlug;
+    const checkInCart = () => {
+      setIsAddedToCart(isInCart(targetSlug));
+    };
+
+    checkInCart();
+
+    window.addEventListener('stackdeal_cart_updated', checkInCart);
+    window.addEventListener('storage', checkInCart);
+    return () => {
+      window.removeEventListener('stackdeal_cart_updated', checkInCart);
+      window.removeEventListener('storage', checkInCart);
+    };
+  }, [deal, dealSlug]);
+
   const handleAddToCart = () => {
     if (!deal) return;
+    if (isAddedToCart) {
+      window.location.href = '/cart';
+      return;
+    }
     addToCart(deal, selectedTierIndex);
     setIsAddedToCart(true);
-    setTimeout(() => setIsAddedToCart(false), 3000);
   };
   
   // Question / Founder message states
@@ -678,16 +698,17 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
                   <button
                     type="button"
                     onClick={handleAddToCart}
+                    title={isAddedToCart ? 'Already added! Click to view Cart' : 'Save this software to your Cart'}
                     className={`w-full py-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                       isAddedToCart
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700 hover:bg-emerald-100 shadow-xs'
                         : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800 shadow-xs'
                     }`}
                   >
                     {isAddedToCart ? (
                       <>
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Added to Cart! (View in Header)</span>
+                        <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                        <span>Added to Cart ✔ (View in Cart →)</span>
                       </>
                     ) : (
                       <>

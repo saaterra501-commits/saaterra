@@ -3,11 +3,25 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Tag, Star, Scale, Check, Plus, ShoppingCart } from 'lucide-react';
-import { addToCart } from '@/lib/cart';
+import { addToCart, isInCart } from '@/lib/cart';
 
 export default function NachoNachoCard({ deal, onBuyClick }) {
   const [isCompared, setIsCompared] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+
+  useEffect(() => {
+    const checkInCart = () => {
+      setIsAdded(isInCart(deal.slug || deal.id));
+    };
+    checkInCart();
+
+    window.addEventListener('stackdeal_cart_updated', checkInCart);
+    window.addEventListener('storage', checkInCart);
+    return () => {
+      window.removeEventListener('stackdeal_cart_updated', checkInCart);
+      window.removeEventListener('storage', checkInCart);
+    };
+  }, [deal.slug, deal.id]);
 
   const starterTier = deal.pricingTiers && deal.pricingTiers.length > 0 ? deal.pricingTiers[0] : null;
   const starterTierName = starterTier?.tierName || 'Starter Pass';
@@ -68,9 +82,12 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
   const handleAddToCart = (e) => {
     e.stopPropagation();
     e.preventDefault();
+    if (isAdded) {
+      window.location.href = '/cart';
+      return;
+    }
     addToCart(deal, 0);
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleCardClick = () => {
@@ -230,14 +247,14 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
           <button
             type="button"
             onClick={handleAddToCart}
-            title={isAdded ? 'Added to Cart!' : 'Add to Cart (Save for future)'}
+            title={isAdded ? 'Already added! Click to view Cart' : 'Add to Cart (Save for future)'}
             className={`px-2 py-1.5 rounded-lg border transition-all flex items-center justify-center cursor-pointer shrink-0 ${
               isAdded 
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-600' 
+                ? 'bg-emerald-50 border-emerald-500 text-emerald-600 hover:bg-emerald-100 shadow-xs' 
                 : 'bg-slate-50 hover:bg-orange-50 border-slate-200 hover:border-[#FF6B35] text-slate-600 hover:text-[#FF6B35]'
             }`}
           >
-            {isAdded ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+            {isAdded ? <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" /> : <ShoppingCart className="w-3.5 h-3.5" />}
           </button>
 
           <Link
