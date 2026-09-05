@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, Bell, ShoppingCart, User, Menu, X, LogIn, LogOut, Wallet, Shield, Sparkles, Flame, KeyRound, UploadCloud, Layers } from 'lucide-react';
+import { Search, ChevronDown, Bell, ShoppingCart, User, Menu, X, LogIn, LogOut, Wallet, Shield, Sparkles, Flame, KeyRound, UploadCloud, Layers, Rocket } from 'lucide-react';
 import StackDealLogo from './StackDealLogo';
 import AuthModal from './AuthModal';
 import AiDealAssistantModal from './AiDealAssistantModal';
@@ -325,10 +325,6 @@ export default function Navbar() {
             New arrivals
           </Link>
 
-          <Link href="/compare" className="hover:text-slate-950 transition-colors">
-            Compare
-          </Link>
-
           <Link href="/plus" className="flex items-center gap-1 bg-[#1A1828] text-amber-400 font-black px-2.5 py-1 rounded-md text-[10px] tracking-wider uppercase hover:bg-slate-900 transition-colors">
             PLUS
           </Link>
@@ -338,19 +334,15 @@ export default function Navbar() {
         {/* 4. Right Utility Icons */}
         <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 text-slate-800">
 
-          {/* WhatsApp VIP Community Button */}
-          <a
-            href="https://chat.whatsapp.com/GmWT9MGU8LX2PFGEtl1Z7f"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 border border-emerald-200/90 text-xs font-bold transition-all shadow-xs hover:scale-105"
-            title="Join StackDeal VIP WhatsApp Community"
+          {/* Become a Vendor Feature Button */}
+          <Link
+            href="/submit"
+            className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-950 hover:bg-black text-white border border-slate-800 hover:border-orange-500/50 text-xs font-bold transition-all shadow-xs hover:shadow-md group cursor-pointer"
+            title="List your SaaS tool on StackDeal"
           >
-            <svg className="w-3.5 h-3.5 fill-current text-emerald-600 shrink-0" viewBox="0 0 24 24">
-              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.699c.971.53 1.761.815 2.796.815 3.18 0 5.766-2.587 5.767-5.766.001-3.181-2.585-5.768-5.767-5.768zm3.397 8.21c-.141.396-.714.726-1.074.77-.361.045-.826.068-2.673-.699-2.223-.924-3.642-3.182-3.753-3.329-.111-.148-.908-1.209-.908-2.306 0-1.097.575-1.637.778-1.859.203-.223.443-.278.591-.278.148 0 .296.002.425.008.136.006.319-.052.499.38.188.452.641 1.564.697 1.677.056.113.093.245.018.394-.075.148-.112.241-.223.371-.111.13-.233.29-.333.39-.111.111-.227.232-.098.454.129.222.574.947 1.233 1.535.849.758 1.565.993 1.787 1.104.222.111.352.093.481-.056.129-.148.556-.649.704-.871.148-.222.296-.185.499-.111.204.074 1.296.611 1.518.722.222.111.37.167.425.26.056.093.056.538-.085.934zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.438 5.178L2 22l4.98-1.306C8.423 21.492 10.153 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
-            </svg>
-            <span>VIP Club</span>
-          </a>
+            <UploadCloud className="w-3.5 h-3.5 text-[#FF6B35] group-hover:scale-110 transition-transform" />
+            <span>Become a Vendor</span>
+          </Link>
           
           {/* Live User & Vendor Notification Bell */}
           <button
@@ -600,19 +592,19 @@ export default function Navbar() {
               <span className="text-[10px] text-slate-400 font-bold">5-Yr</span>
             </Link>
 
-            {/* Compare Software */}
+            {/* Redeem Code */}
             <Link
-              href="/compare"
+              href="/redeem"
               onClick={() => setMenuOpen(false)}
               className="p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100 border border-slate-200/60 flex items-center justify-between transition-all group"
             >
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-100/80 text-[#2475FF] flex items-center justify-center shrink-0">
-                  <Layers className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-lg bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
+                  <KeyRound className="w-3.5 h-3.5" />
                 </div>
-                <span className="font-bold text-slate-800 group-hover:text-slate-950">Compare</span>
+                <span className="font-bold text-slate-800 group-hover:text-slate-950">Redeem</span>
               </div>
-              <span className="text-[10px] text-slate-400 font-bold">vs $</span>
+              <span className="text-[10px] text-slate-400 font-bold">Code</span>
             </Link>
 
             {/* StackDeal PLUS Club */}
@@ -633,32 +625,29 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* 3. Sleek VIP WhatsApp Community Banner */}
-          <a
-            href="https://chat.whatsapp.com/GmWT9MGU8LX2PFGEtl1Z7f"
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* 3. Dedicated Become a Vendor / Creator Spotlight Banner */}
+          <Link
+            href="/submit"
             onClick={() => setMenuOpen(false)}
-            className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-teal-500/10 border border-emerald-500/30 flex items-center justify-between group transition-all hover:bg-emerald-500/15"
+            className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white border border-slate-800 flex items-center justify-between group transition-all shadow-md hover:border-orange-500/50"
           >
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.699c.971.53 1.761.815 2.796.815 3.18 0 5.766-2.587 5.767-5.766.001-3.181-2.585-5.768-5.767-5.768zm3.397 8.21c-.141.396-.714.726-1.074.77-.361.045-.826.068-2.673-.699-2.223-.924-3.642-3.182-3.753-3.329-.111-.148-.908-1.209-.908-2.306 0-1.097.575-1.637.778-1.859.203-.223.443-.278.591-.278.148 0 .296.002.425.008.136.006.319-.052.499.38.188.452.641 1.564.697 1.677.056.113.093.245.018.394-.075.148-.112.241-.223.371-.111.13-.233.29-.333.39-.111.111-.227.232-.098.454.129.222.574.947 1.233 1.535.849.758 1.565.993 1.787 1.104.222.111.352.093.481-.056.129-.148.556-.649.704-.871.148-.222.296-.185.499-.111.204.074 1.296.611 1.518.722.222.111.37.167.425.26.056.093.056.538-.085.934zM12 2C6.477 2 2 6.477 2 12c0 1.891.526 3.662 1.438 5.178L2 22l4.98-1.306C8.423 21.492 10.153 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
-                </svg>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF6B35] to-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Rocket className="w-4 h-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900">VIP WhatsApp Community</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-black text-white">Become a Vendor</span>
                 </div>
-                <p className="text-[10px] text-slate-500 font-medium">48h Early Drops & Secret Coupons</p>
+                <p className="text-[10px] text-slate-300 font-medium truncate mt-0.5">
+                  Launch 5-Year Passes & get 50–100 paying customers
+                </p>
               </div>
             </div>
-            <span className="text-[11px] font-bold text-emerald-700 bg-white px-2 py-1 rounded-lg border border-emerald-200/80 shadow-2xs group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-              Join ➔
+            <span className="text-[11px] font-bold text-orange-400 group-hover:text-white group-hover:translate-x-0.5 transition-all shrink-0 ml-2">
+              Apply ➔
             </span>
-          </a>
+          </Link>
 
           {/* 4. Secondary Actions / Utility Rows */}
           <div className="divide-y divide-slate-100 border border-slate-200/70 rounded-2xl overflow-hidden bg-white">
@@ -681,7 +670,7 @@ export default function Navbar() {
             >
               <div className="flex items-center gap-2.5">
                 <UploadCloud className="w-4 h-4 text-slate-400" />
-                <span>List Your SaaS Tool (70% Payout)</span>
+                <span>List Your SaaS Tool</span>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 -rotate-90" />
             </Link>

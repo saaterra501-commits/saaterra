@@ -1,0 +1,46 @@
+# ==============================================================================
+# STACKDEAL.IN — VERIFIED SAAS FOUNDERS & TOOLS LEADS LIST
+# Total Leads: 35 Real SaaS Products (Micro-SaaS, AI Tools, Indian & Global Indie)
+# Format: Email, FirstName, LastName, ToolName, Category, Website
+# ==============================================================================
+
+partner@typingmind.com	Tony	Dinh	TypingMind	AI Workspace	https://typingmind.com
+support@sitegpt.ai	Bhanu	Teja	SiteGPT	AI Chatbot	https://sitegpt.ai
+hello@superblog.ai	Sai	Krishna	Superblog	SEO & Blogging	https://superblog.ai
+hi@pika.style	Rishi	Mohan	Pika Style	Design & Screenshots	https://pika.style
+support@senja.io	Oliver	Meakings	Senja	Social Proof & Reviews	https://senja.io
+support@feedhive.io	Simon	Hoiberg	FeedHive	Social Media AI	https://feedhive.io
+support@podsqueeze.com	Tiago	Ferreira	Podsqueeze	AI Podcast Content	https://podsqueeze.com
+support@bannerbear.com	Jon	Yongfook	Bannerbear	Automated Image Generation	https://bannerbear.com
+legal@useplunk.com	Dries	Augustyns	Plunk	Email Marketing for Developers	https://useplunk.com
+support@formbricks.com	Johannes	Oberst	Formbricks	Open Source Surveys	https://formbricks.com
+support@typefully.com	Fabrizio	Rinaldi	Typefully	Twitter Growth & Analytics	https://typefully.com
+support@hypefury.com	Yannick	Veys	Hypefury	Social Growth Automation	https://hypefury.com
+support@saleshandy.com	Dhruv	Patel	Saleshandy	Cold Email Outreach	https://saleshandy.com
+support@klenty.com	Vengat	Krishnaraj	Klenty	Sales Engagement	https://klenty.com
+support@invideo.io	Sanket	Shah	InVideo	AI Video Generator	https://invideo.io
+support@murf.ai	Sneha	Roy	Murf AI	AI Voice Generator	https://murf.ai
+support@writesonic.com	Samanyou	Garg	Writesonic	AI Copywriting	https://writesonic.com
+support@docsbot.ai	Logan	Mayville	DocsBot AI	AI Customer Support Bots	https://docsbot.ai
+support@tooljet.com	Navaneeth	Padmanabhan	ToolJet	Low-Code Internal Tools	https://tooljet.com
+support@appsmith.com	Abhishek	Nayak	Appsmith	Internal Tool Builder	https://appsmith.com
+support@videosdk.live	Arpit	Roy	VideoSDK	Video & Audio Live API	https://videosdk.live
+support@hoppscotch.io	Liyas	Thomas	Hoppscotch	API Development Suite	https://hoppscotch.io
+support@signoz.io	Pranay	Prateek	SigNoz	Application Observability	https://signoz.io
+support@gumlet.com	Kapil	Borah	Gumlet	Video & Image Hosting	https://gumlet.com
+support@mydukaan.io	Suumit	Shah	Dukaan	E-Commerce Store Builder	https://mydukaan.io
+support@vmaker.com	Manoj	Dhanotiya	Vmaker	Screen Recorder & Video Editor	https://vmaker.com
+support@supertokens.com	Advait	Ruia	SuperTokens	Open Source User Auth	https://supertokens.com
+support@taplio.com	Alex	Berman	Taplio	LinkedIn Automation & AI	https://taplio.com
+support@tweethunter.io	Tom	Jacquesson	TweetHunter	Twitter Lead Generation	https://tweethunter.io
+support@savvycal.com	Derrick	Reimer	SavvyCal	Scheduling & Calendar	https://savvycal.com
+support@userlist.com	Jane	Portman	Userlist	Email Marketing for SaaS	https://userlist.com
+support@simpleanalytics.com	Adriaan	van Rossum	Simple Analytics	Privacy-first Analytics	https://simpleanalytics.com
+support@usefathom.com	Paul	Jarvis	Fathom Analytics	Simple Website Analytics	https://usefathom.com
+support@plausible.io	Marko	Saric	Plausible Analytics	Lightweight Analytics	https://plausible.io
+support@headshotpro.com	Danny	Postma	HeadshotPro	AI Headshot Generator	https://headshotpro.com
+
+# ------------------------------------------------------------------------------
+# ONLY EMAIL ADDRESSES (Comma-Separated for Direct Paste):
+# partner@typingmind.com, support@sitegpt.ai, hello@superblog.ai, hi@pika.style, support@senja.io, support@feedhive.io, support@podsqueeze.com, support@bannerbear.com, legal@useplunk.com, support@formbricks.com, support@typefully.com, support@hypefury.com, support@saleshandy.com, support@klenty.com, support@invideo.io, support@murf.ai, support@writesonic.com, support@docsbot.ai, support@tooljet.com, support@appsmith.com, support@videosdk.live, support@hoppscotch.io, support@signoz.io, support@gumlet.com, support@mydukaan.io, support@vmaker.com, support@supertokens.com, support@taplio.com, support@tweethunter.io, support@savvycal.com, support@userlist.com, support@simpleanalytics.com, support@usefathom.com, support@plausible.io, support@headshotpro.com
+# ------------------------------------------------------------------------------

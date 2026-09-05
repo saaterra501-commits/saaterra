@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import LegalBetaDisclaimer from "@/components/LegalBetaDisclaimer";
 import GuestAuthNudge from "@/components/GuestAuthNudge";
+import TopAnnouncementBar from "@/components/TopAnnouncementBar";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.stackdeal.in";
 
@@ -198,6 +199,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         style={{ fontFamily: "'New Kansas', 'newKansas', 'Fraunces', 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif" }}
         suppressHydrationWarning
       >
+        <TopAnnouncementBar />
         <LegalBetaDisclaimer />
         <GuestAuthNudge />
         {children}

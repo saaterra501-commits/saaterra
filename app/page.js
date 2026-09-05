@@ -11,6 +11,7 @@ import EndingSoonSliderSection from '../components/EndingSoonSliderSection';
 import LTDCheckoutModal from '../components/LTDCheckoutModal';
 import SalesTicker from '../components/SalesTicker';
 import HomeFAQ from '../components/HomeFAQ';
+import DynamicPromoBanner from '../components/DynamicPromoBanner';
 import Link from 'next/link';
 import {
   Sparkles, Flame, ShieldCheck, Clock, Check, ArrowRight, Zap, Users,
@@ -142,12 +143,13 @@ export default function Home() {
     async function loadDeals() {
       try {
         const res = await fetch('/api/deals');
+        if (!res.ok) return;
         const data = await res.json();
         if (data?.success && data?.deals && data.deals.length > 0) {
           setDeals(data.deals);
         }
       } catch (err) {
-        console.error('Error loading live deals:', err);
+        console.warn('Live deals fetch notice:', err?.message || err);
       } finally {
         setLoading(false);
       }
@@ -314,7 +316,10 @@ export default function Home() {
           )}
         </div>
 
-        {/* ── 4C. Dedicated Ending Soon Software Passes Carousel ── */}
+        {/* ── 4C. Dynamic Admin-Controlled Promotional Banner ── */}
+        <DynamicPromoBanner />
+
+        {/* ── 4D. Dedicated Ending Soon Software Passes Carousel ── */}
         {!loading && deals.length > 0 && (
           <EndingSoonSliderSection deals={deals} onBuyClick={handleBuy} />
         )}

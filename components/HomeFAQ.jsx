@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, HelpCircle, Sparkles, ShieldCheck, Zap, ArrowRight, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -37,6 +37,24 @@ const FAQ_ITEMS = [
 
 export default function HomeFAQ() {
   const [openIdx, setOpenIdx] = useState(0);
+  const [faqs, setFaqs] = useState(FAQ_ITEMS);
+
+  useEffect(() => {
+    async function loadFaqs() {
+      try {
+        const res = await fetch('/api/site-config');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.success && Array.isArray(data?.config?.faqs) && data.config.faqs.length > 0) {
+          const activeFaqs = data.config.faqs.filter((f) => f.active !== false);
+          if (activeFaqs.length > 0) {
+            setFaqs(activeFaqs);
+          }
+        }
+      } catch (e) {}
+    }
+    loadFaqs();
+  }, []);
 
   const toggle = (idx) => {
     setOpenIdx((prev) => (prev === idx ? -1 : idx));
@@ -45,7 +63,7 @@ export default function HomeFAQ() {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS.map((item) => ({
+    mainEntity: faqs.map((item) => ({
       '@type': 'Question',
       name: item.q,
       acceptedAnswer: {
@@ -78,7 +96,7 @@ export default function HomeFAQ() {
 
       {/* Accordion List */}
       <div className="space-y-3 max-w-3xl mx-auto">
-        {FAQ_ITEMS.map((item, idx) => {
+        {faqs.map((item, idx) => {
           const isOpen = openIdx === idx;
           return (
             <div

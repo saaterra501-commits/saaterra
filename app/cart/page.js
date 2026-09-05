@@ -182,19 +182,32 @@ function CartContent() {
   };
 
   // Apply promo coupon
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault();
     setCouponError('');
     const code = couponCode.trim().toUpperCase();
+    if (!code) return;
 
-    if (code === 'SAATERRA10' || code === 'VIP10') {
-      setAppliedCoupon({ code, discountPercent: 10, label: '10% Launch Discount' });
-    } else if (code === 'FOUNDER20') {
-      setAppliedCoupon({ code, discountPercent: 20, label: '20% Founder Discount' });
-    } else if (code === 'SAVE500') {
-      setAppliedCoupon({ code, flatDiscount: 500, label: '₹500 Flat Savings' });
-    } else {
-      setCouponError('Invalid or expired coupon code. Try "SAATERRA10" or "FOUNDER20".');
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, cartSubtotal: rawSubtotal }),
+      });
+      const data = await res.json();
+      if (data?.success && data?.coupon) {
+        setAppliedCoupon({
+          code: data.coupon.code,
+          discountPercent: data.coupon.discountType === 'percent' ? data.coupon.discountValue : null,
+          flatDiscount: data.coupon.discountType === 'flat' ? data.coupon.discountValue : null,
+          discountAmount: data.coupon.discountAmount,
+          label: data.coupon.description,
+        });
+      } else {
+        setCouponError(data.message || 'Invalid or expired coupon code');
+      }
+    } catch (err) {
+      setCouponError('Network error validating coupon');
     }
   };
 
@@ -209,6 +222,8 @@ function CartContent() {
       couponDiscount = Math.round(rawSubtotal * (appliedCoupon.discountPercent / 100));
     } else if (appliedCoupon.flatDiscount) {
       couponDiscount = Math.min(rawSubtotal, appliedCoupon.flatDiscount);
+    } else if (appliedCoupon.discountAmount) {
+      couponDiscount = Math.min(rawSubtotal, appliedCoupon.discountAmount);
     }
   }
 
