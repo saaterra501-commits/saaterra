@@ -1,81 +1,97 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Zap, Check, Clock, ChevronUp, Database, MessageSquare, Search, Video, Sparkles, X, ShieldCheck } from 'lucide-react';
+import { Bell, Zap, Check, Clock, ChevronUp, MessageSquare, Search, Database, Mail, Video, Sparkles, X, Layers } from 'lucide-react';
 
-const UPCOMING_DROPS = [
+const UPCOMING_CATEGORIES = [
   {
-    id: 'lead-scrape',
-    name: 'LeadScrape AI',
-    tagline: 'Unlimited B2B leads & verified founder emails.',
-    category: 'Lead Scrapers',
-    eta: '4 Days',
-    price: '₹2,499',
-    originalPrice: '₹28,000',
-    icon: Database,
-    iconColor: 'text-[#FF6B35]',
-    iconBg: 'bg-orange-50 border-orange-200',
-    upvotes: 412,
-  },
-  {
-    id: 'whatsapp-crm',
-    name: 'WhatsAuto CRM',
-    tagline: '100+ WhatsApp inboxes with official Meta Cloud API.',
-    category: 'WhatsApp Bots',
-    eta: '8 Days',
-    price: '₹1,999',
-    originalPrice: '₹24,000',
+    id: 'whatsapp-bots',
+    name: 'WhatsApp Bots & Meta Automation',
+    toolCount: 6,
+    eta: 'Dropping in 5–10 Days',
+    priceRange: 'From ₹1,999',
+    replaces: 'WATI & Interakt (₹3,500/mo)',
+    highlights: 'Cart recovery bots, official Meta Cloud API & multi-agent shared inboxes.',
     icon: MessageSquare,
     iconColor: 'text-emerald-600',
     iconBg: 'bg-emerald-50 border-emerald-200',
-    upvotes: 358,
+    upvotes: 412,
   },
   {
-    id: 'geo-seo',
-    name: 'RankPerplex GEO',
-    tagline: 'Rank clients on ChatGPT & Perplexity AI answers.',
-    category: 'AI & SEO',
-    eta: '12 Days',
-    price: '₹2,999',
-    originalPrice: '₹35,000',
+    id: 'ai-geo-seo',
+    name: 'AI & Generative SEO (GEO)',
+    toolCount: 7,
+    eta: 'Dropping in 7–14 Days',
+    priceRange: 'From ₹2,499',
+    replaces: 'Ahrefs & Semrush ($129/mo)',
+    highlights: 'ChatGPT & Perplexity citation tracking, client white-label audit reports.',
     icon: Search,
     iconColor: 'text-[#2475FF]',
     iconBg: 'bg-blue-50 border-blue-200',
+    upvotes: 358,
+  },
+  {
+    id: 'lead-scrapers',
+    name: 'B2B Lead Scrapers & Data Finders',
+    toolCount: 5,
+    eta: 'Dropping in 10–18 Days',
+    priceRange: 'From ₹2,499',
+    replaces: 'Apollo.io ($99/mo) & Lusha',
+    highlights: 'Google Maps lead extractors, 99% SMTP verified emails & phone finders.',
+    icon: Database,
+    iconColor: 'text-[#FF6B35]',
+    iconBg: 'bg-orange-50 border-orange-200',
     upvotes: 284,
   },
   {
-    id: 'viral-script',
-    name: 'ShortsViral AI',
-    tagline: 'Viral hooks & teleprompter scripts for Shorts/Reels.',
-    category: 'Productivity',
-    eta: '16 Days',
-    price: '₹2,199',
-    originalPrice: '₹22,000',
+    id: 'crm-cold-email',
+    name: 'CRM & Cold Email Automation',
+    toolCount: 4,
+    eta: 'Dropping in 14–21 Days',
+    priceRange: 'From ₹1,999',
+    replaces: 'Lemlist & Instantly ($79/mo)',
+    highlights: 'Outbound sequences, inbox warmups, agency pipelines & GST invoices.',
+    icon: Mail,
+    iconColor: 'text-indigo-600',
+    iconBg: 'bg-indigo-50 border-indigo-200',
+    upvotes: 219,
+  },
+  {
+    id: 'video-productivity',
+    name: 'Video AI & Creator Productivity',
+    toolCount: 3,
+    eta: 'Dropping in 18–25 Days',
+    priceRange: 'From ₹1,499',
+    replaces: 'Syllaby & Jasper Video ($49/mo)',
+    highlights: 'Viral retention hooks for Shorts/Reels, teleprompter & audio exports.',
     icon: Video,
     iconColor: 'text-purple-600',
     iconBg: 'bg-purple-50 border-purple-200',
-    upvotes: 219,
+    upvotes: 187,
   },
 ];
+
+const TOTAL_TOOLS = UPCOMING_CATEGORIES.reduce((acc, c) => acc + c.toolCount, 0); // 25
 
 export default function UpcomingDealsSection() {
   const [upvotes, setUpvotes] = useState(() => {
     const init = {};
-    UPCOMING_DROPS.forEach(d => { init[d.id] = d.upvotes; });
+    UPCOMING_CATEGORIES.forEach(c => { init[c.id] = c.upvotes; });
     return init;
   });
   const [voted, setVoted] = useState({});
 
-  // Main Top Bar Form State
+  // Main Form State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [category, setCategory] = useState('All');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
   // Per-Card Inline Notify State
-  const [activeNotifyDeal, setActiveNotifyDeal] = useState(null);
+  const [activeNotifyCat, setActiveNotifyCat] = useState(null);
   const [cardName, setCardName] = useState('');
   const [cardEmail, setCardEmail] = useState('');
   const [cardWhatsapp, setCardWhatsapp] = useState('');
@@ -110,8 +126,8 @@ export default function UpcomingDealsSection() {
           name: name.trim(),
           email: email.trim(),
           whatsapp: whatsapp.replace(/\D/g, ''),
-          source: 'upcoming_section_header',
-          preferredCategory: 'All'
+          source: 'upcoming_pipeline_25_software',
+          preferredCategory: category
         }),
       });
       const data = await res.json();
@@ -128,7 +144,7 @@ export default function UpcomingDealsSection() {
   };
 
   // Per-Card Submit Handler
-  const handleCardSubmit = async (e, deal) => {
+  const handleCardSubmit = async (e, cat) => {
     e.preventDefault();
     if (!cardEmail || !cardEmail.includes('@')) {
       setCardError('Valid email is required.');
@@ -141,18 +157,18 @@ export default function UpcomingDealsSection() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: cardName.trim() || `VIP Buyer (${deal.name})`,
+          name: cardName.trim() || `VIP (${cat.name})`,
           email: cardEmail.trim(),
           whatsapp: cardWhatsapp.replace(/\D/g, ''),
-          source: `card_${deal.id}`,
-          preferredCategory: deal.category
+          source: `category_${cat.id}`,
+          preferredCategory: cat.name
         }),
       });
       const data = await res.json();
       if (data?.success) {
-        setInlineSuccess(deal.name);
+        setInlineSuccess(cat.name);
         setTimeout(() => {
-          setActiveNotifyDeal(null);
+          setActiveNotifyCat(null);
           setInlineSuccess('');
           setCardName('');
           setCardEmail('');
@@ -171,36 +187,40 @@ export default function UpcomingDealsSection() {
   return (
     <section id="upcoming-deals" className="w-full space-y-4 scroll-mt-24">
 
-      {/* ── Compact Header & Name + Email + Number Form ── */}
+      {/* ── Compact Header & Pipeline VIP Form ── */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <span className="inline-flex items-center gap-1 bg-[#2475FF] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                 <Sparkles className="w-3 h-3 text-amber-300" />
-                Dropping Soon
+                Launch Pipeline
               </span>
               <span className="text-[11px] font-bold text-slate-500">
-                5-Year SaaS Passes • VIP Early-Bird
+                Next 30 Days Launch Roadmap
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
-              Upcoming Drops <span className="text-sm font-bold text-slate-400 font-mono">({UPCOMING_DROPS.length})</span>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight flex items-center gap-2">
+              <span>{TOTAL_TOOLS}+ Software 5-Year Passes Dropping Soon</span>
+              <span className="text-xs font-black text-[#FF6B35] bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full font-mono">
+                5 Categories
+              </span>
             </h2>
           </div>
-          <p className="text-xs text-slate-500 font-medium sm:text-right">
-            VIP members get private drop link + coupon <span className="font-bold text-slate-800">24h before public release</span>.
+          <p className="text-xs text-slate-500 font-medium sm:text-right max-w-sm">
+            We are negotiating 5-Year passes with top founders. VIP members get <span className="font-bold text-slate-800">24h early access + discounted launch coupons</span>.
           </p>
         </div>
 
-        {/* Form: Name + Email + WhatsApp Number */}
+        {/* Form: Name + Email + WhatsApp Number + Category */}
         {submitted ? (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold p-3.5 rounded-xl flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
-                🎉 Awesome{name ? ` ${name}` : ''}! You're on the VIP list. We'll send first-access drops to{' '}
-                <span className="font-mono text-emerald-950">{email}</span>
+                🎉 Awesome{name ? ` ${name}` : ''}! You're on the VIP list for{' '}
+                <span className="font-bold">{category === 'All' ? `all ${TOTAL_TOOLS}+ upcoming software` : category}</span>.
+                Alerts will be sent to <span className="font-mono text-emerald-950">{email}</span>
                 {whatsapp ? ` & WhatsApp (+91 ${whatsapp})` : ''}!
               </span>
             </div>
@@ -223,7 +243,7 @@ export default function UpcomingDealsSection() {
               </div>
 
               {/* Email input */}
-              <div className="sm:col-span-4">
+              <div className="sm:col-span-3">
                 <input
                   type="email"
                   required
@@ -235,16 +255,30 @@ export default function UpcomingDealsSection() {
               </div>
 
               {/* WhatsApp Number input */}
-              <div className="sm:col-span-3 relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">+91</span>
+              <div className="sm:col-span-2 relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">+91</span>
                 <input
                   type="tel"
                   maxLength={10}
-                  placeholder="WhatsApp (optional)"
+                  placeholder="WhatsApp"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-emerald-500 rounded-xl pl-10 pr-3 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-emerald-500 rounded-xl pl-9 pr-2 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
                 />
+              </div>
+
+              {/* Category Select */}
+              <div className="sm:col-span-2">
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#2475FF] rounded-xl px-2.5 py-2 text-xs font-medium text-slate-700 outline-none transition-all cursor-pointer"
+                >
+                  <option value="All">🔔 All {TOTAL_TOOLS}+ Software</option>
+                  {UPCOMING_CATEGORIES.map(c => (
+                    <option key={c.id} value={c.name}>{c.name} ({c.toolCount})</option>
+                  ))}
+                </select>
               </div>
 
               {/* Submit button */}
@@ -273,76 +307,72 @@ export default function UpcomingDealsSection() {
         )}
       </div>
 
-      {/* ── Compact 4-Card Grid ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {UPCOMING_DROPS.map((deal) => {
-          const Icon = deal.icon;
-          const isVoted = !!voted[deal.id];
-          const isNotifyActive = activeNotifyDeal === deal.id;
+      {/* ── Category Cards Grid (25 Software Launch Pipeline) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
+        {UPCOMING_CATEGORIES.map((cat) => {
+          const Icon = cat.icon;
+          const isVoted = !!voted[cat.id];
+          const isNotifyActive = activeNotifyCat === cat.id;
 
           return (
             <div
-              key={deal.id}
+              key={cat.id}
               className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between relative group"
             >
               <div>
-                {/* Top Row: Icon + Category + ETA */}
+                {/* Top Row: Icon + Tool Count Badge */}
                 <div className="flex items-center justify-between gap-2 mb-2.5">
-                  <div className={`w-8 h-8 rounded-xl border flex items-center justify-center ${deal.iconBg} ${deal.iconColor} shrink-0`}>
+                  <div className={`w-8 h-8 rounded-xl border flex items-center justify-center ${cat.iconBg} ${cat.iconColor} shrink-0`}>
                     <Icon className="w-4 h-4" />
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                      {deal.category}
-                    </span>
-                    <span className="flex items-center gap-0.5 text-[10px] font-black text-[#FF6B35] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-md font-mono">
-                      <Clock className="w-2.5 h-2.5" />
-                      {deal.eta}
-                    </span>
-                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-[#2475FF] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full font-mono">
+                    <Layers className="w-2.5 h-2.5" />
+                    {cat.toolCount} Software
+                  </span>
                 </div>
 
-                {/* Title & Tagline */}
-                <h3 className="text-sm font-black text-slate-950 leading-tight">
-                  {deal.name}
+                {/* Category Name & Highlights */}
+                <h3 className="text-sm font-black text-slate-950 leading-snug">
+                  {cat.name}
                 </h3>
-                <p className="text-[11px] text-slate-500 font-medium leading-normal mt-1 line-clamp-2">
-                  {deal.tagline}
+                <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1.5 line-clamp-2">
+                  {cat.highlights}
                 </p>
+
+                {/* Drop Window Pill */}
+                <div className="mt-2.5 inline-flex items-center gap-1 text-[10px] font-bold text-[#FF6B35] bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-md">
+                  <Clock className="w-3 h-3" />
+                  <span>{cat.eta}</span>
+                </div>
               </div>
 
               {/* Price Row + Actions */}
               <div className="mt-3 pt-2.5 border-t border-slate-100">
                 <div className="flex items-baseline justify-between mb-2">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-sm font-black text-slate-950 font-mono">{deal.price}</span>
-                    <span className="text-[10px] text-slate-400 line-through font-mono">{deal.originalPrice}</span>
-                  </div>
-                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded">
-                    5-Yr Pass
-                  </span>
+                  <span className="text-xs font-black text-slate-900 font-mono">{cat.priceRange}</span>
+                  <span className="text-[9px] font-bold text-slate-400">5-Yr Pass</span>
                 </div>
 
-                {/* Compact Interactive Buttons: Upvote + Alert Me */}
+                {/* Compact Buttons: Vote + Alert Me */}
                 <div className="flex items-center gap-1.5">
                   {/* Micro Upvote Button */}
                   <button
-                    onClick={(e) => toggleUpvote(deal.id, e)}
+                    onClick={(e) => toggleUpvote(cat.id, e)}
                     className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
                       isVoted
                         ? 'bg-amber-500 border-amber-500 text-white shadow-xs'
                         : 'bg-slate-50 hover:bg-orange-50 border-slate-200 text-slate-700 hover:text-[#FF6B35]'
                     }`}
-                    title="Upvote this deal"
+                    title="Vote for this category to prioritize drops"
                   >
                     <ChevronUp className="w-3.5 h-3.5" />
-                    <span>{upvotes[deal.id] || deal.upvotes}</span>
+                    <span>{upvotes[cat.id] || cat.upvotes}</span>
                   </button>
 
                   {/* Micro Notify Button */}
                   <button
                     onClick={() => {
-                      setActiveNotifyDeal(isNotifyActive ? null : deal.id);
+                      setActiveNotifyCat(isNotifyActive ? null : cat.id);
                       setCardError('');
                     }}
                     className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
@@ -356,17 +386,17 @@ export default function UpcomingDealsSection() {
                   </button>
                 </div>
 
-                {/* Inline 3-Input Alert Drawer (Name, Email, Number) */}
+                {/* Inline 3-Input Alert Drawer for this Category */}
                 {isNotifyActive && (
                   <div className="mt-2.5 pt-2.5 border-t border-slate-100 animate-in fade-in duration-150">
-                    {inlineSuccess === deal.name ? (
+                    {inlineSuccess === cat.name ? (
                       <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-center">
-                        ✓ VIP Early Access Alert Locked for {deal.name}!
+                        ✓ Alert Set for {cat.toolCount} {cat.name} drops!
                       </div>
                     ) : (
-                      <form onSubmit={(e) => handleCardSubmit(e, deal)} className="space-y-1.5">
+                      <form onSubmit={(e) => handleCardSubmit(e, cat)} className="space-y-1.5">
                         <div className="text-[10px] font-black text-slate-700">
-                          Get Alert for {deal.name.split(' ')[0]}:
+                          Alert for {cat.toolCount} {cat.name.split(' ')[0]} Tools:
                         </div>
                         <input
                           type="text"
@@ -378,7 +408,7 @@ export default function UpcomingDealsSection() {
                         <input
                           type="email"
                           required
-                          placeholder="Email Address *"
+                          placeholder="Work Email Address *"
                           value={cardEmail}
                           onChange={(e) => { setCardEmail(e.target.value); setCardError(''); }}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-800 placeholder-slate-400 outline-none focus:border-[#2475FF]"
@@ -409,7 +439,7 @@ export default function UpcomingDealsSection() {
                           ) : (
                             <>
                               <Bell className="w-3 h-3" />
-                              <span>Confirm VIP Alert</span>
+                              <span>Get Category Alerts</span>
                             </>
                           )}
                         </button>

@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Zap, Bell, ArrowRight, X, Check, Clock, Flame, ChevronRight, Database, MessageSquare, Search, Video } from 'lucide-react';
+import { Zap, Bell, ArrowRight, X, Check, Clock, Flame, ChevronRight, Database, MessageSquare, Search, Video, Mail, Layers } from 'lucide-react';
 
-const UPCOMING_DEALS = [
-  { id: 'lead-scrape-ai', name: 'LeadScrape AI', eta: '4d', category: 'Lead Scrapers', icon: Database, interested: 412 },
-  { id: 'whatsapp-agency-suite', name: 'WhatsAuto Suite', eta: '8d', category: 'WhatsApp Bots', icon: MessageSquare, interested: 358 },
-  { id: 'nuwatomic-geo-radar', name: 'RankPerplex GEO', eta: '12d', category: 'AI & SEO', icon: Search, interested: 284 },
-  { id: 'shorts-viral-ai', name: 'ShortsViral AI', eta: '16d', category: 'Productivity', icon: Video, interested: 219 },
+const UPCOMING_CATEGORIES = [
+  { id: 'whatsapp-bots', name: 'WhatsApp Bots', count: '6 Software', eta: '5-10d', icon: MessageSquare },
+  { id: 'ai-geo-seo', name: 'AI & GEO SEO', count: '7 Software', eta: '7-14d', icon: Search },
+  { id: 'lead-scrapers', name: 'B2B Scrapers', count: '5 Software', eta: '10-18d', icon: Database },
+  { id: 'crm-cold-email', name: 'Sales & CRM', count: '4 Software', eta: '14-21d', icon: Mail },
+  { id: 'video-productivity', name: 'Video AI', count: '3 Software', eta: '18-25d', icon: Video },
 ];
 
 export default function UpcomingDropBar() {
@@ -16,11 +17,11 @@ export default function UpcomingDropBar() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [dismissed, setDismissed] = useState(false);
-  const [activeDeal, setActiveDeal] = useState(0);
+  const [activeCat, setActiveCat] = useState(0);
 
   if (dismissed) return null;
 
-  const scrollToUpcoming = (dealId) => {
+  const scrollToUpcoming = () => {
     const el = document.getElementById('upcoming-deals');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -39,7 +40,7 @@ export default function UpcomingDropBar() {
       const res = await fetch('/api/upcoming-alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'topbar' }),
+        body: JSON.stringify({ email, source: 'topbar_pipeline' }),
       });
       if (!res.ok) return;
       const data = await res.json();
@@ -51,8 +52,6 @@ export default function UpcomingDropBar() {
       setLoading(false);
     }
   };
-
-  const ActiveIcon = UPCOMING_DEALS[activeDeal].icon;
 
   return (
     <div className="relative w-full bg-gradient-to-r from-[#0A0F1E] via-[#0F172A] to-[#0A0F1E] border-b border-white/10 overflow-hidden text-xs">
@@ -70,8 +69,8 @@ export default function UpcomingDropBar() {
                 <Check className="w-3 h-3 text-emerald-400" />
               </div>
               <span className="text-xs font-bold text-white">
-                🎉 You're on the VIP list! First-access alert will be sent to{' '}
-                <span className="text-amber-300 font-mono">{email}</span> when the next deal drops.
+                🎉 You're on the VIP list! 25+ software launch alerts will be sent to{' '}
+                <span className="text-amber-300 font-mono">{email}</span>.
               </span>
             </div>
             <button
@@ -86,29 +85,29 @@ export default function UpcomingDropBar() {
           /* ── Main Bar ── */
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-4 py-2">
 
-            {/* Left: Upcoming deals rotating pills */}
+            {/* Left: Upcoming 25+ Software Categories Ticker */}
             <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-x-auto scrollbar-hide py-0.5">
               {/* Pulsing Next Drop badge */}
               <button
-                onClick={() => scrollToUpcoming()}
+                onClick={scrollToUpcoming}
                 className="flex items-center gap-1.5 bg-[#FF6B35]/20 hover:bg-[#FF6B35]/30 border border-[#FF6B35]/40 text-[#FF6B35] text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap cursor-pointer transition-all shrink-0"
               >
                 <Flame className="w-3 h-3 fill-[#FF6B35] animate-pulse" />
-                <span>Next Drops ({UPCOMING_DEALS.length})</span>
+                <span>25+ Software Dropping</span>
               </button>
 
-              {/* Deal pills with vector icons */}
+              {/* Category pills with vector icons */}
               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-                {UPCOMING_DEALS.map((deal, i) => {
-                  const Icon = deal.icon;
-                  const isSelected = activeDeal === i;
+                {UPCOMING_CATEGORIES.map((cat, i) => {
+                  const Icon = cat.icon;
+                  const isSelected = activeCat === i;
 
                   return (
                     <button
-                      key={deal.id}
+                      key={cat.id}
                       onClick={() => {
-                        setActiveDeal(i);
-                        scrollToUpcoming(deal.id);
+                        setActiveCat(i);
+                        scrollToUpcoming();
                       }}
                       className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap transition-all border cursor-pointer shrink-0 ${
                         isSelected
@@ -117,10 +116,9 @@ export default function UpcomingDropBar() {
                       }`}
                     >
                       <Icon className="w-3 h-3 text-[#FF6B35]" />
-                      <span className="font-medium">{deal.name}</span>
-                      <span className="flex items-center gap-0.5 text-amber-400 text-[10px] font-mono">
-                        <Clock className="w-2.5 h-2.5" />
-                        {deal.eta}
+                      <span className="font-medium">{cat.name}</span>
+                      <span className="text-[10px] text-amber-300 font-bold bg-white/10 px-1.5 py-0.2 rounded-full">
+                        {cat.count}
                       </span>
                     </button>
                   );
@@ -129,10 +127,10 @@ export default function UpcomingDropBar() {
 
               {/* Jump to section arrow */}
               <button
-                onClick={() => scrollToUpcoming()}
+                onClick={scrollToUpcoming}
                 className="hidden xl:flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-amber-400 transition-colors shrink-0 cursor-pointer ml-1"
               >
-                <span>View & Vote</span>
+                <span>View Roadmap</span>
                 <ChevronRight className="w-3 h-3" />
               </button>
             </div>
