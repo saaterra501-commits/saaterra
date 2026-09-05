@@ -353,7 +353,7 @@ export default function UpcomingDealsSection() {
               <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
                 <span>Join Official VIP WhatsApp Community</span>
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.2 rounded-full">
-                  1,400+ Founders Active
+                  Official Group
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">

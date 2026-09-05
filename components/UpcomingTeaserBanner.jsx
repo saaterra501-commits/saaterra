@@ -89,8 +89,8 @@ export default function UpcomingTeaserBanner() {
               25+ Software Dropping in Next 30 Days
             </span>
             <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
-              <Users className="w-3 h-3 text-slate-400" />
-              3,200+ founders on VIP list
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              100% Free VIP Access
             </span>
           </div>
 
@@ -210,7 +210,7 @@ export default function UpcomingTeaserBanner() {
             className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
           >
             <MessageCircle className="w-4 h-4 fill-white" />
-            <span>Join VIP WhatsApp Community (1.4k+)</span>
+            <span>Join VIP WhatsApp Community</span>
           </a>
 
         </div>
