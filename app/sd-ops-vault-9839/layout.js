@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Tag, ShoppingBag, Users, MessageSquare, Gift,
   Crown, ExternalLink, ShieldCheck, Settings, LogOut, Bell, Clock,
-  CheckCircle2, ArrowRight, X, Lock, AlertTriangle, Mail, Key
+  CheckCircle2, ArrowRight, X, Lock, AlertTriangle, Mail, Key, TrendingUp
 } from 'lucide-react';
 import StackDealLogo from '../../components/StackDealLogo';
 
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { label: 'Site Settings & CMS', href: '/sd-ops-vault-9839/settings', icon: Settings },
   { label: 'Coupons & Promos', href: '/sd-ops-vault-9839/coupons', icon: Gift },
   { label: 'License Keys Vault', href: '/sd-ops-vault-9839/keys', icon: Key },
+  { label: 'VIP Buyer Waitlist', href: '/sd-ops-vault-9839/waitlist', icon: TrendingUp, badgeKey: 'waitlist' },
   { label: 'Registered Users', href: '/sd-ops-vault-9839/users', icon: Users },
   { label: 'Support Inquiries', href: '/sd-ops-vault-9839/inbox', icon: Mail, badgeKey: 'inquiries' },
   { label: 'Deals & Tiers', href: '/sd-ops-vault-9839/deals', icon: Tag, badgeKey: 'deals' },
