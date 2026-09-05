@@ -6,7 +6,8 @@ const NotificationSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
+      default: null,
       index: true,
     },
     userEmail: {
@@ -14,12 +15,23 @@ const NotificationSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       default: '',
+      index: true,
     },
 
     // ─── Notification Content ─────────────────────────────────────────────────
     type: {
       type: String,
-      enum: ['submission_approved', 'submission_rejected', 'vendor_submission', 'order_placed', 'review', 'general'],
+      enum: [
+        'submission_approved',
+        'submission_rejected',
+        'submission_pending',
+        'vendor_submission',
+        'order_placed',
+        'order_completed',
+        'customer_question',
+        'review',
+        'general',
+      ],
       default: 'general',
     },
     title: {
@@ -64,6 +76,11 @@ const NotificationSchema = new mongoose.Schema(
 
 // Index for fast unread count queries per user
 NotificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
+NotificationSchema.index({ userEmail: 1, isRead: 1, createdAt: -1 });
+
+if (process.env.NODE_ENV !== 'production' && mongoose.models.Notification) {
+  delete mongoose.models.Notification;
+}
 
 export default mongoose.models.Notification ||
   mongoose.model('Notification', NotificationSchema);

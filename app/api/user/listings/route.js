@@ -11,24 +11,33 @@ export async function GET(req) {
     
     // Check email from auth or query param
     const { searchParams } = new URL(req.url);
-    const queryEmail = searchParams.get('email')?.toLowerCase();
-    const userEmail = authUser?.email?.toLowerCase() || queryEmail;
+    const queryEmail = searchParams.get('email')?.toLowerCase()?.trim();
+    const userEmail = authUser?.email?.toLowerCase()?.trim() || queryEmail;
 
-    if (!userEmail) {
+    if (!userEmail && !authUser?.userId) {
       return NextResponse.json({ success: true, listings: [] });
     }
 
     await dbConnect();
 
+    const safeRegex = userEmail
+      ? new RegExp('^' + userEmail.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '$', 'i')
+      : null;
+
     // Query ONLY deals submitted by this specific user
-    const userDeals = await Deal.find({
-      $or: [
-        { 'founderContact.email': userEmail },
-        { founderEmail: userEmail },
-        { vendorEmail: userEmail },
-        ...(authUser?.userId ? [{ userId: authUser.userId }] : []),
-      ],
-    })
+    const orConditions = [];
+    if (safeRegex) {
+      orConditions.push(
+        { 'founderContact.email': safeRegex },
+        { founderEmail: safeRegex },
+        { vendorEmail: safeRegex }
+      );
+    }
+    if (authUser?.userId) {
+      orConditions.push({ userId: authUser.userId });
+    }
+
+    const userDeals = await Deal.find({ $or: orConditions })
       .sort({ createdAt: -1 })
       .lean();
 

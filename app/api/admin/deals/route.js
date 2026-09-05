@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Deal from '@/models/Deal';
+import Notification from '@/models/Notification';
+import User from '@/models/User';
+import { getAuthUser } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -24,10 +27,27 @@ export async function POST(req) {
     const slug = body.slug || body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const dealStatus = body.status || 'Pending';
 
+    const founderEmail = (body.founderEmail || body.founderContact?.email || body.vendorEmail || '').trim().toLowerCase();
+    const founderPhone = (body.founderPhone || body.founderContact?.phone || '').trim();
+
+    let authUserId = null;
+    try {
+      const authUser = await getAuthUser();
+      if (authUser?.userId) authUserId = authUser.userId;
+    } catch (e) {}
+
     const dealObj = {
       id: body.id || Date.now(),
       slug,
       ...body,
+      founderEmail,
+      founderPhone,
+      founderContact: {
+        email: founderEmail,
+        phone: founderPhone,
+      },
+      vendorEmail: founderEmail,
+      userId: body.userId || authUserId || null,
       isSelect: true,
       status: dealStatus,
       originalPrice: body.originalPrice || ((body.tier1Price || 1999) * 10),
@@ -54,6 +74,29 @@ export async function POST(req) {
       console.warn('MongoDB save error:', dbErr.message);
     }
 
+    // Trigger Vendor pending notification in MongoDB
+    if (founderEmail) {
+      try {
+        const conn = await dbConnect();
+        if (conn) {
+          const userDoc = await User.findOne({ email: founderEmail });
+          await Notification.create({
+            userId: userDoc?._id || authUserId || null,
+            userEmail: founderEmail,
+            type: 'submission_pending',
+            title: `⏳ Software Submitted for Review: ${dealObj.title}`,
+            message: `Your software "${dealObj.title}" was submitted successfully and is currently under QA review by the StackDeal team.`,
+            link: '/profile',
+            icon: '⏳',
+            meta: { slug: dealObj.slug, dealTitle: dealObj.title },
+            isRead: false,
+          });
+        }
+      } catch (notifErr) {
+        console.warn('Could not create pending notification:', notifErr.message);
+      }
+    }
+
     // Trigger Admin Notification for new vendor submission
     if (!global.ADMIN_NOTIFICATIONS) {
       global.ADMIN_NOTIFICATIONS = [];
@@ -66,7 +109,7 @@ export async function POST(req) {
         title: `New Vendor Listing: ${dealObj.vendorName || dealObj.title}`,
         message: `${dealObj.vendorName} submitted "${dealObj.title}" for QA verification. Review and approve to publish live.`,
         slug: dealObj.slug,
-        vendorEmail: dealObj.founderContact?.email || '',
+        vendorEmail: founderEmail,
         time: new Date().toISOString(),
         isRead: false,
       };
@@ -90,7 +133,30 @@ export async function PATCH(req) {
     const newStatus = status || 'Active';
     const now = new Date();
 
-    // 1. Update in-memory
+    // 1. Fetch deal from DB first to get exact vendor email
+    let dbDeal = null;
+    try {
+      const conn = await dbConnect();
+      if (conn) {
+        dbDeal = await Deal.findOne({ slug });
+      }
+    } catch (err) {
+      console.warn('MongoDB deal fetch error:', err.message);
+    }
+
+    const matchedDeal = (global.STORED_DEALS || []).find((d) => d.slug === slug);
+    const dealTitle = dbDeal?.title || matchedDeal?.title || slug;
+    const vendorEmail = (
+      dbDeal?.founderContact?.email ||
+      dbDeal?.founderEmail ||
+      dbDeal?.vendorEmail ||
+      matchedDeal?.founderContact?.email ||
+      matchedDeal?.founderEmail ||
+      matchedDeal?.vendorEmail ||
+      ''
+    ).trim().toLowerCase();
+
+    // 2. Update in-memory
     if (global.STORED_DEALS) {
       const deal = global.STORED_DEALS.find((d) => d.slug === slug);
       if (deal) {
@@ -102,7 +168,7 @@ export async function PATCH(req) {
       }
     }
 
-    // 2. Update MongoDB
+    // 3. Update MongoDB Deal
     try {
       const conn = await dbConnect();
       if (conn) {
@@ -111,51 +177,78 @@ export async function PATCH(req) {
           updateFields.launchDate = now;
           updateFields.campaignEndDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
         }
-        await Deal.findOneAndUpdate({ slug }, updateFields);
+        await Deal.findOneAndUpdate({ slug }, updateFields, { new: true });
       }
     } catch (err) {
       console.warn('MongoDB deal status update error:', err.message);
     }
 
-    // 3. Trigger Vendor Notification
+    // 4. Create Vendor Notification (Persistent in MongoDB & In-Memory)
+    const notifType = newStatus === 'Active' ? 'submission_approved' : newStatus === 'Rejected' ? 'submission_rejected' : 'general';
+    const notifTitle = newStatus === 'Active'
+      ? `🎉 Software Approved & Live: ${dealTitle}`
+      : newStatus === 'Rejected'
+      ? `⚠️ Software Listing Rejected: ${dealTitle}`
+      : `Listing Status Update: ${dealTitle} is now ${newStatus}`;
+
+    const notifMessage = newStatus === 'Active'
+      ? `Congratulations! Your software "${dealTitle}" has passed QA verification and is now LIVE on the StackDeal marketplace!`
+      : newStatus === 'Rejected'
+      ? `Your listing submission for "${dealTitle}" was not approved. Please update your details or reach out to admin@stackdeal.in.`
+      : `Your software submission "${dealTitle}" status changed to ${newStatus}.`;
+
+    const notifLink = newStatus === 'Active' ? `/deals/${slug}` : '/profile';
+    const notifIcon = newStatus === 'Active' ? '🎉' : newStatus === 'Rejected' ? '⚠️' : '🔔';
+
+    // Persist to MongoDB Notification collection
+    try {
+      const conn = await dbConnect();
+      if (conn && (vendorEmail || dbDeal?.userId)) {
+        let targetUserId = dbDeal?.userId || null;
+        if (!targetUserId && vendorEmail) {
+          const userDoc = await User.findOne({ email: vendorEmail });
+          if (userDoc) targetUserId = userDoc._id;
+        }
+
+        await Notification.create({
+          userId: targetUserId,
+          userEmail: vendorEmail,
+          type: notifType,
+          title: notifTitle,
+          message: notifMessage,
+          link: notifLink,
+          icon: notifIcon,
+          meta: { slug, dealTitle, status: newStatus },
+          isRead: false,
+        });
+      }
+    } catch (err) {
+      console.warn('MongoDB vendor notification create error:', err.message);
+    }
+
+    // Also update in-memory
     if (!global.VENDOR_NOTIFICATIONS) {
       global.VENDOR_NOTIFICATIONS = [];
     }
 
-    const matchedDeal = (global.STORED_DEALS || []).find((d) => d.slug === slug);
-    const dealTitle = matchedDeal?.title || slug;
-    const vendorEmail = matchedDeal?.founderContact?.email || '';
-
-    if (newStatus === 'Active') {
-      global.VENDOR_NOTIFICATIONS.unshift({
-        id: 'vnotif-' + Date.now(),
-        type: 'submission_approved',
-        title: `🎉 Software Approved & Live: ${dealTitle}`,
-        message: `Your software "${dealTitle}" has passed QA verification and is now LIVE on the StackDeal marketplace!`,
-        slug: slug,
-        link: `/deals/${slug}`,
-        userEmail: vendorEmail,
-        time: now.toISOString(),
-        isRead: false,
-      });
-    } else if (newStatus === 'Rejected') {
-      global.VENDOR_NOTIFICATIONS.unshift({
-        id: 'vnotif-' + Date.now(),
-        type: 'submission_rejected',
-        title: `⚠️ Listing Update: ${dealTitle}`,
-        message: `Your listing submission for "${dealTitle}" was not approved. Please update your details or reach out to admin@stackdeal.in.`,
-        slug: slug,
-        link: '/submit',
-        userEmail: vendorEmail,
-        time: now.toISOString(),
-        isRead: false,
-      });
-    }
+    global.VENDOR_NOTIFICATIONS.unshift({
+      id: 'vnotif-' + Date.now(),
+      type: notifType,
+      title: notifTitle,
+      message: notifMessage,
+      slug: slug,
+      link: notifLink,
+      icon: notifIcon,
+      userEmail: vendorEmail,
+      time: now.toISOString(),
+      isRead: false,
+    });
 
     return NextResponse.json({
       success: true,
-      message: `Software ${slug} is now ${newStatus}!`,
+      message: `Software ${slug} is now ${newStatus}! Notification sent to vendor (${vendorEmail || 'registered vendor'}).`,
       status: newStatus,
+      vendorEmail,
     });
   } catch (err) {
     console.error('API Admin Deals PATCH Error:', err.message);

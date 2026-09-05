@@ -24,11 +24,21 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadProfileData() {
       try {
+        let emailQuery = '';
+        if (typeof window !== 'undefined') {
+          const vEmail = (
+            localStorage.getItem('stackdeal_vendor_email') ||
+            localStorage.getItem('stackdeal_user_email') ||
+            ''
+          ).trim().toLowerCase();
+          if (vEmail) emailQuery = `?email=${encodeURIComponent(vEmail)}`;
+        }
+
         const [meRes, ordersRes, notifsRes, listingsRes] = await Promise.all([
           fetch('/api/auth/me'),
-          fetch('/api/user/deals'),
-          fetch('/api/user/notifications'),
-          fetch('/api/user/listings'),
+          fetch(`/api/user/deals${emailQuery}`),
+          fetch(`/api/user/notifications${emailQuery}`),
+          fetch(`/api/user/listings${emailQuery}`),
         ]);
 
         const meData = await meRes.json();
@@ -38,6 +48,22 @@ export default function ProfilePage() {
 
         if (meData?.user) {
           setUser(meData.user);
+          // If logged-in user email was not in query, reload with their email
+          if (meData.user.email && (!emailQuery || !emailQuery.includes(encodeURIComponent(meData.user.email.toLowerCase())))) {
+            const userQuery = `?email=${encodeURIComponent(meData.user.email.toLowerCase())}`;
+            const [userNotifsRes, userListingsRes] = await Promise.all([
+              fetch(`/api/user/notifications${userQuery}`),
+              fetch(`/api/user/listings${userQuery}`),
+            ]);
+            const unData = await userNotifsRes.json();
+            const ulData = await userListingsRes.json();
+            if (unData?.notifications && Array.isArray(unData.notifications)) {
+              setNotifications(unData.notifications);
+            }
+            if (ulData?.listings && Array.isArray(ulData.listings)) {
+              setVendorDeals(ulData.listings);
+            }
+          }
         }
 
         if (ordersData?.orders && Array.isArray(ordersData.orders)) {
@@ -47,15 +73,11 @@ export default function ProfilePage() {
         }
 
         if (notifsData?.notifications && Array.isArray(notifsData.notifications)) {
-          setNotifications(notifsData.notifications);
-        } else {
-          setNotifications([]);
+          setNotifications((prev) => (prev.length > 0 ? prev : notifsData.notifications));
         }
 
         if (listingsData?.listings && Array.isArray(listingsData.listings)) {
-          setVendorDeals(listingsData.listings);
-        } else {
-          setVendorDeals([]);
+          setVendorDeals((prev) => (prev.length > 0 ? prev : listingsData.listings));
         }
       } catch (err) {
         console.error('Error fetching profile data:', err);
@@ -409,7 +431,17 @@ export default function ProfilePage() {
               <h3 className="text-lg font-black text-[#0A0F1E]">All Notifications & Listing Updates ({notifications.length})</h3>
               {notifications.length > 0 && (
                 <button
-                  onClick={() => setNotifications(notifications.map((n) => ({ ...n, isRead: true })))}
+                  onClick={async () => {
+                    setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
+                    try {
+                      const email = typeof window !== 'undefined' ? (localStorage.getItem('stackdeal_vendor_email') || localStorage.getItem('stackdeal_user_email') || user?.email || '') : '';
+                      await fetch('/api/user/notifications', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ markAllRead: true, email }),
+                      });
+                    } catch (e) {}
+                  }}
                   className="text-xs font-black text-[#2475FF] hover:underline cursor-pointer"
                 >
                   Mark all as read

@@ -21,6 +21,14 @@ const DealSchema = new mongoose.Schema(
     foundedDate: { type: String, default: 'April 2022' },
     teamSize: { type: String, default: '1-10 employees' },
     founderName: { type: String, default: 'Ujjwal Sharma' },
+    founderEmail: { type: String, default: '', lowercase: true, trim: true, index: true },
+    founderPhone: { type: String, default: '' },
+    founderContact: {
+      email: { type: String, default: '', lowercase: true, trim: true, index: true },
+      phone: { type: String, default: '' },
+    },
+    vendorEmail: { type: String, default: '', lowercase: true, trim: true, index: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     founderTitle: { type: String, default: 'Founder & CEO' },
     founderAvatar: { type: String, default: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' },
     founderLinkedin: { type: String, default: '' },
@@ -120,7 +128,11 @@ const DealSchema = new mongoose.Schema(
       taco1: { type: Number, default: 0 },
     },
   },
-  { timestamps: true }
+  { timestamps: true, strict: false }
 );
+
+if (process.env.NODE_ENV !== 'production' && mongoose.models.Deal) {
+  delete mongoose.models.Deal;
+}
 
 export default mongoose.models.Deal || mongoose.model('Deal', DealSchema);

@@ -653,14 +653,17 @@ export default function VendorSubmitPage() {
 
       founderName: formData.founderName,
       founderTitle: formData.founderTitle,
+      founderEmail: (formData.founderEmail || '').trim().toLowerCase(),
+      founderPhone: (formData.founderPhone || '').trim(),
+      vendorEmail: (formData.founderEmail || '').trim().toLowerCase(),
       founderAvatar: formData.founderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
       founderLinkedin: formData.founderLinkedin,
       founderTwitter: formData.founderTwitter,
       founderNote: formData.founderNote,
       vendorRedeemUrl: formData.vendorRedeemUrl,
       founderContact: {
-        email: formData.founderEmail,
-        phone: formData.founderPhone,
+        email: (formData.founderEmail || '').trim().toLowerCase(),
+        phone: (formData.founderPhone || '').trim(),
       },
 
       payoutDetails: {
@@ -704,6 +707,13 @@ export default function VendorSubmitPage() {
       const data = await res.json();
       if (data?.success) {
         localStorage.removeItem('stackdeal_vendor_submission_draft_v4');
+        if (formData.founderEmail) {
+          const vEmail = formData.founderEmail.trim().toLowerCase();
+          localStorage.setItem('stackdeal_vendor_email', vEmail);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('vendor_deal_submitted', { detail: { email: vEmail } }));
+          }
+        }
         setSubmittedDeal(payload);
         setShowLivePreview(false);
         window.scrollTo({ top: 0, behavior: 'smooth' });

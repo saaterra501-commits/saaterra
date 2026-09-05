@@ -57,7 +57,16 @@ export default function Navbar() {
 
     async function loadNotifications() {
       try {
-        const res = await fetch('/api/user/notifications');
+        let userEmail = '';
+        if (typeof window !== 'undefined') {
+          userEmail = (
+            localStorage.getItem('stackdeal_vendor_email') ||
+            localStorage.getItem('stackdeal_user_email') ||
+            ''
+          ).trim().toLowerCase();
+        }
+        const query = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
+        const res = await fetch(`/api/user/notifications${query}`);
         if (!res.ok) return;
         const data = await res.json();
         if (isMounted && data?.success && Array.isArray(data?.notifications)) {
@@ -88,15 +97,23 @@ export default function Navbar() {
     const handleCartSync = () => {
       setCartCount(getCartCount());
     };
+    const handleVendorSubmitted = () => {
+      loadNotifications();
+    };
+
     window.addEventListener('stackdeal_cart_updated', handleCartSync);
     window.addEventListener('storage', handleCartSync);
+    window.addEventListener('vendor_deal_submitted', handleVendorSubmitted);
+    window.addEventListener('focus', loadNotifications);
 
-    const interval = setInterval(loadNotifications, 15000);
+    const interval = setInterval(loadNotifications, 10000);
     return () => {
       isMounted = false;
       clearInterval(interval);
       window.removeEventListener('stackdeal_cart_updated', handleCartSync);
       window.removeEventListener('storage', handleCartSync);
+      window.removeEventListener('vendor_deal_submitted', handleVendorSubmitted);
+      window.removeEventListener('focus', loadNotifications);
     };
   }, []);
 
@@ -750,10 +767,11 @@ export default function Navbar() {
                     onClick={async () => {
                       setUserNotifs(userNotifs.map((n) => ({ ...n, isRead: true })));
                       try {
+                        const email = typeof window !== 'undefined' ? (localStorage.getItem('stackdeal_vendor_email') || localStorage.getItem('stackdeal_user_email') || '') : '';
                         await fetch('/api/user/notifications', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ markAllRead: true }),
+                          body: JSON.stringify({ markAllRead: true, email }),
                         });
                       } catch (e) {}
                     }}
@@ -766,7 +784,9 @@ export default function Navbar() {
                     onClick={async () => {
                       setUserNotifs([]);
                       try {
-                        await fetch('/api/user/notifications', { method: 'DELETE' });
+                        const email = typeof window !== 'undefined' ? (localStorage.getItem('stackdeal_vendor_email') || localStorage.getItem('stackdeal_user_email') || '') : '';
+                        const query = email ? `?email=${encodeURIComponent(email)}` : '';
+                        await fetch(`/api/user/notifications${query}`, { method: 'DELETE' });
                       } catch (e) {}
                     }}
                     className="text-red-500 hover:text-red-700 font-bold text-xs cursor-pointer"
