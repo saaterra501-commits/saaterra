@@ -4,44 +4,59 @@ import UpcomingDealAlert from '@/models/UpcomingDealAlert';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/upcoming-alerts — Subscribe to upcoming deal alerts
+// POST /api/upcoming-alerts — Subscribe to upcoming deal alerts (strictly 1 registration per email/phone)
 export async function POST(req) {
   try {
     const body = await req.json();
     const { name, email, whatsapp, preferredCategory, source } = body;
 
-    if (!email || !email.includes('@')) {
-      return NextResponse.json({ success: false, message: 'Valid email is required.' }, { status: 400 });
+    const cleanEmail = (email || '').toLowerCase().trim();
+    const cleanPhone = (whatsapp || '').replace(/\D/g, '').slice(0, 10);
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return NextResponse.json(
+        { success: false, message: 'Kripya ek valid email address enter karein.' },
+        { status: 400 }
+      );
     }
 
     await dbConnect();
 
-    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
-
-    // Upsert — if same email comes again, just update their info (don't error)
-    const existing = await UpcomingDealAlert.findOne({ email: email.toLowerCase().trim() });
-
-    if (existing) {
-      if (!existing.subscribed) {
-        existing.subscribed = true;
-        await existing.save();
-        return NextResponse.json({
-          success: true,
-          message: 'Welcome back! You\'ve been re-subscribed to upcoming deal alerts.',
-          alreadySubscribed: false,
-        });
-      }
-      return NextResponse.json({
-        success: true,
-        message: 'You\'re already on the VIP list! We\'ll notify you first when a new deal drops.',
-        alreadySubscribed: true,
-      });
+    // 1. Check if email is already registered — strictly 1 entry per email
+    const existingEmail = await UpcomingDealAlert.findOne({ email: cleanEmail });
+    if (existingEmail) {
+      return NextResponse.json(
+        {
+          success: false,
+          alreadySubscribed: true,
+          message: 'Ye email pehle se hi VIP list me add hai! Ek email se sirf ek baar hi register kar sakte hain.',
+        },
+        { status: 409 }
+      );
     }
 
+    // 2. Check if WhatsApp number is already registered (if provided)
+    if (cleanPhone && cleanPhone.length === 10) {
+      const existingPhone = await UpcomingDealAlert.findOne({ whatsapp: cleanPhone });
+      if (existingPhone) {
+        return NextResponse.json(
+          {
+            success: false,
+            alreadySubscribed: true,
+            message: 'Ye WhatsApp number pehle se hi VIP list me add hai! Ek number se ek hi baar register kar sakte hain.',
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+
+    // 3. Create new record
     await UpcomingDealAlert.create({
       name: (name || '').trim(),
-      email: email.toLowerCase().trim(),
-      whatsapp: (whatsapp || '').replace(/\s/g, ''),
+      email: cleanEmail,
+      whatsapp: cleanPhone,
       preferredCategory: preferredCategory || 'All',
       source: source || 'homepage',
       ip: String(ip).split(',')[0].trim(),
@@ -49,12 +64,26 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: true,
-      message: 'You\'re on the VIP list! 🎉 We\'ll notify you first when the next deal drops.',
+      message: 'Aap VIP list me add ho chuke hain! 🎉 First access drop alerts aapko milenge.',
       alreadySubscribed: false,
     });
   } catch (err) {
+    // Catch MongoDB duplicate key error (code 11000)
+    if (err.code === 11000) {
+      return NextResponse.json(
+        {
+          success: false,
+          alreadySubscribed: true,
+          message: 'Ye email pehle se hi VIP list me add hai! Ek email se ek hi baar register kar sakte hain.',
+        },
+        { status: 409 }
+      );
+    }
     console.error('[Upcoming Alerts] Subscribe error:', err);
-    return NextResponse.json({ success: false, message: 'Something went wrong. Please try again.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Something went wrong. Please try again.' },
+      { status: 500 }
+    );
   }
 }
 

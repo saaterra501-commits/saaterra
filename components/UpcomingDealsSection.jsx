@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Bell, Zap, Check, Clock, ChevronUp, MessageSquare, Search, Database, Mail, Video, Sparkles, X, Layers } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bell, Zap, Check, Clock, ChevronUp, MessageSquare, Search, Database, Mail, Video, Sparkles, AlertCircle, Layers, ShieldCheck } from 'lucide-react';
 
 const UPCOMING_CATEGORIES = [
   {
@@ -88,6 +88,7 @@ export default function UpcomingDealsSection() {
   const [category, setCategory] = useState('All');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [error, setError] = useState('');
 
   // Per-Card Inline Notify State
@@ -99,6 +100,17 @@ export default function UpcomingDealsSection() {
   const [inlineSuccess, setInlineSuccess] = useState('');
   const [cardError, setCardError] = useState('');
 
+  // Load registered email from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('stackdeal_vip_registered_email');
+      if (saved) {
+        setRegisteredEmail(saved);
+        setSubmitted(true);
+      }
+    } catch {}
+  }, []);
+
   const toggleUpvote = (id, e) => {
     e.stopPropagation();
     const isVoted = !!voted[id];
@@ -109,13 +121,20 @@ export default function UpcomingDealsSection() {
     }));
   };
 
-  // Main Submit Handler
+  // Main Submit Handler (Strict 1-time per email)
   const handleMainSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) {
-      setError('Please enter a valid work email.');
+    const cleanEmail = email.toLowerCase().trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setError('Kripya valid work email enter karein.');
       return;
     }
+
+    if (registeredEmail && cleanEmail === registeredEmail.toLowerCase()) {
+      setError('Aap is email se pehle se hi registered hain! Ek email se sirf ek baar hi add ho sakte hain.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -124,32 +143,44 @@ export default function UpcomingDealsSection() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
-          email: email.trim(),
+          email: cleanEmail,
           whatsapp: whatsapp.replace(/\D/g, ''),
           source: 'upcoming_pipeline_25_software',
           preferredCategory: category
         }),
       });
       const data = await res.json();
+
       if (data?.success) {
+        try {
+          localStorage.setItem('stackdeal_vip_registered_email', cleanEmail);
+        } catch {}
+        setRegisteredEmail(cleanEmail);
         setSubmitted(true);
       } else {
-        setError(data?.message || 'Something went wrong.');
+        setError(data?.message || 'Ye email pehle se hi VIP list me registered hai!');
       }
     } catch {
-      setError('Network error. Please try again.');
+      setError('Network error. Kripya dobara koshish karein.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Per-Card Submit Handler
+  // Per-Card Submit Handler (Strict 1-time per email)
   const handleCardSubmit = async (e, cat) => {
     e.preventDefault();
-    if (!cardEmail || !cardEmail.includes('@')) {
-      setCardError('Valid email is required.');
+    const cleanEmail = cardEmail.toLowerCase().trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setCardError('Valid email zaroori hai.');
       return;
     }
+
+    if (registeredEmail && cleanEmail === registeredEmail.toLowerCase()) {
+      setCardError('Ye email pehle se hi registered hai! Ek email se ek hi baar add ho sakta hai.');
+      return;
+    }
+
     setCardLoading(true);
     setCardError('');
     try {
@@ -158,14 +189,19 @@ export default function UpcomingDealsSection() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: cardName.trim() || `VIP (${cat.name})`,
-          email: cardEmail.trim(),
+          email: cleanEmail,
           whatsapp: cardWhatsapp.replace(/\D/g, ''),
           source: `category_${cat.id}`,
           preferredCategory: cat.name
         }),
       });
       const data = await res.json();
+
       if (data?.success) {
+        try {
+          localStorage.setItem('stackdeal_vip_registered_email', cleanEmail);
+        } catch {}
+        setRegisteredEmail(cleanEmail);
         setInlineSuccess(cat.name);
         setTimeout(() => {
           setActiveNotifyCat(null);
@@ -175,7 +211,7 @@ export default function UpcomingDealsSection() {
           setCardWhatsapp('');
         }, 3500);
       } else {
-        setCardError(data?.message || 'Failed to register alert.');
+        setCardError(data?.message || 'Ye email pehle se hi registered hai!');
       }
     } catch {
       setCardError('Network error.');
@@ -208,7 +244,7 @@ export default function UpcomingDealsSection() {
             </h2>
           </div>
           <p className="text-xs text-slate-500 font-medium sm:text-right max-w-sm">
-            We are negotiating 5-Year passes with top founders. VIP members get <span className="font-bold text-slate-800">24h early access + discounted launch coupons</span>.
+            Exclusive 5-Year Passes. VIP members get <span className="font-bold text-slate-800">24h early access + launch coupon</span> before public drop.
           </p>
         </div>
 
@@ -218,14 +254,12 @@ export default function UpcomingDealsSection() {
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
-                🎉 Awesome{name ? ` ${name}` : ''}! You're on the VIP list for{' '}
-                <span className="font-bold">{category === 'All' ? `all ${TOTAL_TOOLS}+ upcoming software` : category}</span>.
-                Alerts will be sent to <span className="font-mono text-emerald-950">{email}</span>
-                {whatsapp ? ` & WhatsApp (+91 ${whatsapp})` : ''}!
+                🎉 Aap VIP list me already added hain (<span className="font-mono text-emerald-950 font-black">{registeredEmail || email}</span>).
+                Saare 25+ software ke first-access launch alerts aapko sabse pehle milenge!
               </span>
             </div>
             <span className="text-[10px] bg-emerald-200/60 text-emerald-800 px-2.5 py-1 rounded-full font-black uppercase tracking-wider shrink-0">
-              VIP Active
+              ✓ Registered
             </span>
           </div>
         ) : (
@@ -301,7 +335,10 @@ export default function UpcomingDealsSection() {
             </div>
 
             {error && (
-              <p className="text-[11px] font-bold text-red-500 px-1">{error}</p>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 p-2 rounded-xl">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{error}</span>
+              </div>
             )}
           </form>
         )}
@@ -426,7 +463,10 @@ export default function UpcomingDealsSection() {
                         </div>
 
                         {cardError && (
-                          <p className="text-[10px] font-bold text-red-500">{cardError}</p>
+                          <div className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 p-1.5 rounded-lg">
+                            <AlertCircle className="w-3 h-3 shrink-0" />
+                            <span>{cardError}</span>
+                          </div>
                         )}
 
                         <button
