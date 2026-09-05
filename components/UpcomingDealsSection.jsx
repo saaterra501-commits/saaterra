@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Zap, ArrowRight, Check, Clock, ChevronUp, Database, MessageSquare, Search, Video, Sparkles, X } from 'lucide-react';
+import { Bell, Zap, Check, Clock, ChevronUp, Database, MessageSquare, Search, Video, Sparkles, X, ShieldCheck } from 'lucide-react';
 
 const UPCOMING_DROPS = [
   {
@@ -65,13 +65,23 @@ export default function UpcomingDealsSection() {
     return init;
   });
   const [voted, setVoted] = useState({});
+
+  // Main Top Bar Form State
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [activeNotifyDeal, setActiveNotifyDeal] = useState(null);
-  const [inlineEmail, setInlineEmail] = useState('');
-  const [inlineSuccess, setInlineSuccess] = useState('');
   const [error, setError] = useState('');
+
+  // Per-Card Inline Notify State
+  const [activeNotifyDeal, setActiveNotifyDeal] = useState(null);
+  const [cardName, setCardName] = useState('');
+  const [cardEmail, setCardEmail] = useState('');
+  const [cardWhatsapp, setCardWhatsapp] = useState('');
+  const [cardLoading, setCardLoading] = useState(false);
+  const [inlineSuccess, setInlineSuccess] = useState('');
+  const [cardError, setCardError] = useState('');
 
   const toggleUpvote = (id, e) => {
     e.stopPropagation();
@@ -83,11 +93,11 @@ export default function UpcomingDealsSection() {
     }));
   };
 
-  const handleSubscribe = async (e, customEmail = null, dealName = '') => {
-    if (e) e.preventDefault();
-    const targetEmail = customEmail || email;
-    if (!targetEmail || !targetEmail.includes('@')) {
-      setError('Please enter a valid email.');
+  // Main Submit Handler
+  const handleMainSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid work email.');
       return;
     }
     setLoading(true);
@@ -97,92 +107,171 @@ export default function UpcomingDealsSection() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: targetEmail.trim(),
-          source: dealName ? `card_${dealName}` : 'upcoming_section_compact',
-          name: dealName ? `Early-bird for ${dealName}` : 'VIP Buyer'
+          name: name.trim(),
+          email: email.trim(),
+          whatsapp: whatsapp.replace(/\D/g, ''),
+          source: 'upcoming_section_header',
+          preferredCategory: 'All'
         }),
       });
       const data = await res.json();
       if (data?.success) {
-        if (dealName) {
-          setInlineSuccess(dealName);
-          setTimeout(() => {
-            setActiveNotifyDeal(null);
-            setInlineSuccess('');
-            setInlineEmail('');
-          }, 3000);
-        } else {
-          setSubmitted(true);
-        }
+        setSubmitted(true);
       } else {
         setError(data?.message || 'Something went wrong.');
       }
     } catch {
-      setError('Network error. Try again.');
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Per-Card Submit Handler
+  const handleCardSubmit = async (e, deal) => {
+    e.preventDefault();
+    if (!cardEmail || !cardEmail.includes('@')) {
+      setCardError('Valid email is required.');
+      return;
+    }
+    setCardLoading(true);
+    setCardError('');
+    try {
+      const res = await fetch('/api/upcoming-alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: cardName.trim() || `VIP Buyer (${deal.name})`,
+          email: cardEmail.trim(),
+          whatsapp: cardWhatsapp.replace(/\D/g, ''),
+          source: `card_${deal.id}`,
+          preferredCategory: deal.category
+        }),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setInlineSuccess(deal.name);
+        setTimeout(() => {
+          setActiveNotifyDeal(null);
+          setInlineSuccess('');
+          setCardName('');
+          setCardEmail('');
+          setCardWhatsapp('');
+        }, 3500);
+      } else {
+        setCardError(data?.message || 'Failed to register alert.');
+      }
+    } catch {
+      setCardError('Network error.');
+    } finally {
+      setCardLoading(false);
     }
   };
 
   return (
     <section id="upcoming-deals" className="w-full space-y-4 scroll-mt-24">
 
-      {/* ── Compact Header & Inline Subscribe Bar ── */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1 bg-[#2475FF] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              <Sparkles className="w-3 h-3 text-amber-300" />
-              Dropping Soon
-            </span>
-            <span className="text-[11px] font-bold text-slate-500">
-              5-Year SaaS Passes
-            </span>
+      {/* ── Compact Header & Name + Email + Number Form ── */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="inline-flex items-center gap-1 bg-[#2475FF] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 text-amber-300" />
+                Dropping Soon
+              </span>
+              <span className="text-[11px] font-bold text-slate-500">
+                5-Year SaaS Passes • VIP Early-Bird
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
+              Upcoming Drops <span className="text-sm font-bold text-slate-400 font-mono">({UPCOMING_DROPS.length})</span>
+            </h2>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
-            Upcoming Drops <span className="text-sm font-bold text-slate-400 font-mono">({UPCOMING_DROPS.length})</span>
-          </h2>
+          <p className="text-xs text-slate-500 font-medium sm:text-right">
+            VIP members get private drop link + coupon <span className="font-bold text-slate-800">24h before public release</span>.
+          </p>
         </div>
 
-        {/* Compact 1-line Subscribe Input */}
+        {/* Form: Name + Email + WhatsApp Number */}
         {submitted ? (
-          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-4 py-2 rounded-xl">
-            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>You're on the VIP list! First drop alerts locked in.</span>
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold p-3.5 rounded-xl flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>
+                🎉 Awesome{name ? ` ${name}` : ''}! You're on the VIP list. We'll send first-access drops to{' '}
+                <span className="font-mono text-emerald-950">{email}</span>
+                {whatsapp ? ` & WhatsApp (+91 ${whatsapp})` : ''}!
+              </span>
+            </div>
+            <span className="text-[10px] bg-emerald-200/60 text-emerald-800 px-2.5 py-1 rounded-full font-black uppercase tracking-wider shrink-0">
+              VIP Active
+            </span>
           </div>
         ) : (
-          <form onSubmit={(e) => handleSubscribe(e)} className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative flex-1 md:w-64">
-              <Bell className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-              <input
-                type="email"
-                placeholder="Enter email for VIP early-bird..."
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#2475FF] rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
-              />
+          <form onSubmit={handleMainSubmit} className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+              {/* Name input */}
+              <div className="sm:col-span-3">
+                <input
+                  type="text"
+                  placeholder="Your Name (optional)"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#2475FF] rounded-xl px-3 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
+                />
+              </div>
+
+              {/* Email input */}
+              <div className="sm:col-span-4">
+                <input
+                  type="email"
+                  required
+                  placeholder="Work Email Address *"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                  className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-[#2475FF] rounded-xl px-3 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
+                />
+              </div>
+
+              {/* WhatsApp Number input */}
+              <div className="sm:col-span-3 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">+91</span>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  placeholder="WhatsApp (optional)"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-emerald-500 rounded-xl pl-10 pr-3 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
+                />
+              </div>
+
+              {/* Submit button */}
+              <div className="sm:col-span-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-full py-2 px-3 bg-slate-950 hover:bg-slate-800 text-white text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-60"
+                >
+                  {loading ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Join VIP List</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-slate-950 hover:bg-slate-800 text-white text-xs font-black rounded-xl transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-60 shrink-0"
-            >
-              {loading ? (
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Notify Me</span>
-                </>
-              )}
-            </button>
+
+            {error && (
+              <p className="text-[11px] font-bold text-red-500 px-1">{error}</p>
+            )}
           </form>
         )}
       </div>
-
-      {error && (
-        <p className="text-xs font-bold text-red-500 px-1">{error}</p>
-      )}
 
       {/* ── Compact 4-Card Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -252,7 +341,10 @@ export default function UpcomingDealsSection() {
 
                   {/* Micro Notify Button */}
                   <button
-                    onClick={() => setActiveNotifyDeal(isNotifyActive ? null : deal.id)}
+                    onClick={() => {
+                      setActiveNotifyDeal(isNotifyActive ? null : deal.id);
+                      setCardError('');
+                    }}
                     className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
                       isNotifyActive
                         ? 'bg-slate-950 text-white'
@@ -260,33 +352,68 @@ export default function UpcomingDealsSection() {
                     }`}
                   >
                     <Bell className="w-3 h-3" />
-                    <span>{isNotifyActive ? 'Cancel' : 'Notify'}</span>
+                    <span>{isNotifyActive ? 'Cancel' : 'Notify Me'}</span>
                   </button>
                 </div>
 
-                {/* Inline 1-line Alert Popout */}
+                {/* Inline 3-Input Alert Drawer (Name, Email, Number) */}
                 {isNotifyActive && (
-                  <div className="mt-2 pt-2 border-t border-slate-100 animate-in fade-in duration-150">
+                  <div className="mt-2.5 pt-2.5 border-t border-slate-100 animate-in fade-in duration-150">
                     {inlineSuccess === deal.name ? (
-                      <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 p-1.5 rounded-lg text-center">
-                        ✓ VIP Alert Set for {deal.name}!
+                      <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-center">
+                        ✓ VIP Early Access Alert Locked for {deal.name}!
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1">
+                      <form onSubmit={(e) => handleCardSubmit(e, deal)} className="space-y-1.5">
+                        <div className="text-[10px] font-black text-slate-700">
+                          Get Alert for {deal.name.split(' ')[0]}:
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Your Name (optional)"
+                          value={cardName}
+                          onChange={(e) => setCardName(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-800 placeholder-slate-400 outline-none focus:border-[#2475FF]"
+                        />
                         <input
                           type="email"
-                          placeholder="Your email..."
-                          value={inlineEmail}
-                          onChange={(e) => setInlineEmail(e.target.value)}
-                          className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-800 placeholder-slate-400 outline-none focus:border-[#FF6B35]"
+                          required
+                          placeholder="Email Address *"
+                          value={cardEmail}
+                          onChange={(e) => { setCardEmail(e.target.value); setCardError(''); }}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-slate-800 placeholder-slate-400 outline-none focus:border-[#2475FF]"
                         />
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">+91</span>
+                          <input
+                            type="tel"
+                            maxLength={10}
+                            placeholder="WhatsApp Number"
+                            value={cardWhatsapp}
+                            onChange={(e) => setCardWhatsapp(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-2 py-1 text-[11px] text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500"
+                          />
+                        </div>
+
+                        {cardError && (
+                          <p className="text-[10px] font-bold text-red-500">{cardError}</p>
+                        )}
+
                         <button
-                          onClick={() => handleSubscribe(null, inlineEmail, deal.name)}
-                          className="px-2.5 py-1 bg-slate-950 text-white text-[10px] font-black rounded-lg hover:bg-slate-800 cursor-pointer shrink-0"
+                          type="submit"
+                          disabled={cardLoading}
+                          className="w-full py-1.5 bg-[#FF6B35] hover:bg-orange-600 text-white text-[11px] font-black rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 disabled:opacity-60"
                         >
-                          OK
+                          {cardLoading ? (
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <Bell className="w-3 h-3" />
+                              <span>Confirm VIP Alert</span>
+                            </>
+                          )}
                         </button>
-                      </div>
+                      </form>
                     )}
                   </div>
                 )}
