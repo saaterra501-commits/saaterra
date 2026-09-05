@@ -15,6 +15,7 @@ import DynamicPromoBanner from '../components/DynamicPromoBanner';
 import UpcomingDealsSection from '../components/UpcomingDealsSection';
 import UpcomingDropBar from '../components/UpcomingDropBar';
 import UpcomingTeaserBanner from '../components/UpcomingTeaserBanner';
+import FloatingSubscribeIndicator from '../components/FloatingSubscribeIndicator';
 import Link from 'next/link';
 import {
   Sparkles, Flame, ShieldCheck, Clock, Check, ArrowRight, Zap, Users,
@@ -342,6 +343,7 @@ export default function Home() {
       </main>
 
       <CompareTray />
+      <FloatingSubscribeIndicator />
       <Footer />
 
       {showCheckout && selectedDeal && (
