@@ -13,6 +13,7 @@ import SalesTicker from '../components/SalesTicker';
 import HomeFAQ from '../components/HomeFAQ';
 import DynamicPromoBanner from '../components/DynamicPromoBanner';
 import UpcomingDealsSection from '../components/UpcomingDealsSection';
+import UpcomingDropBar from '../components/UpcomingDropBar';
 import Link from 'next/link';
 import {
   Sparkles, Flame, ShieldCheck, Clock, Check, ArrowRight, Zap, Users,
@@ -246,6 +247,9 @@ export default function Home() {
 
       {/* ── 1. Navbar ── */}
       <Navbar />
+
+      {/* ── 2. Upcoming Deal Drop Alert Bar (right below navbar) ── */}
+      <UpcomingDropBar />
 
       {/* ── 3. Hero Carousel Slider with Live MongoDB Deals ── */}
       <HeroDealSlider deals={deals} onBuyClick={handleBuy} />
