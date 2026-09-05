@@ -15,7 +15,7 @@ export async function POST(req) {
 
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return NextResponse.json(
-        { success: false, message: 'Kripya ek valid email address enter karein.' },
+        { success: false, message: 'Please enter a valid work email address.' },
         { status: 400 }
       );
     }
@@ -29,7 +29,7 @@ export async function POST(req) {
         {
           success: false,
           alreadySubscribed: true,
-          message: 'Ye email pehle se hi VIP list me add hai! Ek email se sirf ek baar hi register kar sakte hain.',
+          message: 'This email is already registered on the VIP list. Only one registration per email is permitted.',
         },
         { status: 409 }
       );
@@ -43,7 +43,7 @@ export async function POST(req) {
           {
             success: false,
             alreadySubscribed: true,
-            message: 'Ye WhatsApp number pehle se hi VIP list me add hai! Ek number se ek hi baar register kar sakte hain.',
+            message: 'This WhatsApp number is already registered for VIP alerts. Only one registration per phone number is permitted.',
           },
           { status: 409 }
         );
@@ -64,7 +64,7 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: true,
-      message: 'Aap VIP list me add ho chuke hain! 🎉 First access drop alerts aapko milenge.',
+      message: 'You have been successfully added to the VIP list! 🎉 First-access drop alerts will be sent to you.',
       alreadySubscribed: false,
     });
   } catch (err) {
@@ -74,7 +74,7 @@ export async function POST(req) {
         {
           success: false,
           alreadySubscribed: true,
-          message: 'Ye email pehle se hi VIP list me add hai! Ek email se ek hi baar register kar sakte hain.',
+          message: 'This email is already registered on the VIP list. Only one registration per email is permitted.',
         },
         { status: 409 }
       );

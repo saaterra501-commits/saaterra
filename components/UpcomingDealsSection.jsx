@@ -126,12 +126,12 @@ export default function UpcomingDealsSection() {
     e.preventDefault();
     const cleanEmail = email.toLowerCase().trim();
     if (!cleanEmail || !cleanEmail.includes('@')) {
-      setError('Kripya valid work email enter karein.');
+      setError('Please enter a valid work email address.');
       return;
     }
 
     if (registeredEmail && cleanEmail === registeredEmail.toLowerCase()) {
-      setError('Aap is email se pehle se hi registered hain! Ek email se sirf ek baar hi add ho sakte hain.');
+      setError('This email is already registered on the VIP list. Only one registration per email is permitted.');
       return;
     }
 
@@ -158,10 +158,10 @@ export default function UpcomingDealsSection() {
         setRegisteredEmail(cleanEmail);
         setSubmitted(true);
       } else {
-        setError(data?.message || 'Ye email pehle se hi VIP list me registered hai!');
+        setError(data?.message || 'This email is already registered on the VIP list. Only one registration per email is permitted.');
       }
     } catch {
-      setError('Network error. Kripya dobara koshish karein.');
+      setError('Network error. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
@@ -172,12 +172,12 @@ export default function UpcomingDealsSection() {
     e.preventDefault();
     const cleanEmail = cardEmail.toLowerCase().trim();
     if (!cleanEmail || !cleanEmail.includes('@')) {
-      setCardError('Valid email zaroori hai.');
+      setCardError('A valid email address is required.');
       return;
     }
 
     if (registeredEmail && cleanEmail === registeredEmail.toLowerCase()) {
-      setCardError('Ye email pehle se hi registered hai! Ek email se ek hi baar add ho sakta hai.');
+      setCardError('This email is already registered on the VIP list. Only one registration per email is permitted.');
       return;
     }
 
@@ -211,10 +211,10 @@ export default function UpcomingDealsSection() {
           setCardWhatsapp('');
         }, 3500);
       } else {
-        setCardError(data?.message || 'Ye email pehle se hi registered hai!');
+        setCardError(data?.message || 'This email is already registered on the VIP list. Only one registration per email is permitted.');
       }
     } catch {
-      setCardError('Network error.');
+      setCardError('Network error. Please try again.');
     } finally {
       setCardLoading(false);
     }
@@ -244,7 +244,7 @@ export default function UpcomingDealsSection() {
             </h2>
           </div>
           <p className="text-xs text-slate-500 font-medium sm:text-right max-w-sm">
-            Exclusive 5-Year Passes. VIP members get <span className="font-bold text-slate-800">24h early access + launch coupon</span> before public drop.
+            Exclusive 5-Year Passes. VIP members receive <span className="font-bold text-slate-800">24h early access + launch coupons</span> before public release.
           </p>
         </div>
 
@@ -254,12 +254,12 @@ export default function UpcomingDealsSection() {
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
-                🎉 Aap VIP list me already added hain (<span className="font-mono text-emerald-950 font-black">{registeredEmail || email}</span>).
-                Saare 25+ software ke first-access launch alerts aapko sabse pehle milenge!
+                You are enrolled in the VIP Early-Access Network (<span className="font-mono text-emerald-950 font-black">{registeredEmail || email}</span>).
+                You will receive first-access alerts before each of the 25+ software drops go live!
               </span>
             </div>
             <span className="text-[10px] bg-emerald-200/60 text-emerald-800 px-2.5 py-1 rounded-full font-black uppercase tracking-wider shrink-0">
-              ✓ Registered
+              ✓ Enrolled
             </span>
           </div>
         ) : (
@@ -294,7 +294,7 @@ export default function UpcomingDealsSection() {
                 <input
                   type="tel"
                   maxLength={10}
-                  placeholder="WhatsApp"
+                  placeholder="WhatsApp (optional)"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-emerald-500 rounded-xl pl-9 pr-2 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
@@ -428,7 +428,7 @@ export default function UpcomingDealsSection() {
                   <div className="mt-2.5 pt-2.5 border-t border-slate-100 animate-in fade-in duration-150">
                     {inlineSuccess === cat.name ? (
                       <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-center">
-                        ✓ Alert Set for {cat.toolCount} {cat.name} drops!
+                        ✓ VIP early-access alert locked in for {cat.toolCount} {cat.name} drops!
                       </div>
                     ) : (
                       <form onSubmit={(e) => handleCardSubmit(e, cat)} className="space-y-1.5">
