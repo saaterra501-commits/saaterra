@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, Zap, Check, Clock, ChevronUp, MessageSquare, Search, Database, Mail, Video, Sparkles, AlertCircle, Layers, ShieldCheck } from 'lucide-react';
+import { Bell, Zap, Check, Clock, ChevronUp, MessageSquare, Search, Database, Mail, Video, Sparkles, AlertCircle, Layers, ShieldCheck, MessageCircle, ArrowRight } from 'lucide-react';
 
 const UPCOMING_CATEGORIES = [
   {
@@ -342,6 +342,37 @@ export default function UpcomingDealsSection() {
             )}
           </form>
         )}
+
+        {/* ── WhatsApp VIP Community Bar ── */}
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-600 shrink-0">
+              <MessageCircle className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                <span>Join Official VIP WhatsApp Community</span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.2 rounded-full">
+                  1,400+ Founders Active
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Prefer instant mobile drop alerts? Get private links & launch coupons directly in WhatsApp.
+              </p>
+            </div>
+          </div>
+
+          <a
+            href="https://chat.whatsapp.com/GmWT9MGU8LX2PFGEtl1Z7f"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap shrink-0"
+          >
+            <MessageCircle className="w-3.5 h-3.5 fill-white" />
+            <span>Join WhatsApp Group</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </div>
 
       {/* ── Category Cards Grid (25 Software Launch Pipeline) ── */}
