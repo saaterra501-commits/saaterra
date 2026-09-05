@@ -14,6 +14,7 @@ import HomeFAQ from '../components/HomeFAQ';
 import DynamicPromoBanner from '../components/DynamicPromoBanner';
 import UpcomingDealsSection from '../components/UpcomingDealsSection';
 import UpcomingDropBar from '../components/UpcomingDropBar';
+import UpcomingTeaserBanner from '../components/UpcomingTeaserBanner';
 import Link from 'next/link';
 import {
   Sparkles, Flame, ShieldCheck, Clock, Check, ArrowRight, Zap, Users,
@@ -257,7 +258,10 @@ export default function Home() {
       {/* ── 4. Main Content ── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full space-y-14">
         
-        {/* ── 4A. DealMirror Card Carousel Slider ── */}
+        {/* ── 4A. High-Impact VIP Launch Radar Teaser (Drives visitors to explore 25+ drops and subscribe) ── */}
+        <UpcomingTeaserBanner />
+
+        {/* ── 4B. DealMirror Card Carousel Slider ── */}
         {!loading && deals.length > 0 && (
           <DealMirrorSliderSection deals={deals} onBuyClick={handleBuy} />
         )}
