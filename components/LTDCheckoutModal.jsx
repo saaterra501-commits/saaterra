@@ -1,142 +1,238 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X, ShieldCheck, Zap, CheckCircle2, Copy, ArrowRight,
-  Sparkles, CreditCard, QrCode, Smartphone, Lock,
-  Clock, Flame, Check, Star, Gift, User
+  Sparkles, CreditCard, Lock, Clock, Flame, Check, Gift,
+  User, Mail, Phone, ExternalLink, FileText, AlertCircle
 } from 'lucide-react';
 import AuthModal from './AuthModal';
 
 export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClose, onSuccess }) {
-  const [step, setStep] = useState('checkout');
+  const [step, setStep] = useState('checkout'); // 'checkout' | 'processing' | 'success'
   const [currentUser, setCurrentUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [paymentMode, setPaymentMode] = useState('qr');
-  const [upiId, setUpiId] = useState('');
-  const [cardNo, setCardNo] = useState('');
-  const [gstNumber, setGstNumber] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [assignedCode, setAssignedCode] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(599);
-  const [scanStatus, setScanStatus] = useState('idle');
-  const [scanProgress, setScanProgress] = useState(0);
-  const autoScanRef = useRef(null);
 
-  // Fetch logged in user
+  // Buyer Info
+  const [buyerName, setBuyerName] = useState('');
+  const [buyerEmail, setBuyerEmail] = useState('');
+  const [buyerPhone, setBuyerPhone] = useState('');
+  const [gstNumber, setGstNumber] = useState('');
+
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [assignedCode, setAssignedCode] = useState('');
+  const [verifiedOrder, setVerifiedOrder] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  // Fetch logged in user to auto-prefill
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
         if (data?.authenticated && data?.user) {
           setCurrentUser(data.user);
+          setBuyerName(data.user.name || '');
+          setBuyerEmail(data.user.email || '');
+          if (data.user.phone) setBuyerPhone(data.user.phone);
         }
       })
       .catch(() => {});
   }, []);
 
-  let tierPrice = deal?.tier1Price || 1999;
-  let tierTitle = deal?.tier1Title || 'Starter Pass';
-  let tierCredits = deal?.tier1Credits || '1 User · 2,500 Credits/mo';
+  // Pricing calculations
+  let tierPrice = 1999;
+  let tierTitle = 'Starter Pass';
+  let tierCredits = '1 User · Standard Access';
 
-  if (selectedTier === 'Tier 2' || selectedTier === 'Pro Pass') {
-    tierPrice = deal?.tier2Price || 3999;
-    tierTitle = deal?.tier2Title || 'Pro Pass';
-    tierCredits = deal?.tier2Credits || '3 Users · 10,000 Credits/mo · 5-Year Access';
-  } else if (selectedTier === 'Tier 3' || selectedTier === 'Agency Pass' || selectedTier?.includes('Agency') || selectedTier?.includes('Lifetime')) {
-    tierPrice = deal?.tier3Price || 7999;
-    tierTitle = deal?.tier3Title || 'Agency Lifetime Pass (LTD)';
-    tierCredits = deal?.tier3Credits || '10 Users · Unlimited Credits · ∞ Permanent Lifetime Access';
+  if (deal?.pricingTiers && deal.pricingTiers.length > 0) {
+    const matched = deal.pricingTiers.find((t) =>
+      t.tierName?.toLowerCase() === selectedTier?.toLowerCase() ||
+      (selectedTier?.toLowerCase().includes('tier 1') && t.tierName?.toLowerCase().includes('starter')) ||
+      (selectedTier?.toLowerCase().includes('tier 2') && (t.tierName?.toLowerCase().includes('pro') || t.tierName?.toLowerCase().includes('growth'))) ||
+      (selectedTier?.toLowerCase().includes('tier 3') && (t.tierName?.toLowerCase().includes('agency') || t.tierName?.toLowerCase().includes('lifetime') || t.tierName?.toLowerCase().includes('scale')))
+    );
+
+    if (matched) {
+      tierPrice = matched.price || tierPrice;
+      tierTitle = matched.tierName || tierTitle;
+      tierCredits = matched.features?.[0]?.text || tierCredits;
+    } else {
+      if (selectedTier === 'Tier 2' && deal.pricingTiers[1]) {
+        tierPrice = deal.pricingTiers[1].price;
+        tierTitle = deal.pricingTiers[1].tierName;
+      } else if (selectedTier === 'Tier 3' && (deal.pricingTiers[2] || deal.pricingTiers[1])) {
+        const t = deal.pricingTiers[2] || deal.pricingTiers[1];
+        tierPrice = t.price;
+        tierTitle = t.tierName;
+      } else {
+        tierPrice = deal.pricingTiers[0].price;
+        tierTitle = deal.pricingTiers[0].tierName;
+      }
+    }
+  } else {
+    tierPrice = deal?.tier1Price || 1999;
+    tierTitle = deal?.tier1Title || 'Starter Pass';
+    tierCredits = deal?.tier1Credits || '1 User · 2,500 Credits/mo';
+
+    if (selectedTier === 'Tier 2' || selectedTier === 'Pro Pass') {
+      tierPrice = deal?.tier2Price || 3999;
+      tierTitle = deal?.tier2Title || 'Pro Pass';
+      tierCredits = deal?.tier2Credits || '3 Users · 10,000 Credits/mo';
+    } else if (selectedTier === 'Tier 3' || selectedTier === 'Agency Pass' || selectedTier?.includes('Agency')) {
+      tierPrice = deal?.tier3Price || 7999;
+      tierTitle = deal?.tier3Title || 'Agency Lifetime Pass';
+      tierCredits = deal?.tier3Credits || '10 Users · Unlimited Credits';
+    }
   }
 
   const annualPrice = tierPrice * 10;
   const savingsAmt = annualPrice - tierPrice;
 
-  // Countdown Timer
-  useEffect(() => {
-    if (step === 'razorpay_modal' && timeLeft > 0) {
-      const id = setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000);
-      return () => clearInterval(id);
+  // Load Razorpay Checkout Script
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // Launch Real Razorpay Payment Flow
+  const handleInitiateRazorpay = async () => {
+    setErrorMessage('');
+
+    const emailToUse = buyerEmail || currentUser?.email;
+    if (!emailToUse || !emailToUse.includes('@')) {
+      setErrorMessage('Please enter a valid email address to receive your license key.');
+      return;
     }
-  }, [step, timeLeft]);
 
-  // Auto-scan simulation
-  useEffect(() => {
-    if (step === 'razorpay_modal' && paymentMode === 'qr') {
-      setScanStatus('scanning');
-      setScanProgress(0);
-
-      // Progress bar fill
-      const progressId = setInterval(() => {
-        setScanProgress((p) => {
-          if (p >= 100) { clearInterval(progressId); return 100; }
-          return p + 2;
-        });
-      }, 90);
-
-      // Trigger payment after 5s
-      autoScanRef.current = setTimeout(() => {
-        setScanStatus('detected');
-        setTimeout(() => handleConfirmPayment(), 1400);
-      }, 5000);
-
-      return () => {
-        clearInterval(progressId);
-        clearTimeout(autoScanRef.current);
-      };
-    }
-  }, [step, paymentMode]);
-
-  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-
-  const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=upi://pay?pa=saaterra@razorpay%26pn=SaaTerra%26am=${tierPrice}%26cu=INR%26tn=5YearPass`;
-
-  const handleConfirmPayment = async () => {
-    clearTimeout(autoScanRef.current);
     setLoading(true);
-    setStep('processing');
 
     try {
-      const res = await fetch('/api/razorpay/verify-payment', {
+      // 1. Create Razorpay order on backend
+      const orderRes = await fetch('/api/razorpay/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          razorpay_order_id: `order_rzp_${Date.now()}`,
-          razorpay_payment_id: `pay_phonepe_${Date.now()}`,
-          razorpay_signature: `sig_valid_${Date.now()}`,
-          dealId: deal?._id || deal?.id,
+          dealId: deal?._id || deal?.slug,
           tier: selectedTier,
-          gstNumber,
-          amount: tierPrice,
-          userEmail: currentUser?.email || 'buyer@stackdeal.in',
-          userName: currentUser?.name || 'Verified Agency Buyer',
+          gstNumber: gstNumber.trim(),
+          userEmail: emailToUse.trim(),
+          userName: buyerName.trim() || 'Valued Founder',
+          userPhone: buyerPhone.trim(),
         }),
       });
-      const data = await res.json();
 
-      setTimeout(() => {
-        setAssignedCode(
-          data.licenseCode ||
-          `ST-${(deal?.slug || 'PASS').toUpperCase().slice(0, 6)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
-        );
-        setStep('success');
+      const orderData = await orderRes.json();
+      if (!orderData.success) {
+        throw new Error(orderData.message || 'Failed to create Razorpay order');
+      }
+
+      // 2. Ensure script is loaded
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        throw new Error('Could not load Razorpay payment gateway. Please check your internet connection.');
+      }
+
+      // 3. Configure Razorpay Options
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+        name: 'StackDeal',
+        description: `5-Year Pass: ${deal?.title || 'SaaS Tool'} (${selectedTier})`,
+        image: deal?.vendorLogo || 'https://cdn-icons-png.flaticon.com/512/3670/3670051.png',
+        order_id: orderData.orderId,
+        prefill: {
+          name: buyerName.trim() || currentUser?.name || '',
+          email: emailToUse.trim(),
+          contact: buyerPhone.trim() || '',
+        },
+        notes: {
+          dealId: deal?._id ? deal._id.toString() : deal?.slug,
+          dealTitle: deal?.title || '',
+          tier: selectedTier,
+          gstNumber: gstNumber.trim() || 'NONE',
+        },
+        theme: {
+          color: '#059669', // StackDeal brand emerald
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+          },
+        },
+        handler: async function (response) {
+          // Payment captured on Razorpay, verify on backend
+          setStep('processing');
+          try {
+            const verifyRes = await fetch('/api/razorpay/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                dealId: deal?._id || deal?.slug,
+                tier: selectedTier,
+                gstNumber: gstNumber.trim(),
+                amount: tierPrice,
+                userEmail: emailToUse.trim(),
+                userName: buyerName.trim() || currentUser?.name || 'Verified Agency Founder',
+                userPhone: buyerPhone.trim(),
+                userId: currentUser?._id || null,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              setAssignedCode(verifyData.licenseCode);
+              setVerifiedOrder(verifyData);
+              setStep('success');
+              if (onSuccess) onSuccess(verifyData);
+            } else {
+              throw new Error(verifyData.message || 'Payment verification failed');
+            }
+          } catch (vErr) {
+            setErrorMessage(vErr.message || 'Error verifying payment. Contact support@stackdeal.in with your Payment ID.');
+            setStep('checkout');
+          } finally {
+            setLoading(false);
+          }
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+
+      razorpayInstance.on('payment.failed', function (resp) {
+        console.error('Razorpay Payment Failed:', resp.error);
+        setErrorMessage(`Payment Failed: ${resp.error.description || resp.error.reason}`);
         setLoading(false);
-        if (onSuccess) onSuccess(data);
-      }, 1000);
-    } catch {
-      setTimeout(() => {
-        setAssignedCode(`ST-${(deal?.slug || 'PASS').toUpperCase().slice(0, 6)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
-        setStep('success');
-        setLoading(false);
-      }, 1000);
+      });
+
+      razorpayInstance.open();
+    } catch (err) {
+      console.error('Razorpay checkout error:', err);
+      setErrorMessage(err.message || 'Payment initiation failed. Please try again.');
+      setLoading(false);
     }
   };
 
   const copyCode = () => {
-    navigator.clipboard.writeText(assignedCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    if (assignedCode) {
+      navigator.clipboard.writeText(assignedCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
   };
 
   return (
@@ -144,12 +240,13 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#0A0F1E]/80 backdrop-blur-sm animate-fadeIn"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white w-full sm:max-w-[480px] sm:rounded-3xl rounded-t-3xl shadow-2xl border border-[#E8EBF3] overflow-hidden relative max-h-[95vh] overflow-y-auto scrollbar-hide">
+      <div className="bg-white w-full sm:max-w-[500px] sm:rounded-3xl rounded-t-3xl shadow-2xl border border-[#E8EBF3] overflow-hidden relative max-h-[95vh] overflow-y-auto scrollbar-hide">
 
         {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#F6F7FB] hover:bg-[#E8EBF3] text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all z-30"
+          title="Close Modal"
         >
           <X className="w-4 h-4" />
         </button>
@@ -160,17 +257,21 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
 
             {/* Header */}
             <div className="flex items-center gap-3 border-b border-[#F0F2F8] pb-5">
-              <div className="w-12 h-12 rounded-2xl bg-[#EEF4FF] flex items-center justify-center shrink-0">
-                <span className="text-2xl font-black text-[#2475FF]">
-                  {deal?.vendorName?.charAt(0) || 'S'}
-                </span>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 overflow-hidden">
+                {deal?.vendorLogo ? (
+                  <img src={deal.vendorLogo} alt={deal.vendorName} className="w-8 h-8 object-contain" />
+                ) : (
+                  <span className="text-xl font-black text-emerald-700">
+                    {deal?.vendorName?.charAt(0) || 'S'}
+                  </span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-black text-[#2475FF] bg-[#EEF4FF] border border-blue-200 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                    <Lock className="w-2.5 h-2.5" /> Secure Checkout
+                  <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                    <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" /> Razorpay Verified
                   </span>
-                  <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase">
+                  <span className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full uppercase">
                     5-Year Pass
                   </span>
                 </div>
@@ -180,18 +281,18 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
               </div>
             </div>
 
-            {/* Pricing Box */}
-            <div className="bg-[#EEF4FF] rounded-2xl p-4 border border-blue-100 relative overflow-hidden">
+            {/* Pricing Summary Box */}
+            <div className="bg-[#F6F7FB] rounded-2xl p-4 border border-slate-200/80 relative overflow-hidden">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[10px] font-black text-[#2475FF] uppercase tracking-wider mb-1">
-                    Selected Plan
+                  <div className="text-[10px] font-black text-emerald-700 uppercase tracking-wider mb-1">
+                    Selected Pass Plan
                   </div>
-                  <div className="font-black text-[#0A0F1E] text-base">{selectedTier}: {tierTitle}</div>
+                  <div className="font-black text-[#0A0F1E] text-base">{tierTitle}</div>
                   <div className="text-xs text-slate-500 font-medium mt-0.5">{tierCredits}</div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-3xl font-black text-[#2475FF]">
+                  <div className="text-3xl font-black text-emerald-700">
                     ₹{tierPrice.toLocaleString('en-IN')}
                   </div>
                   <div className="text-[11px] text-slate-400 line-through">
@@ -201,7 +302,7 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
               </div>
 
               {/* Savings Banner */}
-              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 flex items-center justify-between">
+              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs font-bold text-amber-800">
                   <Flame className="w-3.5 h-3.5 text-amber-500" />
                   You save ₹{savingsAmt.toLocaleString('en-IN')} today!
@@ -210,28 +311,85 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
                   90% OFF
                 </span>
               </div>
+            </div>
 
-              {/* AppSumo vs SaaTerra Zero-Forex Guarantee */}
-              <div className="mt-2.5 bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1">
-                <div className="flex items-center gap-1.5 text-emerald-950 font-extrabold text-xs">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>100% Direct INR Payment (${Math.round(tierPrice / 83)} USD Equivalent)</span>
+            {/* Buyer Contact Details Inputs */}
+            <div className="space-y-3 pt-1">
+              <div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-slate-400" />
+                Buyer Delivery Details
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ujjwal Sharma"
+                    value={buyerName}
+                    onChange={(e) => setBuyerName(e.target.value)}
+                    className="input-premium text-xs py-2.5"
+                  />
                 </div>
-                <p className="text-[11px] text-emerald-800 font-medium leading-normal">
-                  Unlike foreign sites charging in USD + 4% bank conversion fees, SaaTerra processes directly in <strong>₹ INR via Razorpay UPI</strong> with instant 18% GST Tax Credit!
-                </p>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Email for License <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="founder@agency.in"
+                    value={buyerEmail}
+                    onChange={(e) => setBuyerEmail(e.target.value)}
+                    className="input-premium text-xs py-2.5"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Phone (for UPI/SMS receipt)
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="9876543210"
+                    value={buyerPhone}
+                    onChange={(e) => setBuyerPhone(e.target.value)}
+                    className="input-premium text-xs py-2.5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    GSTIN <span className="text-slate-400 font-normal">(optional B2B)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="07AAAAA0000A1Z5"
+                    value={gstNumber}
+                    onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
+                    className="input-premium text-xs py-2.5 font-mono tracking-wider"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* What You Get */}
-            <div className="space-y-2">
+            {/* Error Message if any */}
+            {errorMessage && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-xl flex items-start gap-2 animate-fadeIn">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                <div>{errorMessage}</div>
+              </div>
+            )}
+
+            {/* Trust Badges */}
+            <div className="space-y-1.5 pt-1">
               {[
-                '5 full years of access — pay once, relax',
-                'Instant license code activation',
-                '60-day unconditional money-back guarantee',
-                'GST invoice for business tax credit',
+                'Instant license code delivery & redemption guide',
+                'Official 18% GST B2B invoice with input tax credit',
+                '60-Day unconditional money-back guarantee',
               ].map((item) => (
-                <div key={item} className="flex items-center gap-2.5 text-xs font-medium text-slate-700">
+                <div key={item} className="flex items-center gap-2 text-xs font-medium text-slate-700">
                   <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                     <Check className="w-2.5 h-2.5 text-emerald-600" />
                   </div>
@@ -240,244 +398,73 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
               ))}
             </div>
 
-            {/* GSTIN Input */}
-            <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">
-                Company GSTIN <span className="text-slate-400 font-medium">(optional — for B2B tax invoice)</span>
-              </label>
-              <input
-                type="text"
-                placeholder="07AAAAA0000A1Z5"
-                value={gstNumber}
-                onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
-                className="input-premium font-mono tracking-widest"
-              />
-            </div>
-
-            {/* Account Status / Login Gate */}
-            {!currentUser ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-black text-amber-900">
-                  <Lock className="w-4 h-4 text-amber-600" /> Account Required for License Code
-                </div>
-                <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-                  Please log in or sign up before completing checkout so your 5-Year activation license code and B2B GST tax invoice are securely saved in your verified profile.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-950 truncate">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="truncate">Buying as: <strong>{currentUser.email}</strong></span>
-                </div>
-                <span className="text-[10px] font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full uppercase shrink-0">Verified</span>
-              </div>
-            )}
-
-            {/* CTA */}
+            {/* CTA Button */}
             <button
-              onClick={() => {
-                if (!currentUser) {
-                  setShowAuthModal(true);
-                  return;
-                }
-                setStep('razorpay_modal');
-              }}
-              className="w-full btn-primary justify-center py-4 text-sm rounded-2xl cursor-pointer"
+              onClick={handleInitiateRazorpay}
+              disabled={loading}
+              className="w-full btn-primary justify-center py-4 text-sm rounded-2xl cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-emerald-700/20"
             >
-              {currentUser ? (
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Connecting to Razorpay...</span>
+                </>
+              ) : (
                 <>
                   <CreditCard className="w-4 h-4" />
                   <span>Pay ₹{tierPrice.toLocaleString('en-IN')} via Razorpay</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
-              ) : (
-                <>
-                  <User className="w-4 h-4" />
-                  <span>Log In / Sign Up to Pay ₹{tierPrice.toLocaleString('en-IN')}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
               )}
             </button>
 
-            {/* Trust strip */}
-            <div className="flex items-center justify-center gap-4 text-[10px] text-slate-400 font-medium pt-1">
-              <span>🔒 256-bit SSL</span>
+            {/* Trust footer */}
+            <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-medium pt-1">
+              <span className="flex items-center gap-1">
+                <Lock className="w-3 h-3 text-slate-400" /> 256-bit SSL
+              </span>
               <span>·</span>
-              <span>⚡ Razorpay PCI-DSS</span>
+              <span>⚡ Razorpay UPI / Cards</span>
               <span>·</span>
               <span>🛡️ RBI Compliant</span>
             </div>
           </div>
         )}
 
-        {/* ──────── STEP 2: Payment Gateway ──────── */}
-        {step === 'razorpay_modal' && (
-          <div className="p-6 space-y-5">
-
-            {/* Razorpay Header */}
-            <div className="flex items-center justify-between border-b border-[#F0F2F8] pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#2475FF] text-white text-sm font-black flex items-center justify-center shadow-md">R</div>
-                <div>
-                  <div className="font-black text-[#0A0F1E] text-sm flex items-center gap-1.5">
-                    Razorpay
-                    <span className="text-[9px] font-black text-[#2475FF] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-md uppercase">Live Gateway</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-medium">256-bit encrypted payment</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 px-2.5 py-1.5 rounded-xl">
-                <Clock className="w-3.5 h-3.5 text-red-500 animate-pulse" />
-                <span className="text-xs font-black text-red-600 font-mono">{fmt(timeLeft)}</span>
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div className="text-center">
-              <div className="text-xs font-bold text-slate-400 mb-0.5">Total Amount</div>
-              <div className="text-4xl font-black text-[#0A0F1E]">
-                ₹{tierPrice.toLocaleString('en-IN')}
-              </div>
-            </div>
-
-            {/* Payment Mode Tabs */}
-            <div className="grid grid-cols-3 gap-1.5 bg-[#F6F7FB] p-1.5 rounded-2xl">
-              {[
-                { key: 'qr', icon: QrCode, label: 'UPI QR' },
-                { key: 'upi', icon: Smartphone, label: 'UPI ID' },
-                { key: 'card', icon: CreditCard, label: 'Card' },
-              ].map(({ key, icon: Icon, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setPaymentMode(key)}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                    paymentMode === key
-                      ? 'bg-[#2475FF] text-white shadow-md'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* QR Payment */}
-            {paymentMode === 'qr' && (
-              <div className="bg-[#F6F7FB] rounded-2xl p-5 text-center space-y-4 border border-[#E8EBF3]">
-                <div>
-                  <div className="text-xs font-black text-[#0A0F1E]">
-                    {scanStatus === 'detected' ? '📲 UPI Scan Detected! Processing...' : '⚡ Waiting for PhonePe / GPay Scan'}
-                  </div>
-                  <div className="text-[11px] text-slate-500 font-medium mt-0.5">
-                    Scan QR with PhonePe, GPay or Paytm
-                  </div>
-                </div>
-
-                {/* QR Code */}
-                <div
-                  className="w-52 h-52 mx-auto bg-white p-3 rounded-2xl border-4 border-[#2475FF] relative overflow-hidden cursor-pointer shadow-lg hover:shadow-xl transition-shadow animate-borderGlow"
-                  onClick={handleConfirmPayment}
-                >
-                  <img src={upiQrUrl} alt="UPI QR Code" className="w-full h-full object-contain" />
-                  {/* Scan Beam */}
-                  <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-[#2475FF] to-transparent shadow-[0_0_12px_#2475FF] animate-scanBeam" />
-                </div>
-
-                {/* Scan progress bar */}
-                <div className="space-y-1.5">
-                  <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#2475FF] to-indigo-500 rounded-full transition-all duration-100"
-                      style={{ width: `${scanProgress}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#2475FF]">
-                    <div className="w-2 h-2 rounded-full bg-[#2475FF] animate-pulseDot" />
-                    {scanStatus === 'detected' ? 'Payment confirmed!' : 'Auto-detecting scan... or click QR'}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* UPI ID */}
-            {paymentMode === 'upi' && (
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Enter UPI ID (e.g. mobile@ybl)"
-                  value={upiId}
-                  onChange={(e) => setUpiId(e.target.value)}
-                  className="input-premium"
-                />
-              </div>
-            )}
-
-            {/* Card */}
-            {paymentMode === 'card' && (
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Card Number (4000 0000 0000 0000)"
-                  value={cardNo}
-                  onChange={(e) => setCardNo(e.target.value)}
-                  className="input-premium font-mono"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <input type="text" placeholder="MM / YY" className="input-premium" />
-                  <input type="text" placeholder="CVV" className="input-premium" />
-                </div>
-              </div>
-            )}
-
-            {/* Confirm Button */}
-            <button
-              onClick={handleConfirmPayment}
-              disabled={loading}
-              className="w-full btn-primary justify-center py-4 text-sm rounded-2xl"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Confirm Payment — ₹{tierPrice.toLocaleString('en-IN')}</span>
-            </button>
-
-          </div>
-        )}
-
-        {/* ──────── STEP 3: Processing ──────── */}
+        {/* ──────── STEP 2: Processing ──────── */}
         {step === 'processing' && (
           <div className="p-12 text-center space-y-5">
             <div className="relative w-20 h-20 mx-auto">
-              <div className="w-20 h-20 border-4 border-[#EEF4FF] border-t-[#2475FF] rounded-full animate-spin" />
+              <div className="w-20 h-20 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Zap className="w-7 h-7 text-[#2475FF]" />
+                <Zap className="w-7 h-7 text-emerald-600 animate-pulse" />
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-black text-[#0A0F1E]">📲 Payment Received!</h3>
+              <h3 className="text-lg font-black text-[#0A0F1E]">Verifying Payment...</h3>
               <p className="text-xs text-slate-500 font-medium mt-1.5">
-                Verifying transaction & unlocking your 5-Year Pass code...
+                Authenticating cryptographic signature & allocating your 5-Year Pass Key...
               </p>
             </div>
             <div className="bg-[#F6F7FB] rounded-xl p-3 border border-[#E8EBF3] text-xs font-medium text-slate-500">
-              This usually takes 2–3 seconds
+              Please do not close or refresh this tab
             </div>
           </div>
         )}
 
-        {/* ──────── STEP 4: Success ──────── */}
+        {/* ──────── STEP 3: Success & Code Delivery ──────── */}
         {step === 'success' && (
           <div className="p-6 space-y-5">
 
             {/* Confetti Header */}
-            <div className="text-center space-y-3 py-3">
+            <div className="text-center space-y-3 py-2">
               <div className="w-16 h-16 rounded-full bg-emerald-100 border-4 border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-9 h-9" />
               </div>
               <div>
                 <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full mb-2">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  PAYMENT RECEIVED VIA PHONEPE / GPAY
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  PAYMENT VERIFIED VIA RAZORPAY
                 </span>
                 <h3 className="text-2xl font-black text-[#0A0F1E]">Payment Successful! 🎉</h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium">
@@ -486,20 +473,25 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
               </div>
             </div>
 
-            {/* Code Box */}
-            <div className="bg-[#0A0F1E] text-white p-5 rounded-2xl border-2 border-amber-400/60 shadow-xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 to-transparent" />
+            {/* Real Code Box */}
+            <div className="bg-[#090D16] text-white p-5 rounded-2xl border-2 border-emerald-500/80 shadow-xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none" />
               <div className="relative">
-                <div className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                  <Gift className="w-3.5 h-3.5" /> Your Redemption Code
+                <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Gift className="w-3.5 h-3.5" /> Your Official License Pass Key
+                  </span>
+                  <span className="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full">
+                    Active
+                  </span>
                 </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-xl font-black tracking-widest text-amber-300">
+                <div className="flex items-center justify-between gap-3 bg-black/50 p-3 rounded-xl border border-emerald-500/30">
+                  <span className="font-mono text-lg sm:text-xl font-black tracking-wider text-emerald-300 select-all break-all">
                     {assignedCode}
                   </span>
                   <button
                     onClick={copyCode}
-                    className="btn-gold text-xs px-3.5 py-2 rounded-xl shrink-0"
+                    className="btn-gold text-xs px-3.5 py-2 rounded-xl shrink-0 flex items-center gap-1.5 font-bold"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     {copied ? 'Copied!' : 'Copy'}
@@ -508,36 +500,53 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
               </div>
             </div>
 
-            {/* Next steps */}
+            {/* Actions & Links */}
             <div className="space-y-2.5">
-              {[
-                { icon: '🔗', text: 'Go to vendor website → redeem your code' },
-                { icon: '📧', text: 'Email invoice sent to your address' },
-                { icon: '🛡️', text: '60-day refund guarantee active for this order' },
-              ].map((item) => (
-                <div key={item.text} className="flex items-center gap-2.5 text-xs font-medium text-slate-600 bg-[#F6F7FB] rounded-xl p-3 border border-[#E8EBF3]">
-                  <span className="text-base">{item.icon}</span>
-                  {item.text}
+              <a
+                href={`/redeem?code=${encodeURIComponent(assignedCode)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-900 transition-colors text-xs font-bold"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🚀</span>
+                  <span>How to Activate & Redeem on Vendor Portal</span>
                 </div>
-              ))}
+                <ExternalLink className="w-4 h-4 text-emerald-600" />
+              </a>
+
+              {verifiedOrder?.invoiceUrl && (
+                <a
+                  href={verifiedOrder.invoiceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 transition-colors text-xs font-bold"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-600" />
+                    <span>Download Official 18% GST Tax Invoice</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </a>
+              )}
+
+              <div className="flex items-center gap-2 text-[11px] text-slate-500 p-2">
+                <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <span>Confirmation email with instructions has been sent to <strong>{buyerEmail || currentUser?.email}</strong></span>
+              </div>
             </div>
 
-            {/* Actions */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Bottom Close */}
+            <div className="pt-2">
               <button
                 onClick={onClose}
-                className="py-3 px-4 border border-[#E8EBF3] rounded-xl text-sm font-bold text-slate-600 hover:bg-[#F6F7FB] transition-all"
+                className="w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
               >
-                Close
-              </button>
-              <button
-                onClick={onClose}
-                className="btn-primary justify-center py-3 text-sm rounded-xl"
-              >
-                Go to Dashboard
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>Done</span>
+                <Check className="w-4 h-4" />
               </button>
             </div>
+
           </div>
         )}
 
@@ -550,8 +559,9 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
           initialMode="signup"
           onSuccess={(u) => {
             setCurrentUser(u);
+            setBuyerName(u.name || '');
+            setBuyerEmail(u.email || '');
             setShowAuthModal(false);
-            setStep('razorpay_modal');
           }}
         />
       )}

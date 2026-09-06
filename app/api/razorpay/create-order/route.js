@@ -1,79 +1,116 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import dbConnect from '@/lib/dbConnect';
-import LTDDeal from '@/models/LTDDeal';
+import Deal from '@/models/Deal';
 
 export async function POST(req) {
   try {
     await dbConnect();
-    const { dealId, tier = 'Tier 1', gstNumber } = await req.json();
+    const body = await req.json();
+    const { dealId, tier = 'Tier 1', gstNumber, userEmail = '', userName = '' } = body;
 
+    if (!dealId) {
+      return NextResponse.json({ success: false, message: 'Deal ID or slug is required' }, { status: 400 });
+    }
+
+    // Find deal by ObjectId or slug
     let deal = null;
-    if (dealId) {
-      try {
-        deal = await LTDDeal.findById(dealId);
-      } catch (err) {
-        deal = await LTDDeal.findOne({ slug: 'chat-chacha' });
+    try {
+      if (dealId.match(/^[0-9a-fA-F]{24}$/)) {
+        deal = await Deal.findById(dealId);
+      }
+    } catch (err) {
+      // not a valid ObjectId
+    }
+
+    if (!deal) {
+      deal = await Deal.findOne({ slug: dealId });
+    }
+
+    if (!deal) {
+      return NextResponse.json({ success: false, message: 'Deal not found in marketplace' }, { status: 404 });
+    }
+
+    // Determine pricing tier
+    let price = 1999;
+    let selectedTierName = tier;
+
+    if (deal.pricingTiers && deal.pricingTiers.length > 0) {
+      // Match by exact or partial tier name
+      const matchedTier = deal.pricingTiers.find((t) => 
+        t.tierName?.toLowerCase() === tier?.toLowerCase() ||
+        (tier?.toLowerCase().includes('tier 1') && t.tierName?.toLowerCase().includes('starter')) ||
+        (tier?.toLowerCase().includes('tier 2') && (t.tierName?.toLowerCase().includes('pro') || t.tierName?.toLowerCase().includes('growth'))) ||
+        (tier?.toLowerCase().includes('tier 3') && (t.tierName?.toLowerCase().includes('agency') || t.tierName?.toLowerCase().includes('lifetime') || t.tierName?.toLowerCase().includes('scale')))
+      );
+
+      if (matchedTier && matchedTier.price) {
+        price = matchedTier.price;
+        selectedTierName = matchedTier.tierName;
+      } else {
+        // Match by index fallback
+        if (tier === 'Tier 2' && deal.pricingTiers[1]) {
+          price = deal.pricingTiers[1].price;
+          selectedTierName = deal.pricingTiers[1].tierName;
+        } else if (tier === 'Tier 3' && (deal.pricingTiers[2] || deal.pricingTiers[1])) {
+          const tObj = deal.pricingTiers[2] || deal.pricingTiers[1];
+          price = tObj.price;
+          selectedTierName = tObj.tierName;
+        } else {
+          price = deal.pricingTiers[0].price;
+          selectedTierName = deal.pricingTiers[0].tierName;
+        }
       }
     }
-    if (!deal) {
-      deal = await LTDDeal.findOne({ slug: 'chat-chacha' });
-    }
 
-    let price = deal?.tier1Price || 1999;
-    if (tier === 'Tier 2') price = deal?.tier2Price || price * 2;
-    if (tier === 'Tier 3') price = deal?.tier3Price || price * 4;
-
-    const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_1DP51h5iZ51hZ5';
+    const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_1DP51h5iZ51hZ5';
     const keySecret = process.env.RAZORPAY_KEY_SECRET || 'SaaTerraSecretRazorpayKey2026';
 
-    let orderId = `order_mock_${Date.now()}`;
+    const razorpay = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
+    });
 
+    const amountInPaise = Math.round(price * 100);
+
+    const options = {
+      amount: amountInPaise,
+      currency: 'INR',
+      receipt: `rcpt_${deal.slug.substring(0, 10)}_${Date.now().toString().slice(-6)}`,
+      notes: {
+        dealId: deal._id.toString(),
+        dealSlug: deal.slug,
+        tier: selectedTierName,
+        gstNumber: gstNumber || 'NONE',
+        userEmail: userEmail || 'guest',
+      },
+    };
+
+    let orderId = '';
     try {
-      const razorpay = new Razorpay({
-        key_id: keyId,
-        key_secret: keySecret,
-      });
-
-      const options = {
-        amount: price * 100, // Amount in paise
-        currency: 'INR',
-        receipt: `rcpt_${Date.now()}`,
-        notes: {
-          dealId: deal?._id ? deal._id.toString() : 'demo_id',
-          tier,
-          gstNumber: gstNumber || 'NONE'
-        }
-      };
-
       const razorpayOrder = await razorpay.orders.create(options);
       if (razorpayOrder && razorpayOrder.id) {
         orderId = razorpayOrder.id;
       }
     } catch (rzpErr) {
-      console.log('Razorpay API notice (using test order fallback):', rzpErr.message);
+      console.error('Razorpay API error creating order:', rzpErr.message || rzpErr);
+      // Fallback for offline test mode if keys are demo keys
+      orderId = `order_test_${Date.now()}`;
     }
 
     return NextResponse.json({
       success: true,
       orderId,
-      amount: price * 100,
+      amount: amountInPaise,
       currency: 'INR',
       keyId,
-      dealTitle: deal?.title || 'SaaTerra 5-Year Pass',
-      tier,
-      price
+      dealTitle: deal.title,
+      dealSlug: deal.slug,
+      tier: selectedTierName,
+      price,
     });
   } catch (error) {
-    return NextResponse.json({
-      success: true,
-      orderId: `order_mock_${Date.now()}`,
-      amount: 199900,
-      currency: 'INR',
-      keyId: 'rzp_test_1DP51h5iZ51hZ5',
-      dealTitle: 'SaaTerra 5-Year Pass',
-      tier: 'Tier 1',
-      price: 1999
-    });
+    console.error('create-order route fatal error:', error);
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
