@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import Razorpay from 'razorpay';
 import dbConnect from '@/lib/dbConnect';
 import Deal from '@/models/Deal';
 import LTDOrder from '@/models/LTDOrder';
@@ -22,22 +23,58 @@ export async function POST(req) {
       userName = 'Verified Agency Founder',
       userPhone = '',
       userId = null,
-      amount,
     } = body;
 
-    // 1. Strict Payment ID Validation
-    if (!razorpay_payment_id) {
+    // ──────────────────────────────────────────────────────────────────────────
+    // 🛡️ SECURITY LAYER 1: Mandatory Parameter & Type Validation
+    // ──────────────────────────────────────────────────────────────────────────
+    if (!razorpay_payment_id || typeof razorpay_payment_id !== 'string') {
       return NextResponse.json({
         success: false,
-        message: 'STRICT SECURITY NOTICE: Payment not completed on Razorpay. Code generation blocked.',
+        message: 'SECURITY BLOCKED: Missing or invalid Razorpay Payment ID.',
       }, { status: 400 });
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'SaaTerraSecretRazorpayKey2026';
+    if (!razorpay_order_id || typeof razorpay_order_id !== 'string') {
+      return NextResponse.json({
+        success: false,
+        message: 'SECURITY BLOCKED: Missing or invalid Razorpay Order ID.',
+      }, { status: 400 });
+    }
 
-    // 2. Cryptographic HMAC SHA256 Signature Verification
+    const keyId = process.env.RAZORPAY_KEY_ID || '';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+    const isLiveMode = keyId.startsWith('rzp_live_');
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 🛡️ SECURITY LAYER 2: Live Mode Lockdown (Strict Anti-Spoofing)
+    // ──────────────────────────────────────────────────────────────────────────
+    if (isLiveMode) {
+      // In live mode, forbid any test/mock IDs completely
+      if (
+        razorpay_payment_id.startsWith('pay_test_') ||
+        razorpay_order_id.startsWith('order_test_') ||
+        razorpay_order_id.startsWith('order_mock_')
+      ) {
+        return NextResponse.json({
+          success: false,
+          message: 'SECURITY ALERT: Test payment IDs are strictly forbidden on production Live Mode.',
+        }, { status: 403 });
+      }
+
+      if (!razorpay_signature) {
+        return NextResponse.json({
+          success: false,
+          message: 'SECURITY BLOCKED: Razorpay signature is mandatory for live transactions.',
+        }, { status: 400 });
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 🛡️ SECURITY LAYER 3: Cryptographic HMAC-SHA256 Signature Verification
+    // ──────────────────────────────────────────────────────────────────────────
     let isSignatureValid = false;
-    if (razorpay_order_id && razorpay_signature) {
+    if (razorpay_order_id && razorpay_signature && keySecret) {
       const expectedSignature = crypto
         .createHmac('sha256', keySecret)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -48,21 +85,34 @@ export async function POST(req) {
       }
     }
 
-    // Allow mock/test payments in test environment if test ID is used
-    const isTestModeBypass =
-      razorpay_payment_id.startsWith('pay_test_') ||
-      razorpay_order_id?.startsWith('order_test_') ||
-      keySecret === 'SaaTerraSecretRazorpayKey2026';
-
-    if (!isSignatureValid && !isTestModeBypass) {
-      console.error('Signature verification mismatch:', { razorpay_order_id, razorpay_signature });
+    // In Live mode, signature mismatch is a hard rejection
+    if (isLiveMode && !isSignatureValid) {
+      console.error('CRITICAL SECURITY: HMAC Signature verification mismatch!', {
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      });
       return NextResponse.json({
         success: false,
-        message: 'Security Verification Failed: Invalid payment signature from Razorpay.',
+        message: 'SECURITY VERIFICATION FAILED: Cryptographic payment signature mismatch. Transaction rejected.',
       }, { status: 400 });
     }
 
-    // 3. Idempotency Check: Return existing order if already processed
+    // If in test mode with demo secret, allow test payment only for non-live keys
+    if (!isLiveMode && !isSignatureValid) {
+      const isLocalTest =
+        razorpay_payment_id.startsWith('pay_test_') ||
+        razorpay_order_id.startsWith('order_test_');
+      if (!isLocalTest) {
+        return NextResponse.json({
+          success: false,
+          message: 'Invalid signature in test mode.',
+        }, { status: 400 });
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 🛡️ SECURITY LAYER 4: Anti-Replay Attack Protection
+    // ──────────────────────────────────────────────────────────────────────────
     const existingOrder = await LTDOrder.findOne({
       $or: [
         { orderId: razorpay_order_id },
@@ -82,7 +132,9 @@ export async function POST(req) {
       });
     }
 
-    // 4. Fetch Deal from MongoDB
+    // ──────────────────────────────────────────────────────────────────────────
+    // 🛡️ SECURITY LAYER 5: Fetch Deal from MongoDB & Validate Tier Price
+    // ──────────────────────────────────────────────────────────────────────────
     let deal = null;
     try {
       if (dealId && dealId.match(/^[0-9a-fA-F]{24}$/)) {
@@ -97,11 +149,10 @@ export async function POST(req) {
     if (!deal) {
       return NextResponse.json({
         success: false,
-        message: 'Deal not found in database.',
+        message: 'Deal not found in marketplace database.',
       }, { status: 404 });
     }
 
-    // 5. Match Pricing Tier & Calculate Final Amount
     let matchedTier = null;
     if (deal.pricingTiers && deal.pricingTiers.length > 0) {
       matchedTier = deal.pricingTiers.find((t) =>
@@ -112,10 +163,60 @@ export async function POST(req) {
       );
     }
 
-    let finalAmount = amount || (matchedTier ? matchedTier.price : 1999);
+    const expectedPrice = matchedTier ? matchedTier.price : (deal.pricingTiers?.[0]?.price || 1999);
+    const expectedPaise = Math.round(expectedPrice * 100);
 
-    // 6. Real License Code Allocation
-    // Check if vendor has pre-loaded keys in pricing tier or general pool
+    // ──────────────────────────────────────────────────────────────────────────
+    // 🛡️ SECURITY LAYER 6: Real-time Server-to-Server Verification with Razorpay API
+    // ──────────────────────────────────────────────────────────────────────────
+    if (isLiveMode && keyId && keySecret) {
+      try {
+        const razorpayInstance = new Razorpay({
+          key_id: keyId,
+          key_secret: keySecret,
+        });
+
+        const paymentRecord = await razorpayInstance.payments.fetch(razorpay_payment_id);
+
+        // A. Verify Status is actually CAPTURED (money received in Razorpay)
+        if (paymentRecord.status !== 'captured') {
+          return NextResponse.json({
+            success: false,
+            message: `SECURITY BLOCKED: Payment status is "${paymentRecord.status}" (not captured). No license issued.`,
+          }, { status: 400 });
+        }
+
+        // B. Verify Payment is for THIS exact Order ID
+        if (paymentRecord.order_id !== razorpay_order_id) {
+          return NextResponse.json({
+            success: false,
+            message: 'SECURITY ALERT: Payment record does not match the requested order ID.',
+          }, { status: 400 });
+        }
+
+        // C. Anti-Price Tampering: Verify exact amount paid
+        if (Number(paymentRecord.amount) < expectedPaise) {
+          console.error('PRICE TAMPERING DETECTED:', {
+            paid: paymentRecord.amount,
+            expected: expectedPaise,
+          });
+          return NextResponse.json({
+            success: false,
+            message: `SECURITY ALERT: Amount paid (₹${paymentRecord.amount / 100}) is less than the required tier price (₹${expectedPrice}). Transaction rejected.`,
+          }, { status: 400 });
+        }
+      } catch (rzpFetchErr) {
+        console.error('Razorpay live fetch error:', rzpFetchErr.message);
+        return NextResponse.json({
+          success: false,
+          message: `Unable to verify transaction with Razorpay servers: ${rzpFetchErr.message}`,
+        }, { status: 502 });
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 🔑 LICENSE ALLOCATION & ATOMIC STORAGE
+    // ──────────────────────────────────────────────────────────────────────────
     let licenseCode = null;
     if (matchedTier && matchedTier.licenseCodes && matchedTier.licenseCodes.length > 0) {
       licenseCode = matchedTier.licenseCodes.shift();
@@ -123,16 +224,13 @@ export async function POST(req) {
       licenseCode = deal.licenseKeys.shift();
     }
 
-    // If no manual vendor keys left, generate an official, cryptographically unique StackDeal Pass Key
     if (!licenseCode) {
       licenseCode = `SD-${deal.slug.toUpperCase().replace(/[^A-Z0-9]/g, '')}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
     }
 
-    // 60-Day Money-Back Guarantee Deadline
     const refundDeadline = new Date();
     refundDeadline.setDate(refundDeadline.getDate() + 60);
 
-    // Find user ID if not provided
     let attachedUserId = userId;
     if (!attachedUserId && userEmail) {
       try {
@@ -141,9 +239,9 @@ export async function POST(req) {
       } catch (uErr) {}
     }
 
-    // 7. Save Order in MongoDB
+    // Save Order
     const order = await LTDOrder.create({
-      orderId: razorpay_order_id || `order_sd_${Date.now()}`,
+      orderId: razorpay_order_id,
       dealId: deal._id,
       dealSlug: deal.slug,
       dealTitle: deal.title,
@@ -152,7 +250,7 @@ export async function POST(req) {
       userName: userName.trim(),
       userPhone: userPhone.trim(),
       tier: matchedTier?.tierName || tier,
-      amountPaid: finalAmount,
+      amountPaid: expectedPrice, // strictly server-enforced price
       currency: 'INR',
       paymentGateway: 'razorpay',
       paymentId: razorpay_payment_id,
@@ -163,21 +261,21 @@ export async function POST(req) {
       refundDeadline,
     });
 
-    // 8. Increment Sold Counts on Deal
+    // Update Deal Metrics
     deal.soldCount = (deal.soldCount || 0) + 1;
     if (matchedTier) {
       matchedTier.soldCount = (matchedTier.soldCount || 0) + 1;
     }
     await deal.save();
 
-    // 9. Create User Notification in MongoDB
+    // Create In-App Notification
     try {
       await Notification.create({
         userId: attachedUserId || null,
         userEmail: userEmail.toLowerCase().trim(),
         type: 'order_completed',
         title: `🎉 5-Year Pass Unlocked: ${deal.title}!`,
-        message: `Your payment of ₹${finalAmount.toLocaleString('en-IN')} was verified. License Code: ${licenseCode}. 60-Day refund protection active.`,
+        message: `Payment of ₹${expectedPrice.toLocaleString('en-IN')} verified. License Key: ${licenseCode}. 60-day refund guarantee active.`,
         link: '/profile',
         icon: '🔑',
         meta: {
@@ -185,14 +283,14 @@ export async function POST(req) {
           dealTitle: deal.title,
           dealSlug: deal.slug,
           orderId: order.orderId,
-          amountPaid: finalAmount,
+          amountPaid: expectedPrice,
         },
       });
     } catch (notifErr) {
-      console.error('Notification creation notice:', notifErr.message);
+      console.warn('Notification log:', notifErr.message);
     }
 
-    // 10. Send Professional Confirmation Email with License Code
+    // Send Email via Nodemailer
     try {
       if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
         const transporter = nodemailer.createTransporter({
@@ -209,52 +307,15 @@ export async function POST(req) {
         const emailHtml = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #090d16; color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
             <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 32px 24px; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">⚡ Payment Successful!</h1>
-              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Your 5-Year Access Pass is unlocked and ready to activate.</p>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #ffffff;">⚡ Payment Successful!</h1>
+              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Your 5-Year Access Pass is unlocked.</p>
             </div>
-            
             <div style="padding: 28px 24px;">
               <p style="color: #94a3b8; font-size: 15px; margin: 0 0 20px 0;">Hello <strong>${userName || 'Founder'}</strong>,</p>
-              <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
-                Thank you for your purchase on StackDeal. You have secured exclusive 5-Year access to <strong>${deal.title}</strong> (${matchedTier?.tierName || tier}).
-              </p>
-
-              <!-- License Key Card -->
               <div style="background: #131b2e; border: 1px solid #059669; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
-                <span style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #34d399; margin-bottom: 8px;">Your Official License Pass Key</span>
-                <code style="display: inline-block; background: #000000; color: #10b981; font-size: 20px; font-weight: 800; padding: 10px 20px; border-radius: 8px; border: 1px dashed rgba(52, 211, 153, 0.4); letter-spacing: 2px;">${licenseCode}</code>
-                <p style="color: #64748b; font-size: 12px; margin: 12px 0 0 0;">Strictly confidential. Never share this pass key publicly.</p>
+                <span style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #34d399; margin-bottom: 8px;">Official License Pass Key</span>
+                <code style="display: inline-block; background: #000000; color: #10b981; font-size: 20px; font-weight: 800; padding: 10px 20px; border-radius: 8px; border: 1px dashed rgba(52, 211, 153, 0.4);">${licenseCode}</code>
               </div>
-
-              <!-- Order Summary Table -->
-              <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px;">
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
-                  <td style="padding: 10px 0; color: #94a3b8;">Software / Deal:</td>
-                  <td style="padding: 10px 0; color: #ffffff; text-align: right; font-weight: 600;">${deal.title}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
-                  <td style="padding: 10px 0; color: #94a3b8;">Access Plan:</td>
-                  <td style="padding: 10px 0; color: #ffffff; text-align: right; font-weight: 600;">${matchedTier?.tierName || tier} (5-Year Pass)</td>
-                </tr>
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
-                  <td style="padding: 10px 0; color: #94a3b8;">Amount Paid:</td>
-                  <td style="padding: 10px 0; color: #34d399; text-align: right; font-weight: 700; font-size: 15px;">₹${finalAmount.toLocaleString('en-IN')} (Incl. 18% GST)</td>
-                </tr>
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
-                  <td style="padding: 10px 0; color: #94a3b8;">Razorpay Order ID:</td>
-                  <td style="padding: 10px 0; color: #cbd5e1; text-align: right; font-family: monospace;">${order.orderId}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
-                  <td style="padding: 10px 0; color: #94a3b8;">Payment Reference:</td>
-                  <td style="padding: 10px 0; color: #cbd5e1; text-align: right; font-family: monospace;">${razorpay_payment_id}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #94a3b8;">Guarantee Window:</td>
-                  <td style="padding: 10px 0; color: #38bdf8; text-align: right; font-weight: 600;">60-Day Money Back Guarantee</td>
-                </tr>
-              </table>
-
-              <!-- Call to Actions -->
               <div style="text-align: center; margin-bottom: 24px;">
                 <a href="${redeemUrl}" style="display: inline-block; background: #059669; color: #ffffff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-right: 8px;">
                   🚀 Activate Pass Now &rarr;
@@ -263,14 +324,6 @@ export async function POST(req) {
                   📄 Download Tax Invoice
                 </a>
               </div>
-
-              <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 16px; font-size: 12px; color: #94a3b8; line-height: 1.5;">
-                <strong style="color: #cbd5e1;">Need assistance?</strong> Contact our Indian founder support desk at <a href="mailto:support@stackdeal.in" style="color: #34d399;">support@stackdeal.in</a> or reply directly to this email.
-              </div>
-            </div>
-
-            <div style="background: #060911; padding: 16px 24px; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #64748b;">
-              &copy; ${new Date().getFullYear()} StackDeal Platform · Curated SaaS Deals for Indian Agencies & Founders
             </div>
           </div>
         `;
@@ -278,12 +331,12 @@ export async function POST(req) {
         await transporter.sendMail({
           from: `"${process.env.GMAIL_FROM_NAME || 'StackDeal Platform'}" <${process.env.GMAIL_USER}>`,
           to: userEmail.toLowerCase().trim(),
-          subject: `⚡ [CONFIRMED] Your 5-Year Pass for ${deal.title} is Ready! (License Key Inside)`,
+          subject: `⚡ [CONFIRMED] Your 5-Year Pass for ${deal.title} is Ready!`,
           html: emailHtml,
         });
       }
     } catch (mailErr) {
-      console.error('Email delivery notice:', mailErr.message);
+      console.warn('Email send notice:', mailErr.message);
     }
 
     return NextResponse.json({
@@ -293,7 +346,7 @@ export async function POST(req) {
       paymentId: razorpay_payment_id,
       dealTitle: deal.title,
       tier: matchedTier?.tierName || tier,
-      amountPaid: finalAmount,
+      amountPaid: expectedPrice,
       invoiceUrl: `/api/invoice/${order.orderId}`,
       message: 'Razorpay Payment Successful! 5-Year Pass Code Unlocked.',
     });
