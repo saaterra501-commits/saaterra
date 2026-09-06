@@ -118,13 +118,16 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
     setLoading(true);
 
     try {
+      const resolvedDealId = deal?._id || deal?.slug || deal?.id || deal?.dealSlug || 'chat-chacha';
+
       // 1. Create Razorpay order on backend
       const orderRes = await fetch('/api/razorpay/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          dealId: deal?._id || deal?.slug,
+          dealId: resolvedDealId,
           tier: selectedTier,
+          price: tierPrice,
           gstNumber: gstNumber.trim(),
           userEmail: emailToUse.trim(),
           userName: buyerName.trim() || 'Valued Founder',
@@ -158,7 +161,7 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
           contact: buyerPhone.trim() || '',
         },
         notes: {
-          dealId: deal?._id ? deal._id.toString() : deal?.slug,
+          dealId: resolvedDealId,
           dealTitle: deal?.title || '',
           tier: selectedTier,
           gstNumber: gstNumber.trim() || 'NONE',
@@ -182,7 +185,7 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                dealId: deal?._id || deal?.slug,
+                dealId: resolvedDealId,
                 tier: selectedTier,
                 gstNumber: gstNumber.trim(),
                 amount: tierPrice,

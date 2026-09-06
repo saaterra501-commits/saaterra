@@ -616,11 +616,16 @@ function CartContent() {
       {showCheckoutModal && (
         <LTDCheckoutModal
           deal={{
-            title: cartItems.length === 1 ? cartItems[0].title : `StackDeal Bundle (${cartItems.length} Passes)`,
+            _id: cartItems[0]?.slug || cartItems[0]?.id || 'chat-chacha',
+            slug: cartItems[0]?.slug || 'chat-chacha',
+            id: cartItems[0]?.slug || cartItems[0]?.id || 'chat-chacha',
+            title: cartItems.length === 1 ? cartItems[0].title : `StackDeal Order (${cartItems.length} Software Passes)`,
             tier1Price: totalAmount,
-            tier1Title: plusAdded ? 'Bundle + StackDeal Plus VIP' : 'StackDeal 5-Year Pass Order',
+            tier1Title: plusAdded ? 'Order + StackDeal Plus VIP' : (cartItems[0]?.tierName || 'StackDeal 5-Year Pass'),
+            vendorLogo: cartItems[0]?.screenshot || '/logo.png',
+            vendorName: cartItems[0]?.vendorName || 'StackDeal Partner',
           }}
-          selectedTier={plusAdded ? 'Bundle + StackDeal Plus' : 'Cart Checkout'}
+          selectedTier={cartItems.length === 1 ? (cartItems[0]?.tierName || 'Tier 1') : 'Cart Checkout'}
           onClose={() => setShowCheckoutModal(false)}
         />
       )}

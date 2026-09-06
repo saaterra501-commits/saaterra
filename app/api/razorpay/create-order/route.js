@@ -7,37 +7,53 @@ export async function POST(req) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { dealId, tier = 'Tier 1', gstNumber, userEmail = '', userName = '' } = body;
+    const {
+      dealId,
+      tier = 'Tier 1',
+      price: customPrice,
+      gstNumber,
+      userEmail = '',
+      userName = '',
+    } = body;
 
-    if (!dealId) {
-      return NextResponse.json({ success: false, message: 'Deal ID or slug is required' }, { status: 400 });
-    }
+    const targetDealId = dealId || 'chat-chacha';
 
     // Find deal by ObjectId or slug
     let deal = null;
     try {
-      if (dealId.match(/^[0-9a-fA-F]{24}$/)) {
-        deal = await Deal.findById(dealId);
+      if (typeof targetDealId === 'string' && targetDealId.match(/^[0-9a-fA-F]{24}$/)) {
+        deal = await Deal.findById(targetDealId);
       }
     } catch (err) {
       // not a valid ObjectId
     }
 
-    if (!deal) {
-      deal = await Deal.findOne({ slug: dealId });
+    if (!deal && typeof targetDealId === 'string') {
+      deal = await Deal.findOne({ slug: targetDealId });
     }
 
+    // Fallback: If not found (e.g. cart bundle order), pick first active deal or general marketplace pass
     if (!deal) {
-      return NextResponse.json({ success: false, message: 'Deal not found in marketplace' }, { status: 404 });
+      deal = await Deal.findOne({ status: 'Active' }) || await Deal.findOne({});
     }
 
-    // Determine pricing tier
-    let price = 1999;
+    // Fallback deal object if DB has no deals
+    if (!deal) {
+      deal = {
+        _id: 'sd_bundle_pass',
+        slug: 'stackdeal-bundle',
+        title: 'StackDeal 5-Year Software Pass',
+        pricingTiers: [{ tierName: 'Starter Pass', price: 1999 }],
+      };
+    }
+
+    // Determine pricing tier & amount
+    let price = customPrice ? Number(customPrice) : 1999;
     let selectedTierName = tier;
 
-    if (deal.pricingTiers && deal.pricingTiers.length > 0) {
+    if (!customPrice && deal.pricingTiers && deal.pricingTiers.length > 0) {
       // Match by exact or partial tier name
-      const matchedTier = deal.pricingTiers.find((t) => 
+      const matchedTier = deal.pricingTiers.find((t) =>
         t.tierName?.toLowerCase() === tier?.toLowerCase() ||
         (tier?.toLowerCase().includes('tier 1') && t.tierName?.toLowerCase().includes('starter')) ||
         (tier?.toLowerCase().includes('tier 2') && (t.tierName?.toLowerCase().includes('pro') || t.tierName?.toLowerCase().includes('growth'))) ||
@@ -63,8 +79,15 @@ export async function POST(req) {
       }
     }
 
-    const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_1DP51h5iZ51hZ5';
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'SaaTerraSecretRazorpayKey2026';
+    const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+
+    if (!keyId || !keySecret) {
+      return NextResponse.json({
+        success: false,
+        message: 'Razorpay API credentials are not configured in environment variables.',
+      }, { status: 500 });
+    }
 
     const razorpay = new Razorpay({
       key_id: keyId,
@@ -73,34 +96,25 @@ export async function POST(req) {
 
     const amountInPaise = Math.round(price * 100);
 
+    const safeSlug = deal.slug ? deal.slug.substring(0, 10) : 'sd_pass';
     const options = {
       amount: amountInPaise,
       currency: 'INR',
-      receipt: `rcpt_${deal.slug.substring(0, 10)}_${Date.now().toString().slice(-6)}`,
+      receipt: `rcpt_${safeSlug}_${Date.now().toString().slice(-6)}`,
       notes: {
-        dealId: deal._id.toString(),
-        dealSlug: deal.slug,
+        dealId: deal._id ? deal._id.toString() : (deal.slug || 'stackdeal'),
+        dealSlug: deal.slug || 'stackdeal',
         tier: selectedTierName,
         gstNumber: gstNumber || 'NONE',
         userEmail: userEmail || 'guest',
       },
     };
 
-    let orderId = '';
-    try {
-      const razorpayOrder = await razorpay.orders.create(options);
-      if (razorpayOrder && razorpayOrder.id) {
-        orderId = razorpayOrder.id;
-      }
-    } catch (rzpErr) {
-      console.error('Razorpay API error creating order:', rzpErr.message || rzpErr);
-      // Fallback for offline test mode if keys are demo keys
-      orderId = `order_test_${Date.now()}`;
-    }
+    const razorpayOrder = await razorpay.orders.create(options);
 
     return NextResponse.json({
       success: true,
-      orderId,
+      orderId: razorpayOrder.id,
       amount: amountInPaise,
       currency: 'INR',
       keyId,
@@ -111,6 +125,9 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error('create-order route fatal error:', error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      message: error?.error?.description || error.message || 'Failed to create Razorpay order',
+    }, { status: 500 });
   }
 }
