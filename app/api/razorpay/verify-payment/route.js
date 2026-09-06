@@ -7,6 +7,49 @@ import Deal from '@/models/Deal';
 import LTDOrder from '@/models/LTDOrder';
 import Notification from '@/models/Notification';
 import User from '@/models/User';
+import fs from 'fs';
+import path from 'path';
+
+function getRazorpayCredentials() {
+  let keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
+  let keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+
+  if (!keyId || !keySecret) {
+    try {
+      const candidates = [
+        path.join(process.cwd(), '.env.local'),
+        'C:\\Users\\ujjaw\\OneDrive\\Documents\\saaterra\\.env.local',
+        'C:\\Users\\ujjaw\\OneDrive\\Desktop\\saaterra\\.env.local',
+      ];
+      for (const envPath of candidates) {
+        if (fs.existsSync(envPath)) {
+          const content = fs.readFileSync(envPath, 'utf8');
+          const lines = content.split(/\r?\n/);
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('RAZORPAY_KEY_ID=')) {
+              const val = trimmed.split('=')[1]?.trim()?.replace(/^["']|["']$/g, '');
+              if (val) keyId = val;
+            }
+            if (trimmed.startsWith('RAZORPAY_KEY_SECRET=')) {
+              const val = trimmed.split('=')[1]?.trim()?.replace(/^["']|["']$/g, '');
+              if (val) keySecret = val;
+            }
+            if (trimmed.startsWith('NEXT_PUBLIC_RAZORPAY_KEY_ID=') && !keyId) {
+              const val = trimmed.split('=')[1]?.trim()?.replace(/^["']|["']$/g, '');
+              if (val) keyId = val;
+            }
+          }
+          if (keyId && keySecret) break;
+        }
+      }
+    } catch (e) {
+      console.warn('Fallback env read notice:', e.message);
+    }
+  }
+
+  return { keyId, keySecret };
+}
 
 export async function POST(req) {
   try {
@@ -42,8 +85,7 @@ export async function POST(req) {
       }, { status: 400 });
     }
 
-    const keyId = process.env.RAZORPAY_KEY_ID || '';
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+    const { keyId, keySecret } = getRazorpayCredentials();
     const isLiveMode = keyId.startsWith('rzp_live_');
 
     // ──────────────────────────────────────────────────────────────────────────
