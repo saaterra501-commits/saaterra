@@ -110,16 +110,58 @@ export async function POST(req) {
           });
           existingKeySet.add(lowerKey);
         } else if (catKey && existingKeySet.has(lowerKey)) {
-          // Sync active status
+          // Sync active status, name, image and themeColor
           const matchIdx = updatedTopCats.findIndex((t) => (t.categoryKey || t.name || '').toLowerCase() === lowerKey);
           if (matchIdx >= 0) {
             updatedTopCats[matchIdx].active = cat.active !== false;
             updatedTopCats[matchIdx].name = cat.name;
+            if (cat.image !== undefined) {
+              updatedTopCats[matchIdx].image = (cat.image || '').trim();
+            }
+            if (cat.themeColor) {
+              updatedTopCats[matchIdx].themeColor = cat.themeColor;
+            }
           }
         }
       });
 
-      topCats = updatedTopCats;
+      // Also ensure any topCategory with missing image inherits it from categories
+      const allCatsList = body.categories || existing?.categories || [];
+      const catMap = new Map();
+      allCatsList.forEach((c) => {
+        const k = (c.name || '').trim().toLowerCase();
+        if (k) catMap.set(k, c);
+      });
+
+      topCats = updatedTopCats.map((tc) => {
+        if (tc.isMostPopular) return tc;
+        const k = (tc.categoryKey || tc.name || '').trim().toLowerCase();
+        const matched = catMap.get(k);
+        return {
+          ...tc,
+          image: (tc.image && tc.image.trim() !== '') ? tc.image.trim() : (matched?.image ? matched.image.trim() : ''),
+          themeColor: tc.themeColor || matched?.themeColor || '#FF6B35',
+        };
+      });
+    } else {
+      // If topCategories were updated directly, ensure they inherit image from existing categories if empty
+      const allCatsList = existing?.categories || [];
+      const catMap = new Map();
+      allCatsList.forEach((c) => {
+        const k = (c.name || '').trim().toLowerCase();
+        if (k) catMap.set(k, c);
+      });
+
+      topCats = topCats.map((tc) => {
+        if (tc.isMostPopular) return tc;
+        const k = (tc.categoryKey || tc.name || '').trim().toLowerCase();
+        const matched = catMap.get(k);
+        return {
+          ...tc,
+          image: (tc.image && tc.image.trim() !== '') ? tc.image.trim() : (matched?.image ? matched.image.trim() : ''),
+          themeColor: tc.themeColor || matched?.themeColor || '#FF6B35',
+        };
+      });
     }
 
     const updateData = {

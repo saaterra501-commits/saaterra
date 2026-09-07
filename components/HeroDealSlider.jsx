@@ -184,7 +184,10 @@ export default function HeroDealSlider({
   allCategories = null,
 }) {
   const trackRef = useRef(null);
+  const catTrackRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollCatLeft, setCanScrollCatLeft] = useState(false);
+  const [canScrollCatRight, setCanScrollCatRight] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
   // Dynamic Top Categories from Admin Config or curated fallback
@@ -192,8 +195,29 @@ export default function HeroDealSlider({
     ? customTopCategories.filter((c) => c.active !== false).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
     : TOP_CATEGORIES;
 
-  // Ensure any active categories from platform categories not yet in topCategories are seamlessly included
-  const displayTopCategories = [...baseTopCats];
+  // Build lookup map of allCategories for rich category metadata (image, themeColor, etc.)
+  const allCatMap = new Map();
+  if (allCategories && Array.isArray(allCategories)) {
+    allCategories.forEach((cat) => {
+      const k = (cat.name || '').trim().toLowerCase();
+      if (k) allCatMap.set(k, cat);
+      const s = (cat.slug || '').trim().toLowerCase();
+      if (s) allCatMap.set(s, cat);
+    });
+  }
+
+  // Ensure every top category inherits image / themeColor from allCategories if missing
+  const displayTopCategories = baseTopCats.map((tc) => {
+    if (tc.isMostPopular) return tc;
+    const catLookupKey = (tc.categoryKey || tc.name || '').trim().toLowerCase();
+    const matchedCat = allCatMap.get(catLookupKey);
+    return {
+      ...tc,
+      image: (tc.image && tc.image.trim() !== '') ? tc.image.trim() : (matchedCat?.image ? matchedCat.image.trim() : ''),
+      themeColor: tc.themeColor || matchedCat?.themeColor || '#FF6B35',
+    };
+  });
+
   if (allCategories && Array.isArray(allCategories)) {
     const existingKeys = new Set(displayTopCategories.map((c) => (c.categoryKey || c.name || '').toLowerCase()));
     allCategories.filter((c) => c.active !== false).forEach((cat) => {
@@ -203,7 +227,7 @@ export default function HeroDealSlider({
           id: cat.id || `top-${cat.slug || cat.name}`,
           name: cat.name,
           categoryKey: cat.name,
-          image: cat.image || '',
+          image: (cat.image || '').trim(),
           themeColor: cat.themeColor || '#FF6B35',
           isMostPopular: false,
           order: Number(cat.order) || 99,
@@ -261,6 +285,13 @@ export default function HeroDealSlider({
     setCanScrollLeft(trackRef.current.scrollLeft > 30);
   };
 
+  const updateCatScrollButtons = () => {
+    if (!catTrackRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = catTrackRef.current;
+    setCanScrollCatLeft(scrollLeft > 15);
+    setCanScrollCatRight(scrollLeft + clientWidth < scrollWidth - 15);
+  };
+
   useEffect(() => {
     const el = trackRef.current;
     if (el) {
@@ -269,9 +300,27 @@ export default function HeroDealSlider({
     }
   }, []);
 
+  useEffect(() => {
+    const el = catTrackRef.current;
+    if (el) {
+      updateCatScrollButtons();
+      el.addEventListener('scroll', updateCatScrollButtons, { passive: true });
+      window.addEventListener('resize', updateCatScrollButtons);
+      return () => {
+        el.removeEventListener('scroll', updateCatScrollButtons);
+        window.removeEventListener('resize', updateCatScrollButtons);
+      };
+    }
+  }, [displayTopCategories.length]);
+
   const handleScroll = (distance) => {
     if (!trackRef.current) return;
     trackRef.current.scrollBy({ left: distance, behavior: 'smooth' });
+  };
+
+  const handleCatScroll = (distance) => {
+    if (!catTrackRef.current) return;
+    catTrackRef.current.scrollBy({ left: distance, behavior: 'smooth' });
   };
 
   // Auto-scroll banners smoothly every 5.5s
@@ -424,80 +473,137 @@ export default function HeroDealSlider({
       </div>
 
       {/* ── 2. TOP CATEGORIES SECTION (TRUE FULL SCREEN WIDTH) ── */}
-      <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 pt-9 pb-4">
+      <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 pt-9 pb-4 relative">
         
-        {/* Section Heading */}
-        <h2 className="text-xl sm:text-2xl lg:text-[26px] font-black text-slate-900 tracking-tight mb-6">
-          Top Categories
-        </h2>
+        {/* Section Heading & Controls */}
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl sm:text-2xl lg:text-[26px] font-black text-slate-900 tracking-tight">
+            Top Categories
+          </h2>
 
-        {/* Circular Category Items Row (Full Screen Even Spread on Desktop) */}
-        <div className="w-full flex items-start justify-between gap-3 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-none pb-3 pt-1">
-          {displayTopCategories.map((cat) => {
-            const isSelected = activeCat === cat.categoryKey;
+          {/* Quick Scroll Indicator Arrows (Top Right) */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleCatScroll(-320)}
+              disabled={!canScrollCatLeft}
+              className={`w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center transition-all ${
+                canScrollCatLeft ? 'text-slate-800 hover:bg-slate-50 hover:border-slate-300 shadow-xs cursor-pointer' : 'text-slate-300 opacity-40 cursor-not-allowed'
+              }`}
+              aria-label="Scroll Categories Left"
+              title="Previous Categories"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleCatScroll(320)}
+              disabled={!canScrollCatRight}
+              className={`w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center transition-all ${
+                canScrollCatRight ? 'text-slate-800 hover:bg-slate-50 hover:border-slate-300 shadow-xs cursor-pointer' : 'text-slate-300 opacity-40 cursor-not-allowed'
+              }`}
+              aria-label="Scroll Categories Right"
+              title="Next Categories"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryClick(cat.categoryKey)}
-                className="flex flex-col items-center flex-shrink-0 group cursor-pointer text-center focus:outline-hidden"
-              >
-                {/* ── 2A. "MOST POPULAR" Blue Circular Badge (Exact match to screenshot) ── */}
-                {cat.isMostPopular && (
-                  <div className={`w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-[#0052cc] border-2 border-blue-400 text-yellow-300 font-black text-center flex flex-col items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
-                    activeCat === 'All' ? 'ring-4 ring-blue-300 scale-105' : ''
-                  }`}>
-                    <span className="text-[12px] sm:text-[14px] lg:text-[15px] leading-tight font-black tracking-tight text-yellow-300">
-                      MOST
-                    </span>
-                    <span className="text-[12px] sm:text-[14px] lg:text-[15px] leading-tight font-black tracking-tight text-yellow-300">
-                      POPULAR
-                    </span>
-                  </div>
-                )}
+        {/* Circular Category Items Row with Floating Left/Right Arrows */}
+        <div className="relative group/cattrack">
+          {/* Floating Left Arrow Button */}
+          {canScrollCatLeft && (
+            <button
+              onClick={() => handleCatScroll(-320)}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-800 shadow-xl border border-slate-200/90 flex items-center justify-center hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all z-30 cursor-pointer absolute -left-3 sm:-left-4 top-[44px] sm:top-[50px] -translate-y-1/2 focus:outline-hidden"
+              aria-label="Scroll Categories Left"
+            >
+              <ChevronLeft className="w-5 h-5 -translate-x-0.5" />
+            </button>
+          )}
 
-                {/* ── 2B. Software Circular Categories ── */}
-                {!cat.isMostPopular && (
-                  <div className={`relative w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-slate-100 border border-slate-200/90 shadow-2xs overflow-hidden aspect-square shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
-                    isSelected ? 'ring-4 ring-blue-400/40 border-blue-500 scale-105' : ''
-                  }`}>
-                    {cat.image ? (
-                      <img
-                        src={cat.image}
-                        alt={cat.name}
-                        className="w-full h-full object-cover aspect-square block group-hover:scale-110 transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          const fallback = e.target.parentElement.querySelector('.cat-badge-fallback');
-                          if (fallback) fallback.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className={`cat-badge-fallback w-full h-full items-center justify-center font-black text-white text-base sm:text-lg lg:text-xl shadow-inner ${
-                        cat.image ? 'hidden' : 'flex'
-                      }`}
-                      style={{
-                        background: cat.themeColor
-                          ? `linear-gradient(135deg, ${cat.themeColor}, #0F172A)`
-                          : 'linear-gradient(135deg, #FF6B35, #0052cc)',
-                      }}
-                    >
-                      <span>{cat.name?.slice(0, 2).toUpperCase() || 'SD'}</span>
+          {/* Floating Right Arrow Button */}
+          {canScrollCatRight && (
+            <button
+              onClick={() => handleCatScroll(320)}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-800 shadow-xl border border-slate-200/90 flex items-center justify-center hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all z-30 cursor-pointer absolute -right-3 sm:-right-4 top-[44px] sm:top-[50px] -translate-y-1/2 focus:outline-hidden"
+              aria-label="Scroll Categories Right"
+            >
+              <ChevronRight className="w-5 h-5 translate-x-0.5" />
+            </button>
+          )}
+
+          {/* Scrollable Track */}
+          <div
+            ref={catTrackRef}
+            className="w-full flex items-start gap-4 sm:gap-6 lg:gap-8 overflow-x-auto scrollbar-none scroll-smooth pb-3 pt-1 px-1"
+          >
+            {displayTopCategories.map((cat) => {
+              const isSelected = activeCat === cat.categoryKey;
+
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.categoryKey)}
+                  className="flex flex-col items-center flex-shrink-0 group cursor-pointer text-center focus:outline-hidden"
+                >
+                  {/* ── 2A. "MOST POPULAR" Blue Circular Badge ── */}
+                  {cat.isMostPopular && (
+                    <div className={`w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-[#0052cc] border-2 border-blue-400 text-yellow-300 font-black text-center flex flex-col items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
+                      activeCat === 'All' ? 'ring-4 ring-blue-300 scale-105' : ''
+                    }`}>
+                      <span className="text-[12px] sm:text-[14px] lg:text-[15px] leading-tight font-black tracking-tight text-yellow-300">
+                        MOST
+                      </span>
+                      <span className="text-[12px] sm:text-[14px] lg:text-[15px] leading-tight font-black tracking-tight text-yellow-300">
+                        POPULAR
+                      </span>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Category Label Below */}
-                <span className={`text-xs sm:text-[13px] lg:text-sm font-bold mt-2.5 max-w-[85px] sm:max-w-[105px] leading-tight transition-colors ${
-                  isSelected ? 'text-blue-600 font-black' : 'text-slate-700 group-hover:text-slate-950'
-                }`}>
-                  {cat.name}
-                </span>
+                  {/* ── 2B. Software Circular Categories ── */}
+                  {!cat.isMostPopular && (
+                    <div className={`relative w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-slate-100 border border-slate-200/90 shadow-2xs overflow-hidden aspect-square shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
+                      isSelected ? 'ring-4 ring-blue-400/40 border-blue-500 scale-105' : ''
+                    }`}>
+                      {cat.image ? (
+                        <img
+                          src={cat.image}
+                          alt={cat.name}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover aspect-square block group-hover:scale-110 transition-transform duration-300"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            const fallback = e.target.parentElement?.querySelector('.cat-badge-fallback');
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className={`cat-badge-fallback w-full h-full items-center justify-center font-black text-white text-base sm:text-lg lg:text-xl shadow-inner ${
+                          cat.image ? 'hidden' : 'flex'
+                        }`}
+                        style={{
+                          background: cat.themeColor
+                            ? `linear-gradient(135deg, ${cat.themeColor}, #0F172A)`
+                            : 'linear-gradient(135deg, #FF6B35, #0052cc)',
+                        }}
+                      >
+                        <span>{cat.name?.slice(0, 2).toUpperCase() || 'SD'}</span>
+                      </div>
+                    </div>
+                  )}
 
-              </button>
-            );
-          })}
+                  {/* Category Label Below */}
+                  <span className={`text-xs sm:text-[13px] lg:text-sm font-bold mt-2.5 max-w-[85px] sm:max-w-[105px] leading-tight transition-colors ${
+                    isSelected ? 'text-blue-600 font-black' : 'text-slate-700 group-hover:text-slate-950'
+                  }`}>
+                    {cat.name}
+                  </span>
+
+                </button>
+              );
+            })}
+          </div>
         </div>
 
       </div>
