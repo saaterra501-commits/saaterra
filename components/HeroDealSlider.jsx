@@ -98,7 +98,7 @@ export default function HeroDealSlider({ deals = [] }) {
     if (isPaused || slides.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [isPaused, slides.length]);
 
@@ -214,7 +214,8 @@ export default function HeroDealSlider({ deals = [] }) {
         })}
 
         {/* ── NAVIGATION (Dots & Arrows) ── */}
-        <div className="slider-nav absolute bottom-[30px] left-1/2 -translate-x-1/2 flex items-center gap-[9px] z-30">
+        <div className="slider-nav absolute bottom-[30px] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-30">
+          <div className="flex items-center gap-[9px]">
           
           <button
             onClick={previousSlide}
@@ -244,7 +245,13 @@ export default function HeroDealSlider({ deals = [] }) {
           >
             →
           </button>
-
+          </div>
+          {/* Hover-to-pause hint */}
+          <span className={`text-[10px] font-medium transition-opacity duration-300 ${
+            isPaused ? 'text-[#111] opacity-80' : 'text-[#888] opacity-60'
+          }`}>
+            {isPaused ? '⏸ Paused' : '⏵ Hover to pause'}
+          </span>
         </div>
 
       </div>
