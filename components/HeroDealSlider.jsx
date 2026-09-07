@@ -127,49 +127,49 @@ const TOP_CATEGORIES = [
     id: 'whatsapp-bots',
     name: 'WhatsApp Bots',
     categoryKey: 'WhatsApp Bots',
-    image: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=300&q=80',
+    image: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=300&h=300&q=80',
   },
   {
     id: 'ai-geo-seo',
     name: 'AI & GEO SEO',
     categoryKey: 'AI & GEO SEO',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80',
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&h=300&q=80',
   },
   {
     id: 'lead-scrapers',
     name: 'Lead Scrapers',
     categoryKey: 'Lead Scrapers',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&q=80',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&h=300&q=80',
   },
   {
     id: 'crm-sales',
     name: 'CRM & Sales',
     categoryKey: 'CRM & Sales',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=300&q=80',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=300&h=300&q=80',
   },
   {
     id: 'video-design',
     name: 'Video & Design',
     categoryKey: 'Video & Design',
-    image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=300&q=80',
+    image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=300&h=300&q=80',
   },
   {
     id: 'email-marketing',
     name: 'Email Marketing',
     categoryKey: 'Email Marketing',
-    image: 'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?auto=format&fit=crop&w=300&q=80',
+    image: 'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?auto=format&fit=crop&w=300&h=300&q=80',
   },
   {
     id: 'developer-tools',
     name: 'Developer Tools',
     categoryKey: 'Developer Tools',
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=300&q=80',
+    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=300&h=300&q=80',
   },
   {
     id: 'analytics',
     name: 'Analytics',
     categoryKey: 'Analytics',
-    image: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&w=300&q=80',
+    image: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&w=300&h=300&q=80',
   },
   {
     id: 'min-50-cashback',
@@ -406,13 +406,13 @@ export default function HeroDealSlider({
 
                 {/* ── 2C. Photographic Circular Categories (Fashion, Credit Cards, Mobiles, etc.) ── */}
                 {!cat.isMostPopular && !cat.isMinCashback && (
-                  <div className={`w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center overflow-hidden p-1.5 sm:p-2 group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
+                  <div className={`relative w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-slate-100 border border-slate-200/90 shadow-2xs overflow-hidden aspect-square shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
                     isSelected ? 'ring-4 ring-blue-400/40 border-blue-500 scale-105' : ''
                   }`}>
                     <img
                       src={cat.image}
                       alt={cat.name}
-                      className="w-full h-full object-cover rounded-full group-hover:scale-108 transition-transform duration-300"
+                      className="w-full h-full object-cover aspect-square block group-hover:scale-110 transition-transform duration-300"
                     />
                   </div>
                 )}
