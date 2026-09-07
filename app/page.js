@@ -12,10 +12,8 @@ import LTDCheckoutModal from '../components/LTDCheckoutModal';
 import SalesTicker from '../components/SalesTicker';
 import HomeFAQ from '../components/HomeFAQ';
 import DynamicPromoBanner from '../components/DynamicPromoBanner';
-import UpcomingDealsSection from '../components/UpcomingDealsSection';
 import UpcomingDropBar from '../components/UpcomingDropBar';
 import UpcomingTeaserBanner from '../components/UpcomingTeaserBanner';
-import FloatingSubscribeIndicator from '../components/FloatingSubscribeIndicator';
 import Link from 'next/link';
 import {
   Sparkles, Flame, ShieldCheck, Clock, Check, ArrowRight, Zap, Users,
@@ -398,16 +396,12 @@ export default function Home() {
           <EndingSoonSliderSection deals={deals} onBuyClick={handleBuy} />
         )}
 
-        {/* ── 4E. VIP Buyer Network — Upcoming Deal Alert Signup ── */}
-        <UpcomingDealsSection />
-
-        {/* ── 4F. Verified FAQ Accordion with Schema.org SEO ── */}
+        {/* ── 4E. Verified FAQ Accordion with Schema.org SEO ── */}
         <HomeFAQ />
 
       </main>
 
       <CompareTray />
-      <FloatingSubscribeIndicator />
       <Footer />
 
       {showCheckout && selectedDeal && (
