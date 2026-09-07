@@ -9,6 +9,13 @@ const DealSchema = new mongoose.Schema(
     isSelect: { type: Boolean, default: true },
     status: { type: String, default: 'Active' },
     
+    // Hero Banner Slider Controls
+    showOnHeroSlider: { type: Boolean, default: false },
+    sliderDiscount: { type: String, default: '' },
+    sliderBadge: { type: String, default: '' },
+    sliderSubtitle: { type: String, default: '' },
+    sliderOrder: { type: Number, default: 0 },
+    
     // 14-Day Real Countdown Fields
     campaignDurationDays: { type: Number, default: 14 },
     campaignEndDate: { type: Date, default: () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },

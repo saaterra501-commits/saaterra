@@ -172,5 +172,10 @@ function formatMarketplaceDeal(raw) {
     claimedPercent: raw.claimedPercent || 72,
     whiteLabel: raw.whiteLabel || false,
     reseller: raw.reseller || false,
+    showOnHeroSlider: Boolean(raw.showOnHeroSlider),
+    sliderDiscount: raw.sliderDiscount || '',
+    sliderBadge: raw.sliderBadge || '',
+    sliderSubtitle: raw.sliderSubtitle || '',
+    sliderOrder: Number(raw.sliderOrder || 0),
   };
 }

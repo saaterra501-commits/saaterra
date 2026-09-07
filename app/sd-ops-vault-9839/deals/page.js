@@ -67,6 +67,13 @@ export default function AdminDealsPage() {
     isSelect: true,
     status: 'Pending',
     
+    // Hero Slider Carousel Spotlight
+    showOnHeroSlider: false,
+    sliderDiscount: '',
+    sliderBadge: '',
+    sliderSubtitle: '',
+    sliderOrder: 0,
+    
     campaignDurationDays: 14,
 
     pricingTiers: [
@@ -220,6 +227,30 @@ export default function AdminDealsPage() {
     }
   };
 
+  const handleToggleSliderQuick = async (deal) => {
+    const nextVal = !deal.showOnHeroSlider;
+    try {
+      const res = await fetch('/api/admin/deals', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: deal.slug,
+          showOnHeroSlider: nextVal,
+        }),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setDeals((prev) =>
+          prev.map((d) => (d.slug === deal.slug ? { ...d, showOnHeroSlider: nextVal } : d))
+        );
+        setStatusMsg(nextVal ? `"${deal.title}" is now active on the Hero Slider!` : `Removed "${deal.title}" from Hero Slider.`);
+        setTimeout(() => setStatusMsg(''), 3500);
+      }
+    } catch (e) {
+      console.error('Error toggling slider status:', e);
+    }
+  };
+
   const handleDelete = async (slug) => {
     if (!confirm(`Are you sure you want to permanently delete "${slug}"?`)) return;
     try {
@@ -287,6 +318,11 @@ export default function AdminDealsPage() {
       ifscCode: deal.payoutDetails?.ifscCode || emptyDeal.ifscCode,
       bankName: deal.payoutDetails?.bankName || emptyDeal.bankName,
       panOrGstin: deal.payoutDetails?.panOrGstin || emptyDeal.panOrGstin,
+      showOnHeroSlider: Boolean(deal.showOnHeroSlider),
+      sliderDiscount: deal.sliderDiscount || '',
+      sliderBadge: deal.sliderBadge || '',
+      sliderSubtitle: deal.sliderSubtitle || '',
+      sliderOrder: deal.sliderOrder || 0,
     });
 
     setShowAddForm(true);
@@ -788,6 +824,73 @@ export default function AdminDealsPage() {
                     </label>
                   </div>
                 </div>
+              </div>
+
+              {/* Hero Banner Slider Spotlight Controls */}
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <div>
+                      <h4 className="text-xs font-black text-white">🌟 Hero Banner Carousel Spotlight</h4>
+                      <p className="text-[10px] text-slate-400">Feature this software tool prominently on the homepage Hero Carousel.</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editingDeal.showOnHeroSlider || false}
+                      onChange={(e) => setEditingDeal({ ...editingDeal, showOnHeroSlider: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-400"></div>
+                  </label>
+                </div>
+
+                {editingDeal.showOnHeroSlider && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-amber-500/20 animate-fadeIn">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-300 mb-1">Banner Discount</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 50-92% Off"
+                        value={editingDeal.sliderDiscount || ''}
+                        onChange={(e) => setEditingDeal({ ...editingDeal, sliderDiscount: e.target.value })}
+                        className="w-full bg-white/5 border border-white/15 text-white text-xs font-bold p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-300 mb-1">Badge Tag</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. META CLOUD API"
+                        value={editingDeal.sliderBadge || ''}
+                        onChange={(e) => setEditingDeal({ ...editingDeal, sliderBadge: e.target.value })}
+                        className="w-full bg-white/5 border border-white/15 text-white text-xs font-bold p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-300 mb-1">Banner Subtitle</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. WhatsApp AI Cart Recovery & Broadcasts"
+                        value={editingDeal.sliderSubtitle || ''}
+                        onChange={(e) => setEditingDeal({ ...editingDeal, sliderSubtitle: e.target.value })}
+                        className="w-full bg-white/5 border border-white/15 text-white text-xs font-bold p-2.5 rounded-xl focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-300 mb-1">Display Order</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={editingDeal.sliderOrder || 0}
+                        onChange={(e) => setEditingDeal({ ...editingDeal, sliderOrder: Number(e.target.value) })}
+                        className="w-full bg-white/5 border border-white/15 text-white text-xs font-bold p-2.5 rounded-xl focus:outline-none focus:border-amber-400 font-mono"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1437,6 +1540,20 @@ export default function AdminDealsPage() {
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>👁️ QA Preview</span>
+                    </button>
+
+                    {/* Quick 1-Click Hero Slider Toggle */}
+                    <button
+                      onClick={() => handleToggleSliderQuick(d)}
+                      className={`px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border ${
+                        d.showOnHeroSlider
+                          ? 'bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border-amber-400/40 shadow-sm'
+                          : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-200 border-white/10'
+                      }`}
+                      title={d.showOnHeroSlider ? 'Remove from Hero Banner Carousel' : 'Feature on Hero Banner Carousel'}
+                    >
+                      <Sparkles className={`w-3.5 h-3.5 ${d.showOnHeroSlider ? 'text-amber-400 fill-amber-400' : 'text-slate-400'}`} />
+                      <span>{d.showOnHeroSlider ? '★ On Slider' : '+ Slider'}</span>
                     </button>
 
                     {/* Edit All Details Button */}

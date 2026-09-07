@@ -6,6 +6,7 @@ import {
   ChevronRight, ChevronLeft, MessageSquare, Search, Sparkles,
   Users, BarChart3, CheckCircle2, Zap, ShieldCheck, ArrowRight
 } from 'lucide-react';
+import { getCategoryTheme } from '@/lib/categoryThemes';
 
 const SOFTWARE_BANNERS = [
   {
@@ -178,10 +179,60 @@ export default function HeroDealSlider({
   onBuyClick,
   activeCat = 'All',
   onSelectCategory,
+  customTopCategories = null,
+  customSliderBanners = null,
 }) {
   const trackRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Dynamic Top Categories from Admin Config or curated fallback
+  const displayTopCategories = (customTopCategories && Array.isArray(customTopCategories) && customTopCategories.length > 0)
+    ? customTopCategories.filter((c) => c.active !== false).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+    : TOP_CATEGORIES;
+
+  // Dynamic Hero Slider Banners from Admin Selected Deals or curated fallback
+  const sliderDeals = deals.filter((d) => d.showOnHeroSlider);
+  const displayBanners = (customSliderBanners && customSliderBanners.length > 0)
+    ? customSliderBanners
+    : (sliderDeals.length > 0)
+    ? sliderDeals.sort((a, b) => (Number(a.sliderOrder) || 0) - (Number(b.sliderOrder) || 0)).map((deal) => {
+        const theme = getCategoryTheme(deal.category);
+        const IconComp = theme.icon;
+        const discountText = deal.sliderDiscount || (deal.discountPct ? `${deal.discountPct}% Off` : '50-92% Off');
+        const badgeText = deal.sliderBadge || (deal.category ? deal.category.toUpperCase() : 'VERIFIED DEAL');
+        const cleanName = deal.title.includes('—') ? deal.title.split('—')[0].trim() : (deal.title.includes('-') ? deal.title.split('-')[0].trim() : deal.title);
+
+        return {
+          id: deal.slug || deal.id,
+          softwareName: cleanName,
+          badgeText: badgeText,
+          badgeBg: theme.badgeBg,
+          iconColor: theme.priceColor,
+          icon: IconComp,
+          discount: discountText,
+          subtitle: deal.sliderSubtitle || deal.tagline || '5-Year Access Pass on StackDeal',
+          dealTag: 'SD',
+          dealText: `₹${(deal.price || 1999).toLocaleString('en-IN')} / 5-Year Pass`,
+          pillBg: 'bg-[#002B7A]',
+          gradient: theme.id === 'WhatsApp Bots'
+            ? 'from-[#0070F3] via-[#0056D2] to-[#003DB3]'
+            : theme.id === 'AI & GEO SEO'
+            ? 'from-[#FF7A00] via-[#FF6600] to-[#E65100]'
+            : theme.id === 'Lead Scrapers'
+            ? 'from-[#7C3AED] via-[#6D28D9] to-[#4C1D95]'
+            : theme.id === 'Video & Design'
+            ? 'from-[#EC4899] via-[#DB2777] to-[#BE185D]'
+            : 'from-[#009688] via-[#00796B] to-[#004D40]',
+          href: `/deals/${deal.slug}`,
+          techMockup: {
+            badge: deal.badge || 'Verified Deal',
+            metric: `${deal.campaignDurationDays || 14}d Window`,
+            image: deal.screenshot || deal.heroImage || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=350&q=80',
+          },
+        };
+      })
+    : SOFTWARE_BANNERS;
 
   const updateScrollButtons = () => {
     if (!trackRef.current) return;
@@ -260,7 +311,7 @@ export default function HeroDealSlider({
           ref={trackRef}
           className="flex items-center gap-4 sm:gap-6 overflow-x-auto scroll-smooth scrollbar-none py-2 px-1 w-full"
         >
-          {SOFTWARE_BANNERS.map((banner) => {
+          {displayBanners.map((banner) => {
             const IconComponent = banner.icon;
 
             return (
@@ -360,7 +411,7 @@ export default function HeroDealSlider({
 
         {/* Circular Category Items Row (Full Screen Even Spread on Desktop) */}
         <div className="w-full flex items-start justify-between gap-3 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-none pb-3 pt-1">
-          {TOP_CATEGORIES.map((cat) => {
+          {displayTopCategories.map((cat) => {
             const isSelected = activeCat === cat.categoryKey;
 
             return (

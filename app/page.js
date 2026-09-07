@@ -183,24 +183,37 @@ export default function Home() {
   const [activeCat, setActiveCat] = useState('All');
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [siteConfig, setSiteConfig] = useState(null);
 
-  // Dynamic Live Deals Fetching from MongoDB & Admin API
+  // Dynamic Live Deals & Site Config Fetching from MongoDB
   useEffect(() => {
-    async function loadDeals() {
+    async function loadData() {
       try {
-        const res = await fetch('/api/deals');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data?.success && data?.deals && data.deals.length > 0) {
-          setDeals(data.deals);
+        const [dealsRes, configRes] = await Promise.all([
+          fetch('/api/deals'),
+          fetch('/api/site-config'),
+        ]);
+
+        if (dealsRes.ok) {
+          const data = await dealsRes.json();
+          if (data?.success && data?.deals && data.deals.length > 0) {
+            setDeals(data.deals);
+          }
+        }
+
+        if (configRes.ok) {
+          const configData = await configRes.json();
+          if (configData?.success && configData?.config) {
+            setSiteConfig(configData.config);
+          }
         }
       } catch (err) {
-        console.warn('Live deals fetch notice:', err?.message || err);
+        console.warn('Live data fetch notice:', err?.message || err);
       } finally {
         setLoading(false);
       }
     }
-    loadDeals();
+    loadData();
   }, []);
 
   const handleBuy = (deal) => {
@@ -217,7 +230,9 @@ export default function Home() {
 
   const endingSoonCount = deals.filter(isDealEndingSoon).length;
 
-  const dynamicCategories = ['All', ...new Set(deals.map((d) => d.category).filter(Boolean))];
+  const configCatNames = siteConfig?.categories ? siteConfig.categories.filter((c) => c.active !== false).map((c) => c.name) : [];
+  const dealCatNames = deals.map((d) => d.category).filter(Boolean);
+  const dynamicCategories = ['All', ...new Set([...configCatNames, ...dealCatNames])];
 
   const filteredDeals = deals.filter(
     (d) => activeCat === 'All' || d.category === activeCat
@@ -301,6 +316,7 @@ export default function Home() {
         onBuyClick={handleBuy}
         activeCat={activeCat}
         onSelectCategory={setActiveCat}
+        customTopCategories={siteConfig?.topCategories}
       />
 
       {/* ── 4. Main Content ── */}

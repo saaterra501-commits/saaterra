@@ -42,6 +42,8 @@ export async function POST(req) {
       ...(body.promoBanner && { promoBanner: body.promoBanner }),
       ...(body.seo && { seo: body.seo }),
       ...(body.faqs && { faqs: body.faqs }),
+      ...(body.categories && { categories: body.categories }),
+      ...(body.topCategories && { topCategories: body.topCategories }),
     };
 
     const updated = await SiteConfig.findOneAndUpdate(

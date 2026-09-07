@@ -125,9 +125,33 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   try {
-    const { slug, status } = await req.json();
+    const body = await req.json();
+    const { slug, status } = body;
     if (!slug) {
       return NextResponse.json({ success: false, error: 'Deal slug required' }, { status: 400 });
+    }
+
+    // Direct Hero Slider updates
+    if (body.showOnHeroSlider !== undefined || body.sliderDiscount !== undefined || body.sliderBadge !== undefined || body.sliderSubtitle !== undefined || body.sliderOrder !== undefined) {
+      const updateData = {};
+      if (body.showOnHeroSlider !== undefined) updateData.showOnHeroSlider = Boolean(body.showOnHeroSlider);
+      if (body.sliderDiscount !== undefined) updateData.sliderDiscount = body.sliderDiscount;
+      if (body.sliderBadge !== undefined) updateData.sliderBadge = body.sliderBadge;
+      if (body.sliderSubtitle !== undefined) updateData.sliderSubtitle = body.sliderSubtitle;
+      if (body.sliderOrder !== undefined) updateData.sliderOrder = Number(body.sliderOrder);
+      if (status) updateData.status = status;
+
+      try {
+        await dbConnect();
+        const updated = await Deal.findOneAndUpdate({ slug }, { $set: updateData }, { new: true });
+        if (global.STORED_DEALS) {
+          const d = global.STORED_DEALS.find((item) => item.slug === slug);
+          if (d) Object.assign(d, updateData);
+        }
+        return NextResponse.json({ success: true, deal: updated, message: 'Hero slider configuration updated!' });
+      } catch (err) {
+        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+      }
     }
 
     const newStatus = status || 'Active';
