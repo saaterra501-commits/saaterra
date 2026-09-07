@@ -1,126 +1,199 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ShieldCheck, Tag, Zap, Star, Check, Sparkles, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import {
+  ChevronRight, ChevronLeft, MessageSquare, Search, Users,
+  BarChart3, ShoppingBag, Mail, Sparkles, Zap, ShieldCheck,
+  TrendingUp, Award, Flame, CheckCircle2
+} from 'lucide-react';
 
-const DEFAULT_SLIDES = [
+const CASHKARO_BANNERS = [
   {
-    id: 'chat-chacha',
-    slug: 'chat-chacha',
-    badge: '🔥 Bestseller Deal',
-    category: 'WhatsApp Bots',
-    rating: 4.9,
-    reviewsCount: 42,
-    shortTitle: 'Chat Chacha AI',
-    title: 'Chat Chacha — WhatsApp AI Marketing & Automation',
-    description: 'Recover abandoned carts, broadcast bulk offers, and automate 24/7 customer support with Meta Cloud API. Pay once in INR, zero monthly dollar bills.',
-    highlights: [
-      'Official Meta Cloud API verified setup & template approvals',
-      'Automate cart recovery messages with 98% open rates',
-      'Official 18% GST tax invoice & 60-day refund guarantee',
-    ],
-    price: 1999,
-    originalPrice: 24000,
-    discountPct: 92,
-    accessText: '/ 5-Year Access',
-    buttonText: 'Get This Deal',
+    id: 'banner-chat-chacha',
+    brand: 'Chat Chacha',
+    brandBadge: 'Meta Cloud API',
+    brandLogoText: 'Chat Chacha 💬',
+    discount: '50-92% Off',
+    subtitle: 'Across WhatsApp AI & Bots',
+    cashbackText: 'Upto ₹22,000 Lifetime Savings',
+    cashbackTag: 'SD',
+    badgeColor: 'bg-[#002f7a]',
+    gradient: 'from-[#0056D2] via-[#0066FF] to-[#0047BA]',
+    accentColor: '#00D2FF',
     href: '/deals/chat-chacha',
-    image: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?q=80&w=1200&auto=format&fit=crop',
+    dealPrice: 1999,
+    originalPrice: 24000,
+    features: ['Auto Cart Recovery', 'Official Meta API', '18% GST Invoice'],
+    category: 'WhatsApp Bots',
   },
   {
-    id: 'seo-rocket',
-    slug: 'seo-rocket',
-    badge: '⚡ Hot Deal',
-    category: 'AI & GEO SEO',
-    rating: 4.8,
-    reviewsCount: 38,
-    shortTitle: 'AI SEO Radar',
-    title: 'AI Keyword & Competitor Radar',
-    description: 'Track local Indian agency rankings, discover high-intent keywords, and automate client SEO audits without expensive monthly recurring subscriptions.',
-    highlights: [
-      'Track Google & AI engine rankings in real time',
-      'Automated white-label client PDF audit reports',
-      'Full API webhook integrations with WordPress & Webflow',
-    ],
-    price: 2499,
-    originalPrice: 32000,
-    discountPct: 92,
-    accessText: '/ 5-Year Access',
-    buttonText: 'Explore Deal',
+    id: 'banner-seo-radar',
+    brand: 'AI SEO Radar',
+    brandBadge: 'Google & Perplexity',
+    brandLogoText: 'SEO Radar 🎯',
+    discount: 'Upto 80% Off',
+    subtitle: 'Across AI Keywords & Rankings',
+    cashbackText: 'Upto ₹29,500 Lifetime Savings',
+    cashbackTag: 'SD',
+    badgeColor: 'bg-[#b33c00]',
+    gradient: 'from-[#FF6600] via-[#FF7700] to-[#E65100]',
+    accentColor: '#FFD000',
     href: '/deals/seo-rocket',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&auto=format&fit=crop',
+    dealPrice: 2499,
+    originalPrice: 32000,
+    features: ['Track Realtime SERPs', 'White-label Client PDF', '60-Day Refund'],
+    category: 'AI & GEO SEO',
   },
   {
-    id: 'geo-citation',
-    slug: 'geo-citation',
-    badge: '⭐ Most Popular',
-    category: 'Generative Search',
-    rating: 4.9,
-    reviewsCount: 51,
-    shortTitle: 'GEO AI Suite',
-    title: 'Generative Engine Optimization (GEO) Suite',
-    description: 'Audit AI search presence across ChatGPT, Perplexity and Gemini. Generate white-label client reports and dominate conversational search results.',
-    highlights: [
-      'Generative Engine Optimization (GEO) auditing suite',
-      'Monitor brand sentiment across all major LLMs',
-      '5-Year Pass including all future model updates',
-    ],
-    price: 3499,
-    originalPrice: 42000,
-    discountPct: 91,
-    accessText: '/ 5-Year Access',
-    buttonText: 'View Deal',
+    id: 'banner-geo-citation',
+    brand: 'GEO AI Suite',
+    brandBadge: 'Generative Search',
+    brandLogoText: 'GEO Suite ✨',
+    discount: 'Upto 90% Off',
+    subtitle: 'On LLM Brand Citations & Audits',
+    cashbackText: '18% GST Input Tax Credit',
+    cashbackTag: 'SD',
+    badgeColor: 'bg-[#005f73]',
+    gradient: 'from-[#00B4D8] via-[#0096C7] to-[#0077B6]',
+    accentColor: '#80FFDB',
     href: '/deals/geo-citation',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop',
+    dealPrice: 3499,
+    originalPrice: 42000,
+    features: ['Audit ChatGPT & Gemini', 'Citation Scorecard', '5-Year Updates'],
+    category: 'AI & GEO SEO',
+  },
+  {
+    id: 'banner-lead-scraper',
+    brand: 'LeadPilot Pro',
+    brandBadge: 'B2B Growth Engine',
+    brandLogoText: 'LeadPilot 🚀',
+    discount: 'Flat 85% Off',
+    subtitle: 'On Verified B2B Lead Scrapers',
+    cashbackText: 'Instant UPI Key Activation',
+    cashbackTag: 'SD',
+    badgeColor: 'bg-[#4c1d95]',
+    gradient: 'from-[#7C3AED] via-[#8B5CF6] to-[#6D28D9]',
+    accentColor: '#E9D5FF',
+    href: '/deals',
+    dealPrice: 1499,
+    originalPrice: 9999,
+    features: ['Verified Mobile & Email', 'LinkedIn Sales Sync', 'Export to CSV'],
+    category: 'Lead Scrapers',
+  },
+  {
+    id: 'banner-mega-clearance',
+    brand: 'StackDeal Mega',
+    brandBadge: 'Limited Time Drops',
+    brandLogoText: 'Mega Drop 🔥',
+    discount: 'Min 90% Off',
+    subtitle: 'Across All 5-Year SaaS Passes',
+    cashbackText: 'Zero Monthly Dollar Bills',
+    cashbackTag: 'SD',
+    badgeColor: 'bg-[#7f1d1d]',
+    gradient: 'from-[#DC2626] via-[#EF4444] to-[#B91C1C]',
+    accentColor: '#FEE2E2',
+    href: '/deals',
+    dealPrice: 999,
+    originalPrice: 15000,
+    features: ['100% Indian Founders', 'Instant License Key', 'Money Back Guarantee'],
+    category: 'All',
   },
 ];
 
-const DURATION_MS = 8000; // 8 seconds per slide
+const TOP_CATEGORIES = [
+  {
+    id: 'most-popular',
+    name: 'Most Popular',
+    categoryKey: 'All',
+    isSpecialBadge: true,
+    badgeType: 'most-popular',
+  },
+  {
+    id: 'whatsapp-bots',
+    name: 'WhatsApp Bots',
+    categoryKey: 'WhatsApp Bots',
+    icon: MessageSquare,
+    bgColor: 'bg-emerald-50',
+    borderColor: 'border-emerald-200',
+    iconColor: 'text-emerald-600',
+    accentBg: 'from-emerald-400 to-green-500',
+    badge: 'Hot 🔥',
+  },
+  {
+    id: 'ai-geo-seo',
+    name: 'AI & GEO SEO',
+    categoryKey: 'AI & GEO SEO',
+    icon: Search,
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    iconColor: 'text-blue-600',
+    accentBg: 'from-blue-400 to-indigo-500',
+    badge: 'AI ✨',
+  },
+  {
+    id: 'lead-scrapers',
+    name: 'Lead Scrapers',
+    categoryKey: 'Lead Scrapers',
+    icon: Users,
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    iconColor: 'text-amber-600',
+    accentBg: 'from-amber-400 to-orange-500',
+    badge: 'B2B',
+  },
+  {
+    id: 'crm-sales',
+    name: 'CRM & Sales',
+    categoryKey: 'CRM & Sales',
+    icon: BarChart3,
+    bgColor: 'bg-purple-50',
+    borderColor: 'border-purple-200',
+    iconColor: 'text-purple-600',
+    accentBg: 'from-purple-400 to-violet-500',
+    badge: 'Scale',
+  },
+  {
+    id: 'ecommerce',
+    name: 'E-Commerce',
+    categoryKey: 'E-Commerce',
+    icon: ShoppingBag,
+    bgColor: 'bg-rose-50',
+    borderColor: 'border-rose-200',
+    iconColor: 'text-rose-600',
+    accentBg: 'from-rose-400 to-pink-500',
+    badge: 'Store',
+  },
+  {
+    id: 'email-sms',
+    name: 'Email & SMS',
+    categoryKey: 'Email & SMS',
+    icon: Mail,
+    bgColor: 'bg-cyan-50',
+    borderColor: 'border-cyan-200',
+    iconColor: 'text-cyan-600',
+    accentBg: 'from-cyan-400 to-teal-500',
+    badge: 'Send',
+  },
+  {
+    id: 'min-90-off',
+    name: 'Min 90% Off',
+    categoryKey: 'All',
+    isSpecialBadge: true,
+    badgeType: 'min-90',
+  },
+];
 
-export default function HeroDealSlider({ deals = [], onBuyClick }) {
-  const [currentSlide, setCurrentSlide] = useState(0);
+export default function HeroDealSlider({
+  deals = [],
+  onBuyClick,
+  activeCat = 'All',
+  onSelectCategory,
+}) {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [fadeActive, setFadeActive] = useState(true);
-
-  // Map dynamic deals from MongoDB/API with fallback
-  const slides = (deals && deals.length > 0)
-    ? deals.slice(0, 6).map((d, idx) => {
-        const starterTier = d.pricingTiers && d.pricingTiers.length > 0 ? d.pricingTiers[0] : null;
-        const price = Number(d.tier1Price ?? starterTier?.price ?? d.price ?? 1999);
-        const originalPrice = Number(d.originalPrice ?? starterTier?.originalPrice ?? (price * 8));
-        const discountPct = Number(d.discountPct ?? Math.round(((originalPrice - price) / (originalPrice || 1)) * 100));
-        const defaultSlide = DEFAULT_SLIDES[idx % DEFAULT_SLIDES.length];
-
-        const highlights = Array.isArray(d.tldr) && d.tldr.length > 0
-          ? d.tldr.slice(0, 3)
-          : defaultSlide.highlights;
-
-        const shortTitle = (d.title || defaultSlide.title).split('—')[0].split('-')[0].trim();
-
-        return {
-          id: d.slug || d.id || `deal-${idx}`,
-          slug: d.slug || d.id,
-          badge: d.badge || (idx === 0 ? '🔥 Bestseller Deal' : idx === 1 ? '⚡ Hot Deal' : '⭐ Popular Deal'),
-          category: d.category || defaultSlide.category,
-          rating: d.rating || 4.9,
-          reviewsCount: d.reviewsCount || 40 + (idx * 5),
-          shortTitle: shortTitle.length > 20 ? shortTitle.substring(0, 18) + '...' : shortTitle,
-          title: d.title || defaultSlide.title,
-          description: d.tagline || defaultSlide.description,
-          highlights,
-          price,
-          originalPrice,
-          discountPct,
-          accessText: '/ 5-Year Access',
-          buttonText: idx === 0 ? 'Get This Deal' : 'Explore Deal',
-          href: `/deals/${d.slug || d.id}`,
-          image: d.heroImage || d.screenshot || defaultSlide.image,
-          rawDeal: d,
-        };
-      })
-    : DEFAULT_SLIDES;
 
   // Slim green strip ticker configuration
   const [stripConfig, setStripConfig] = useState({
@@ -131,7 +204,7 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
       { text: 'One-Time Payment', icon: '⚡' },
       { text: 'Official 18% GST Invoices', icon: '★' },
       { text: '60-Day Money-Back Guarantee', icon: '🛡️' },
-      { text: 'Instant PhonePe & UPI Activation', icon: '₹' },
+      { text: 'Instant UPI & Card Activation', icon: '₹' },
     ],
   });
 
@@ -149,63 +222,62 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
     loadConfig();
   }, []);
 
-  // Smooth slide transition
-  const switchSlide = (nextIdx) => {
-    setFadeActive(false);
-    setProgress(0);
-    setTimeout(() => {
-      setCurrentSlide(nextIdx);
-      setFadeActive(true);
-    }, 220);
+  // Update scroll arrow visibility
+  const checkScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 20);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 20);
   };
 
-  const showSlide = (idx) => {
-    if (idx === currentSlide) return;
-    let target = idx;
-    if (target >= slides.length) target = 0;
-    if (target < 0) target = slides.length - 1;
-    switchSlide(target);
-  };
-
-  const nextSlide = () => showSlide((currentSlide + 1) % slides.length);
-  const previousSlide = () => showSlide((currentSlide - 1 + slides.length) % slides.length);
-
-  // PhonePe-style Progress Timer (fills continuously across duration, pauses on hover)
   useEffect(() => {
-    if (isPaused || slides.length <= 1) return;
+    checkScroll();
+    const el = scrollRef.current;
+    if (el) {
+      el.addEventListener('scroll', checkScroll);
+      return () => el.removeEventListener('scroll', checkScroll);
+    }
+  }, []);
 
-    const intervalStep = 50; // update every 50ms
+  const scrollBy = (offset) => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+  };
+
+  // Auto scroll banners smoothly every 6 seconds
+  useEffect(() => {
+    if (isPaused) return;
     const timer = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + (intervalStep / DURATION_MS) * 100;
-        if (next >= 100) {
-          switchSlide((currentSlide + 1) % slides.length);
-          return 0;
-        }
-        return next;
-      });
-    }, intervalStep);
-
+      if (!scrollRef.current) return;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      if (scrollLeft + clientWidth >= scrollWidth - 50) {
+        scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        scrollRef.current.scrollBy({ left: 400, behavior: 'smooth' });
+      }
+    }, 6000);
     return () => clearInterval(timer);
-  }, [isPaused, currentSlide, slides.length]);
+  }, [isPaused]);
 
-  const active = slides[currentSlide] || slides[0];
+  const handleCategoryClick = (catKey) => {
+    if (onSelectCategory) {
+      onSelectCategory(catKey);
+    }
+    const dealsSection = document.getElementById('deals-grid') || document.querySelector('main');
+    if (dealsSection) {
+      dealsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
-    <section
-      className="phonepe-style-slider relative w-full overflow-hidden select-none"
-      style={{
-        background: 'radial-gradient(130% 130% at 80% 15%, #601fa8 0%, #3e1273 45%, #210745 80%, #120326 100%)',
-      }}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
+    <section className="cashkaro-style-hero bg-white border-b border-slate-100 select-none">
+      
       {/* ── 1. SLIM ROTATED GREEN TICKER STRIP ── */}
       {stripConfig.enabled !== false && (
         <div
           className={`deal-strip w-[112%] -ml-[6%] ${
             stripConfig.isSlim !== false ? 'h-[20px] sm:h-[22px]' : 'h-[30px]'
-          } bg-[#63f477] flex items-center overflow-hidden relative z-20 mt-[10px] sm:mt-[14px] shadow-xs border-y border-emerald-400/50`}
+          } bg-[#63f477] flex items-center overflow-hidden relative z-20 mt-[8px] sm:mt-[12px] shadow-2xs border-y border-emerald-400/40`}
           style={{ transform: 'rotate(-2deg)' }}
         >
           <div className="strip-content flex items-center gap-[28px] sm:gap-[36px] whitespace-nowrap text-[10px] sm:text-[11px] font-black text-slate-950 animate-marquee tracking-wide">
@@ -225,250 +297,232 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
         </div>
       )}
 
-      {/* ── Ambient Radial Glow ── */}
-      <div className="absolute top-1/4 right-10 w-[500px] h-[500px] bg-gradient-to-br from-[#2ebbd1]/20 via-[#a855f7]/25 to-[#ffc700]/15 rounded-full blur-3xl pointer-events-none" />
-
-      {/* ── 2. MAIN HERO SECTION ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-8 sm:pb-12 relative z-10">
-        
+      {/* ── 2. MULTI-CARD BANNER CAROUSEL (CashKaro Style) ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-4 relative">
         <div
-          className="transition-all duration-300 ease-out"
-          style={{
-            opacity: fadeActive ? 1 : 0,
-            transform: fadeActive ? 'scale(1) translateY(0)' : 'scale(0.99) translateY(6px)',
-          }}
+          className="relative group"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            
-            {/* ── LEFT COLUMN: PHONEPE-STYLE VALUE PROP ── */}
-            <div className="lg:col-span-7 flex flex-col justify-center space-y-5 text-white">
-              
-              {/* Badges Row */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="inline-flex items-center gap-1.5 bg-[#FFC700] text-slate-950 px-3.5 py-1 rounded-full text-xs font-black tracking-wide shadow-sm">
-                  {active.badge}
-                </span>
+          
+          {/* Left Arrow Button */}
+          {canScrollLeft && (
+            <button
+              onClick={() => scrollBy(-420)}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-800 shadow-xl border border-slate-200/90 flex items-center justify-center hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all z-30 cursor-pointer absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2"
+              aria-label="Previous Offer"
+            >
+              <ChevronLeft className="w-5 h-5 font-black text-slate-800" />
+            </button>
+          )}
 
-                <span className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/20 text-purple-100 px-3 py-1 rounded-full text-xs font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#2ebbd1] animate-pulse"></span>
-                  {active.category}
-                </span>
+          {/* Right Arrow Button (Matches the circular white button with chevron in user screenshot) */}
+          <button
+            onClick={() => scrollBy(420)}
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-800 shadow-xl border border-slate-200/90 flex items-center justify-center hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all z-30 cursor-pointer absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2"
+            aria-label="Next Offer"
+          >
+            <ChevronRight className="w-5 h-5 font-black text-slate-800" />
+          </button>
 
-                <span className="inline-flex items-center gap-1 bg-white/10 backdrop-blur-md border border-white/15 text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold">
-                  <Star className="w-3.5 h-3.5 text-[#FFC700] fill-[#FFC700]" />
-                  {active.rating} ({active.reviewsCount} reviews)
-                </span>
-              </div>
+          {/* Scrollable Track */}
+          <div
+            ref={scrollRef}
+            className="flex items-center gap-4 sm:gap-5 overflow-x-auto scroll-smooth scrollbar-none py-2 px-1"
+          >
+            {CASHKARO_BANNERS.map((banner) => (
+              <Link
+                key={banner.id}
+                href={banner.href}
+                className={`relative flex-shrink-0 w-[330px] sm:w-[380px] lg:w-[410px] h-[185px] sm:h-[205px] rounded-2xl sm:rounded-[22px] bg-gradient-to-r ${banner.gradient} p-5 sm:p-6 text-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col justify-between group/card cursor-pointer`}
+              >
+                {/* Background Pattern / Glow */}
+                <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
 
-              {/* Title */}
-              <Link href={active.href} className="group block">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-[-1.5px] leading-[1.1] group-hover:text-amber-300 transition-colors">
-                  {active.title}
-                </h1>
-              </Link>
-
-              {/* Tagline */}
-              <p className="text-base sm:text-lg text-purple-100/85 leading-[1.6] max-w-2xl font-normal">
-                {active.description}
-              </p>
-
-              {/* Highlights */}
-              <div className="space-y-2.5 py-1">
-                {active.highlights.map((highlight, idx) => (
-                  <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm font-semibold text-purple-50">
-                    <div className="w-4 h-4 rounded-full bg-[#2ebbd1]/20 border border-[#2ebbd1] text-[#2ebbd1] flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </div>
-                    <span>{highlight}</span>
+                {/* Top Row: Brand / Vendor Logo Text */}
+                <div className="flex items-center justify-between z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-1.5 drop-shadow-xs">
+                      {banner.brandLogoText}
+                    </span>
+                    <span className="text-[10px] font-extrabold bg-white/20 backdrop-blur-xs px-2 py-0.5 rounded-full text-white/90">
+                      {banner.brandBadge}
+                    </span>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              {/* Price & Savings Display (PhonePe Gold & White) */}
-              <div className="pt-2">
-                <div className="flex flex-wrap items-baseline gap-3">
-                  <span className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-                    ₹{Number(active.price).toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-sm sm:text-base font-extrabold text-purple-200">
-                    {active.accessText}
-                  </span>
-                  <span className="text-base sm:text-lg text-purple-300/60 line-through font-semibold">
-                    ₹{Number(active.originalPrice).toLocaleString('en-IN')}
-                  </span>
-                  <span className="bg-[#FFC700] text-slate-950 text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
-                    {active.discountPct}% OFF
+                {/* Middle Row: Big Discount & Subtitle */}
+                <div className="z-10 my-auto">
+                  <h3 className="text-2xl sm:text-3xl lg:text-[32px] font-black text-white tracking-tight leading-none drop-shadow-xs">
+                    {banner.discount}
+                  </h3>
+                  <p className="text-xs sm:text-sm font-semibold text-white/90 mt-1.5 line-clamp-1 drop-shadow-2xs">
+                    {banner.subtitle}
+                  </p>
+                </div>
+
+                {/* Bottom Row: CashKaro Style Cashback / Deal Pill Badge */}
+                <div className="z-10 flex items-center justify-between">
+                  <div className={`inline-flex items-center gap-1.5 ${banner.badgeColor} text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs border border-white/15`}>
+                    <span className="w-5 h-5 rounded bg-white text-slate-900 flex items-center justify-center text-[10px] font-black shrink-0">
+                      {banner.cashbackTag}
+                    </span>
+                    <span className="font-extrabold text-[11px] sm:text-xs tracking-tight">
+                      {banner.cashbackText}
+                    </span>
+                  </div>
+
+                  <span className="text-[11px] font-bold text-white/90 underline group-hover/card:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                    View Deal →
                   </span>
                 </div>
-                <p className="text-xs font-bold text-[#63f477] mt-1.5 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#63f477]" />
-                  Instant lifetime savings of ₹{Number(active.originalPrice - active.price).toLocaleString('en-IN')} vs recurring billing
-                </p>
-              </div>
 
-              {/* Action Buttons (PhonePe Capsule Style) */}
-              <div className="flex flex-wrap items-center gap-3.5 pt-1">
-                <Link
-                  href={active.href}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#FFC700] hover:bg-[#ffd700] active:scale-98 text-slate-950 font-black text-base rounded-full transition-all duration-150 shadow-[0_10px_25px_rgba(255,199,0,0.35)] cursor-pointer"
-                >
-                  <span>{active.buttonText}</span>
-                  <ArrowRight className="w-4 h-4 font-black" />
-                </Link>
-
-                <Link
-                  href={active.href}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 active:scale-98 border border-white/25 text-white font-bold text-sm rounded-full transition-all cursor-pointer backdrop-blur-sm"
-                >
-                  <span>View Details</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-purple-200" />
-                </Link>
-              </div>
-
-              {/* Trust Features Strip */}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2 text-xs font-bold text-purple-200/80">
-                <span className="inline-flex items-center gap-1.5 text-[#63f477]">
-                  <ShieldCheck className="w-4 h-4 text-[#63f477]" />
-                  60-Day Money-Back Guarantee
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-[#2ebbd1]">
-                  <Tag className="w-4 h-4 text-[#2ebbd1]" />
-                  18% GST Input Tax Credit
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-amber-300">
-                  <Zap className="w-4 h-4 text-[#FFC700]" />
-                  PhonePe / UPI 1-Click Buy
-                </span>
-              </div>
-
-            </div>
-
-            {/* ── RIGHT COLUMN: PHONEPE APP / MOCKUP SHOWCASE ── */}
-            <div className="lg:col-span-5 relative">
-              <Link href={active.href} className="group block relative">
-                
-                {/* Outer Glass Card */}
-                <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden group-hover:border-white/40 transition-all duration-300 group-hover:-translate-y-1">
-                  
-                  {/* Floating Pill: Instant UPI Verified */}
-                  <div className="absolute top-6 right-6 z-20 bg-slate-950/90 text-white text-[11px] font-black px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-1.5 shadow-lg">
-                    <span className="w-2 h-2 rounded-full bg-[#63f477]"></span>
-                    Instant UPI Key Delivery
-                  </div>
-
-                  {/* Window Bar */}
-                  <div className="bg-slate-950/40 backdrop-blur-md rounded-t-2xl px-4 py-2 border-b border-white/10 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
-                    </div>
-                    <span className="text-[10px] font-mono text-purple-200/70 truncate max-w-[180px]">
-                      stackdeal.in/deals/{active.slug}
-                    </span>
-                    <div className="w-3"></div>
-                  </div>
-
-                  {/* Main Product Image */}
-                  <div className="h-[270px] sm:h-[340px] w-full rounded-b-2xl overflow-hidden relative bg-slate-950/50">
-                    <img
-                      src={active.image}
-                      alt={active.title}
-                      className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop';
-                      }}
-                    />
-
-                    {/* Bottom Gradient Overlay on Image */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-4">
-                      <div className="flex items-center justify-between w-full text-xs font-bold text-white">
-                        <span className="flex items-center gap-1.5 text-amber-300">
-                          <Sparkles className="w-3.5 h-3.5 text-[#FFC700]" />
-                          Verified 5-Year Pass
-                        </span>
-                        <span className="text-[#2ebbd1] group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                          Explore Deal →
-                        </span>
+                {/* Right Side 3D Illustrated Cutout / Graphic (Matches the shoes, box, cosmetics in screenshot) */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-[120px] sm:w-[145px] h-[130px] sm:h-[150px] pointer-events-none flex items-center justify-center">
+                  {banner.id === 'banner-chat-chacha' && (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-2xl flex flex-col items-center justify-center p-2 text-center transform rotate-6 group-hover/card:rotate-3 transition-transform">
+                        <span className="text-3xl">💬</span>
+                        <span className="text-[9px] font-black bg-[#25D366] text-white px-2 py-0.5 rounded-full mt-1">98% Open</span>
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-10 h-10 rounded-full bg-[#25D366] border-2 border-white flex items-center justify-center text-white text-lg shadow-md animate-bounce">
+                        ✓
                       </div>
                     </div>
-                  </div>
+                  )}
 
+                  {banner.id === 'banner-seo-radar' && (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl flex flex-col items-center justify-center p-2 transform -rotate-6 group-hover/card:rotate-0 transition-transform">
+                        <span className="text-3xl">🎯</span>
+                        <span className="text-[9px] font-black bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full mt-1">#1 Rank</span>
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-white text-amber-600 flex items-center justify-center text-lg font-black shadow-md">
+                        📈
+                      </div>
+                    </div>
+                  )}
+
+                  {banner.id === 'banner-geo-citation' && (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl flex flex-col items-center justify-center p-2 transform rotate-3 group-hover/card:scale-105 transition-transform">
+                        <span className="text-3xl">✨</span>
+                        <span className="text-[9px] font-black bg-white text-blue-900 px-2 py-0.5 rounded-full mt-1">LLM Citations</span>
+                      </div>
+                      <div className="absolute top-0 right-0 w-8 h-8 rounded-full bg-cyan-300 text-slate-900 flex items-center justify-center text-sm font-black shadow-md">
+                        AI
+                      </div>
+                    </div>
+                  )}
+
+                  {banner.id === 'banner-lead-scraper' && (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl flex flex-col items-center justify-center p-2 transform rotate-6 group-hover/card:rotate-0 transition-transform">
+                        <span className="text-3xl">🚀</span>
+                        <span className="text-[9px] font-black bg-purple-300 text-purple-950 px-2 py-0.5 rounded-full mt-1">B2B Leads</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {banner.id === 'banner-mega-clearance' && (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl flex flex-col items-center justify-center p-2 transform -rotate-3 group-hover/card:scale-105 transition-transform">
+                        <span className="text-3xl">🎁</span>
+                        <span className="text-[9px] font-black bg-yellow-300 text-red-950 px-2 py-0.5 rounded-full mt-1">5-Yr VIP</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </Link>
-            </div>
 
+              </Link>
+            ))}
           </div>
+
+        </div>
+      </div>
+
+      {/* ── 3. TOP CATEGORIES SECTION (Exact Re-creation of user's screenshot) ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
+        
+        {/* Title */}
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Top Categories
+          </h2>
+          <span className="text-xs font-bold text-slate-400">
+            Click to explore passes
+          </span>
         </div>
 
-        {/* ── 3. PHONEPE-STYLE PROGRESS TABS & CONTROLS (Bottom) ── */}
-        <div className="mt-8 sm:mt-12 pt-6 border-t border-white/15 flex flex-col md:flex-row items-center justify-between gap-4">
-          
-          {/* Segmented Progress Tabs */}
-          <div className="flex items-center gap-3 overflow-x-auto max-w-full pb-1 scrollbar-none w-full md:w-auto">
-            {slides.map((s, idx) => {
-              const isActive = idx === currentSlide;
+        {/* Circular Category Buttons Track */}
+        <div className="flex items-start gap-5 sm:gap-7 overflow-x-auto scrollbar-none pb-2 pt-1">
+          {TOP_CATEGORIES.map((cat) => {
+            const isSelected = activeCat === cat.categoryKey && !cat.badgeType;
+            const Icon = cat.icon;
 
-              return (
-                <button
-                  key={s.id || idx}
-                  onClick={() => showSlide(idx)}
-                  className={`relative flex flex-col text-left py-2 px-3.5 rounded-2xl transition-all duration-200 cursor-pointer overflow-hidden border shrink-0 ${
-                    isActive
-                      ? 'bg-white/15 border-white/30 text-white shadow-md'
-                      : 'bg-white/5 border-white/10 text-purple-200/70 hover:bg-white/10 hover:text-white'
-                  }`}
-                  style={{ minWidth: '160px' }}
-                >
-                  <div className="flex items-center justify-between gap-2 w-full mb-1.5">
-                    <span className="text-[11px] font-black uppercase tracking-wider">
-                      {`0${idx + 1}`} {s.shortTitle}
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryClick(cat.categoryKey)}
+                className="flex flex-col items-center flex-shrink-0 group cursor-pointer text-center focus:outline-hidden"
+              >
+                {/* ── 3A. Special "MOST POPULAR" Blue Circular Badge (Exact match to screenshot) ── */}
+                {cat.badgeType === 'most-popular' && (
+                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-b from-[#0052cc] to-[#0066FF] border-2 border-blue-400 text-yellow-300 font-black text-center flex flex-col items-center justify-center shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
+                    activeCat === 'All' ? 'ring-4 ring-blue-400/40 scale-105' : ''
+                  }`}>
+                    <span className="text-[11px] sm:text-[13px] leading-tight font-black tracking-tight drop-shadow-xs">
+                      MOST
                     </span>
-                    <span className={`text-[10px] font-extrabold ${isActive ? 'text-[#FFC700]' : 'text-purple-300/60'}`}>
-                      ₹{Number(s.price).toLocaleString('en-IN')}
+                    <span className="text-[12px] sm:text-[14px] leading-tight font-black tracking-tight text-white drop-shadow-xs">
+                      POPULAR
                     </span>
                   </div>
+                )}
 
-                  {/* Progress Line Bar */}
-                  <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden relative">
-                    <div
-                      className="h-full bg-[#FFC700] rounded-full transition-all"
-                      style={{
-                        width: isActive ? `${progress}%` : idx < currentSlide ? '100%' : '0%',
-                        transition: isActive ? 'width 50ms linear' : 'none',
-                      }}
-                    />
+                {/* ── 3B. Special "Min 90% Off" Red Circular Badge (Exact match to "Min 50% Cashback" in screenshot) ── */}
+                {cat.badgeType === 'min-90' && (
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white border-2 border-red-500 text-center flex flex-col items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md transition-all duration-200">
+                    <span className="text-[10px] sm:text-[11px] font-bold text-red-600 leading-tight">
+                      Min
+                    </span>
+                    <span className="text-2xl sm:text-3xl font-black text-red-600 leading-none tracking-tighter">
+                      90%
+                    </span>
+                    <span className="text-[9px] font-black uppercase text-red-500 tracking-wider">
+                      Pass
+                    </span>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                )}
 
-          {/* Navigation Arrows & Counter */}
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="text-xs font-bold text-purple-200/70">
-              Deal <span className="text-white font-black">{currentSlide + 1}</span> of {slides.length}
-            </span>
+                {/* ── 3C. Standard Category Circular Icons (WhatsApp, AI, SEO, CRM, etc.) ── */}
+                {!cat.isSpecialBadge && (
+                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full ${cat.bgColor} border ${cat.borderColor} flex items-center justify-center shadow-2xs group-hover:scale-105 group-hover:shadow-md transition-all duration-200 relative overflow-hidden ${
+                    isSelected ? 'ring-4 ring-blue-500/30 border-blue-600 scale-105' : ''
+                  }`}>
+                    {/* Subtle Radial Backlight */}
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-xs flex items-center justify-center group-hover:rotate-6 transition-transform">
+                      {Icon && <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${cat.iconColor}`} />}
+                    </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={previousSlide}
-                className="w-9 h-9 rounded-full border border-white/20 bg-white/10 hover:bg-white hover:text-slate-950 text-white flex items-center justify-center transition-colors cursor-pointer backdrop-blur-sm shadow-xs"
-                aria-label="Previous Deal"
-              >
-                <ChevronLeft className="w-4 h-4" />
+                    {/* Small category tag chip */}
+                    <span className="absolute bottom-1.5 text-[8px] font-black px-1.5 py-0.2 rounded bg-white/90 text-slate-700 shadow-2xs">
+                      {cat.badge}
+                    </span>
+                  </div>
+                )}
+
+                {/* Category Name Label */}
+                <span className={`text-xs sm:text-[13px] font-bold mt-2.5 max-w-[85px] sm:max-w-[100px] truncate transition-colors ${
+                  isSelected ? 'text-blue-600 font-black' : 'text-slate-700 group-hover:text-slate-950'
+                }`}>
+                  {cat.name}
+                </span>
+
               </button>
-
-              <button
-                onClick={nextSlide}
-                className="w-9 h-9 rounded-full border border-white/20 bg-white/10 hover:bg-white hover:text-slate-950 text-white flex items-center justify-center transition-colors cursor-pointer backdrop-blur-sm shadow-xs"
-                aria-label="Next Deal"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
+            );
+          })}
         </div>
 
       </div>

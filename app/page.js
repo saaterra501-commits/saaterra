@@ -253,8 +253,13 @@ export default function Home() {
       {/* ── 2. Upcoming Deal Drop Alert Bar (right below navbar) ── */}
       <UpcomingDropBar />
 
-      {/* ── 3. Hero Carousel Slider with Live MongoDB Deals ── */}
-      <HeroDealSlider deals={deals} onBuyClick={handleBuy} />
+      {/* ── 3. Hero Multi-Banner Slider with CashKaro Style & Top Categories ── */}
+      <HeroDealSlider
+        deals={deals}
+        onBuyClick={handleBuy}
+        activeCat={activeCat}
+        onSelectCategory={setActiveCat}
+      />
 
       {/* ── 4. Main Content ── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full space-y-14">
@@ -268,7 +273,7 @@ export default function Home() {
         )}
 
         {/* ── 4B. SaaTerra Select Spotlight Grid: Category Filter + Deal Cards ── */}
-        <div>
+        <div id="deals-grid">
           {/* Section Header + Category Tab Filter */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4 mb-6">
             <div>
