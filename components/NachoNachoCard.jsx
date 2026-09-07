@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Tag, Star, Scale, Check, Plus, ShoppingCart } from 'lucide-react';
 import { addToCart, isInCart } from '@/lib/cart';
+import { getCategoryTheme } from '@/lib/categoryThemes';
 
 export default function NachoNachoCard({ deal, onBuyClick }) {
   const [isCompared, setIsCompared] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+
+  const theme = getCategoryTheme(deal.category);
+  const CategoryIcon = theme.icon;
 
   useEffect(() => {
     const checkInCart = () => {
@@ -29,7 +33,7 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
   const originalPrice = Number(deal.originalPrice ?? starterTier?.originalPrice ?? (price * 10));
   const usdPrice = Math.round(price / 83);
   const usdOriginal = Math.round(originalPrice / 83);
-  const discountPct = Math.round(((originalPrice - price) / (originalPrice || 1)) * 100);
+  const discountPct = Math.max(1, Math.min(99, Math.round(((originalPrice - price) / (originalPrice || 1)) * 100)));
 
   // Real Stock claimed calculation: (soldCount / totalCodes) * 100
   const totalCodes = Number(deal.totalCodes || 100);
@@ -128,10 +132,10 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer group h-full relative"
+      className={`bg-white rounded-2xl overflow-hidden border-2 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer group h-full relative ${theme.borderClass}`}
     >
-      {/* ── 1. TOP: Dark Product Screenshot Banner ── */}
-      <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 overflow-hidden shrink-0">
+      {/* ── 1. TOP: Dark Product Screenshot Banner with Category Glow ── */}
+      <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 overflow-hidden shrink-0">
 
         {/* Product Screenshot Image */}
         <img
@@ -140,8 +144,39 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
           className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
         />
 
-        {/* Overlay gradient at bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        {/* Ambient Category Gradient Glow & Dark Gradient Overlay */}
+        <div className={`absolute inset-0 bg-gradient-to-t ${theme.headerGlow} pointer-events-none`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+        {/* Top-Left: Vendor/Software Brand Logo Badge & Category Discount % */}
+        <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-white p-1 shadow-md border border-white/90 ring-2 ring-black/10 flex items-center justify-center shrink-0 overflow-hidden">
+            <img
+              src={deal.vendorLogo || deal.logo || 'https://cdn-icons-png.flaticon.com/512/3670/3670051.png'}
+              alt={deal.vendorName || deal.title}
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                e.target.src = 'https://cdn-icons-png.flaticon.com/512/3670/3670051.png';
+              }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className={`${theme.ribbonBg} text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow`}>
+              {discountPct}% OFF
+            </span>
+            {hasWhiteLabel && (
+              <span className="bg-white text-slate-950 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider border border-slate-300 shadow">
+                WHITE LABEL
+              </span>
+            )}
+            {hasReseller && (
+              <span className="bg-white text-slate-950 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider border border-slate-300 shadow">
+                RESELLER
+              </span>
+            )}
+          </div>
+        </div>
 
         {/* Transparent '+' / '✔' Compare Icon on Corner (#FF6B35, No Background) */}
         <button
@@ -156,25 +191,8 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
           )}
         </button>
 
-        {/* Discount % ribbon top-left */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
-          <span className="bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow">
-            {discountPct}% OFF
-          </span>
-          {hasWhiteLabel && (
-            <span className="bg-white text-slate-950 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider border border-slate-300 shadow">
-              WHITE LABEL
-            </span>
-          )}
-          {hasReseller && (
-            <span className="bg-white text-slate-950 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider border border-slate-300 shadow">
-              RESELLER
-            </span>
-          )}
-        </div>
-
         {/* Ice Cream Rating + Urgent 7-Day Real-Time Live Countdown */}
-        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1.5" suppressHydrationWarning>
+        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1.5 z-10" suppressHydrationWarning>
           <span className="flex items-center gap-1 bg-black/75 backdrop-blur-sm text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-lg shadow shrink-0">
             🍦 {deal.rating ? Number(deal.rating).toFixed(1) : (deal.tacoRating ? Number(deal.tacoRating).toFixed(1) : '5.0')}
           </span>
@@ -185,7 +203,7 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
               <span>⏳ {timeLeft.days}d {String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.minutes).padStart(2, '0')}m {String(timeLeft.seconds).padStart(2, '0')}s</span>
             </span>
           ) : (
-            <span className="flex items-center gap-1 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow uppercase tracking-wider" suppressHydrationWarning>
+            <span className="flex items-center gap-1 bg-black/80 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow uppercase tracking-wider border border-white/20" suppressHydrationWarning>
               ⏳ {mounted ? timeLeft.days : (deal.campaignDurationDays || 14)}d left
             </span>
           )}
@@ -195,15 +213,29 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
       {/* ── 2. BOTTOM: White Content Section ── */}
       <div className="flex flex-col flex-1 p-4 gap-2 bg-white">
 
+        {/* Category Pill Tag & Vendor Name */}
+        <div className="flex items-center justify-between gap-1 text-[10px]">
+          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md font-black uppercase tracking-wider border shadow-2xs ${theme.pillBg}`}>
+            <CategoryIcon className="w-2.5 h-2.5" />
+            <span>{deal.category || theme.shortLabel}</span>
+          </span>
+
+          {deal.vendorName && (
+            <span className="text-slate-400 font-bold truncate max-w-[130px] text-[10px]">
+              {deal.vendorName}
+            </span>
+          )}
+        </div>
+
         {/* Product Title */}
-        <h3 className="font-bold text-slate-950 text-sm leading-snug line-clamp-3 group-hover:text-[#FF6B35] transition-colors">
+        <h3 className="font-bold text-slate-950 text-sm leading-snug line-clamp-2 group-hover:text-[#FF6B35] transition-colors">
           {deal.title || `${deal.vendorName}: ${deal.tagline}`}
         </h3>
 
-        {/* ── Stock Progress Bar: "84% Claimed" ── */}
+        {/* ── Stock Progress Bar: "84% Claimed" (Category Colored) ── */}
         <div className="mt-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wide">
+            <span className={`text-[10px] font-black uppercase tracking-wide ${theme.priceColor}`}>
               {claimed}% Claimed
             </span>
             <span className="text-[10px] font-medium text-slate-400">
@@ -212,19 +244,19 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
           </div>
           <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all"
+              className={`h-full bg-gradient-to-r ${theme.progressGradient} rounded-full transition-all`}
               style={{ width: `${claimed}%` }}
             />
           </div>
         </div>
 
         {/* ── Starter Plan Label & Real Pricing Row ── */}
-        <div className="flex items-center justify-between mt-1">
+        <div className="flex items-center justify-between mt-1 pt-0.5">
           <div className="flex items-baseline gap-2">
             <span className="text-slate-400 text-xs font-medium line-through">
               ₹{originalPrice.toLocaleString('en-IN')}
             </span>
-            <span className="text-[#FF6B35] text-lg font-black">
+            <span className={`text-lg font-black ${theme.priceColor}`}>
               ₹{price.toLocaleString('en-IN')}
             </span>
           </div>
@@ -234,7 +266,7 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
           </span>
         </div>
 
-        {/* CTA Row */}
+        {/* CTA Row with Category Themed Action Button */}
         <div className="flex items-center gap-1.5 mt-1 pt-2 border-t border-slate-100">
           <Link
             href={`/deals/${deal.slug || 'chat-chacha'}`}
@@ -260,7 +292,7 @@ export default function NachoNachoCard({ deal, onBuyClick }) {
           <Link
             href={`/cart?deal=${deal.slug || deal.id || 'chat-chacha'}&tier=Starter Pass&price=${price}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 px-2.5 py-1.5 bg-[#FF6B35] hover:bg-[#e06000] text-white font-black text-[11px] rounded-lg shadow transition-all cursor-pointer flex items-center justify-center gap-1"
+            className={`flex-1 px-2.5 py-1.5 ${theme.btnBg} text-white font-black text-[11px] rounded-lg shadow transition-all cursor-pointer flex items-center justify-center gap-1`}
           >
             <Tag className="w-3 h-3" />
             Get Pass

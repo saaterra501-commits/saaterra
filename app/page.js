@@ -22,7 +22,7 @@ import {
   Calculator, Gift, Crown, Star, Key, RefreshCw
 } from 'lucide-react';
 
-const CATEGORIES = ['All', 'WhatsApp Bots', 'AI & GEO SEO', 'Lead Scrapers', 'CRM & Sales'];
+const CATEGORIES = ['All', 'WhatsApp Bots', 'AI & GEO SEO', 'Lead Scrapers', 'CRM & Sales', 'Video & Design', 'Analytics'];
 
 const INITIAL_DEALS = [
   {
@@ -32,6 +32,9 @@ const INITIAL_DEALS = [
     title: "Chat Chacha — WhatsApp AI Marketing & Automation",
     tagline: "Recover abandoned carts, broadcast offers, and automate agency support with WhatsApp Cloud API.",
     category: "WhatsApp Bots",
+    vendorName: "Chat Chacha Tech",
+    vendorLogo: "https://cdn-icons-png.flaticon.com/512/3670/3670051.png",
+    campaignDurationDays: 14,
     badge: "Bestseller 🔥",
     rating: 4.9,
     tacoCount: 5,
@@ -59,6 +62,9 @@ const INITIAL_DEALS = [
     title: "AI Keyword & Competitor Radar",
     tagline: "Track local Indian agency rankings, discover high-intent keywords, and automate client SEO audits.",
     category: "AI & GEO SEO",
+    vendorName: "SEORocket AI",
+    vendorLogo: "https://cdn-icons-png.flaticon.com/512/2920/2920329.png",
+    campaignDurationDays: 14,
     badge: "Hot Deal ⚡",
     rating: 4.8,
     tacoCount: 5,
@@ -86,6 +92,9 @@ const INITIAL_DEALS = [
     title: "EmailExtractor Pro AI & Lead Finder",
     tagline: "Extract verified B2B emails and phone numbers from Google Maps and LinkedIn in 1 click.",
     category: "Lead Scrapers",
+    vendorName: "LeadMine Pro",
+    vendorLogo: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png",
+    campaignDurationDays: 14,
     badge: "Trending 🚀",
     rating: 4.9,
     tacoCount: 5,
@@ -113,6 +122,9 @@ const INITIAL_DEALS = [
     title: "Nuwatomic — AI Search (ChatGPT & Perplexity) GEO SEO",
     tagline: "Optimize your agency clients to get recommended on ChatGPT, Claude, and Perplexity AI engines.",
     category: "AI & GEO SEO",
+    vendorName: "Nuwatomic Labs",
+    vendorLogo: "https://cdn-icons-png.flaticon.com/512/8644/8644519.png",
+    campaignDurationDays: 14,
     badge: "AI Native 🤖",
     rating: 4.9,
     tacoCount: 5,
@@ -132,6 +144,36 @@ const INITIAL_DEALS = [
     ],
     heroImage: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop",
     screenshot: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop"
+  },
+  {
+    _id: "init-5",
+    id: "omnisales-crm",
+    slug: "omnisales-crm",
+    title: "OmniSales CRM — Omnichannel Pipeline Automation",
+    tagline: "Close high-ticket agency deals with automated WhatsApp pipelines and zero monthly recurring fees.",
+    category: "CRM & Sales",
+    vendorName: "OmniSales Systems",
+    vendorLogo: "https://cdn-icons-png.flaticon.com/512/2784/2784403.png",
+    campaignDurationDays: 14,
+    badge: "Top Pick 📊",
+    rating: 4.9,
+    tacoCount: 5,
+    reviewsCount: 47,
+    tier1Price: 1999,
+    originalPrice: 24000,
+    discountPct: 92,
+    atAGlance: {
+      alternativeTo: "HubSpot, LeadSquared, Pipedrive",
+      bestFor: "Sales Teams, Agency Closers, B2B Founders",
+      integrations: "WhatsApp Cloud, Razorpay, Webhooks"
+    },
+    tldr: [
+      "Multi-agent WhatsApp team inbox with lead auto-routing.",
+      "Visual sales pipeline stages with automated follow-up triggers.",
+      "5-Year Pass with 18% GST ITC invoice and 60-day refund guarantee."
+    ],
+    heroImage: "https://images.unsplash.com/photo-1556742049-0a67c5574f73?q=80&w=1000&auto=format&fit=crop",
+    screenshot: "https://images.unsplash.com/photo-1556742049-0a67c5574f73?q=80&w=1000&auto=format&fit=crop"
   }
 ];
 

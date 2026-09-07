@@ -6,6 +6,8 @@ import Footer from '../../components/Footer';
 import Link from 'next/link';
 import PlanFeaturesBuilder from '../../components/PlanFeaturesBuilder';
 import VendorDealPreviewModal from '../../components/VendorDealPreviewModal';
+import LiveCategoryPreviewCard from '../../components/LiveCategoryPreviewCard';
+import { CATEGORY_THEMES } from '../../lib/categoryThemes';
 import {
   Rocket, DollarSign, ShieldCheck, CheckCircle2, ArrowRight, ArrowLeft, Zap, Users,
   Calculator, Gift, Tag, Video, Image as ImageIcon, FileText, Layers, User, Sparkles,
@@ -1131,23 +1133,7 @@ export default function VendorSubmitPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                      <div>
-                        <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">Category *</label>
-                        <select
-                          value={formData.category}
-                          onChange={(e) => handleInputChange('category', e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold p-3.5 rounded-xl cursor-pointer focus:outline-none focus:border-[#FF6B35]"
-                        >
-                          <option value="WhatsApp Bots">💬 WhatsApp Tools & Bots</option>
-                          <option value="AI & GEO SEO">🤖 AI & GEO SEO</option>
-                          <option value="Lead Scrapers">🎯 Lead Scraping & B2B</option>
-                          <option value="CRM & Sales">📊 CRM & Sales Automation</option>
-                          <option value="Video & Design">🎨 Video & Design Tools</option>
-                          <option value="Analytics">📈 Analytics & Reporting</option>
-                        </select>
-                      </div>
-
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
                         <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">Headquarters Location</label>
                         <input
@@ -1168,6 +1154,170 @@ export default function VendorSubmitPage() {
                           onChange={(e) => handleInputChange('foundedDate', e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold p-3.5 rounded-xl focus:outline-none focus:border-[#FF6B35]"
                         />
+                      </div>
+                    </div>
+
+                    {/* ── INTERACTIVE CATEGORY SELECTOR & LIVE HOMEPAGE CARD PREVIEW ── */}
+                    <div className="bg-gradient-to-br from-slate-50 via-white to-slate-50 border-2 border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                        <div>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-orange-100 text-[#FF6B35] border border-orange-200 mb-1">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Live Category Card Preview
+                          </span>
+                          <h4 className="text-base sm:text-lg font-black text-slate-950">
+                            Choose Category & Preview Live Card Styling
+                          </h4>
+                          <p className="text-xs text-slate-500 font-medium">
+                            Each category gets a specific color identity, badge, and card design on the StackDeal homepage. Select a category below to see your software's real-time card.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        {/* Left Column: Category Selection Chips (7 cols) */}
+                        <div className="lg:col-span-7 space-y-5">
+                          <div>
+                            <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2.5">
+                              Software Category *
+                            </label>
+
+                            {/* Visual Category Cards / Chips */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              {Object.entries(CATEGORY_THEMES).map(([catKey, catData]) => {
+                                const isSelected = formData.category === catKey;
+                                const CatIcon = catData.icon;
+
+                                return (
+                                  <button
+                                    key={catKey}
+                                    type="button"
+                                    onClick={() => handleInputChange('category', catKey)}
+                                    className={`p-3 rounded-2xl border-2 text-left transition-all duration-200 flex items-start gap-3 cursor-pointer ${
+                                      isSelected
+                                        ? `${catData.pillBg} shadow-md scale-[1.01] ring-2 ring-offset-1`
+                                        : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                    }`}
+                                    style={{
+                                      borderColor: isSelected ? catData.themeColor : undefined,
+                                    }}
+                                  >
+                                    <div
+                                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs text-white"
+                                      style={{ backgroundColor: catData.themeColor }}
+                                    >
+                                      <CatIcon className="w-4 h-4 text-white" />
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between gap-1">
+                                        <span className="text-xs font-black text-slate-900 truncate">
+                                          {catData.shortLabel}
+                                        </span>
+                                        {isSelected && (
+                                          <span className="w-4 h-4 rounded-full bg-slate-950 text-white flex items-center justify-center text-[9px] font-black shrink-0">
+                                            ✓
+                                          </span>
+                                        )}
+                                      </div>
+                                      <p className="text-[10px] text-slate-500 font-medium line-clamp-1 mt-0.5">
+                                        {catData.description}
+                                      </p>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Accessible Select Dropdown as fallback */}
+                            <div className="mt-3">
+                              <select
+                                value={formData.category}
+                                onChange={(e) => handleInputChange('category', e.target.value)}
+                                className="w-full bg-white border border-slate-200 text-slate-800 text-xs font-bold p-2.5 rounded-xl cursor-pointer focus:outline-none focus:border-[#FF6B35]"
+                              >
+                                <option value="WhatsApp Bots">💬 WhatsApp Tools & Bots (Emerald Theme)</option>
+                                <option value="AI & GEO SEO">🤖 AI & GEO SEO (Purple Theme)</option>
+                                <option value="Lead Scrapers">🎯 Lead Scraping & B2B (Cyan / Sky Theme)</option>
+                                <option value="CRM & Sales">📊 CRM & Sales Automation (Orange Theme)</option>
+                                <option value="Video & Design">🎨 Video & Design Tools (Pink Theme)</option>
+                                <option value="Analytics">📈 Analytics & Reporting (Teal Theme)</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Campaign Duration / Validity Timestamp Control */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200">
+                            <div>
+                              <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                                Launch Campaign Duration *
+                              </label>
+                              <select
+                                value={formData.campaignDurationDays || 14}
+                                onChange={(e) => handleInputChange('campaignDurationDays', Number(e.target.value))}
+                                className="w-full bg-white border border-slate-200 text-slate-900 text-xs font-bold p-3 rounded-xl cursor-pointer focus:outline-none focus:border-[#FF6B35]"
+                              >
+                                <option value={7}>⚡ 7 Days (Urgent Flash Drop)</option>
+                                <option value={14}>🚀 14 Days (Standard Launch Drop - Recommended)</option>
+                                <option value={21}>🔥 21 Days (Extended Launch Window)</option>
+                                <option value={30}>🌟 30 Days (Full Month Drop)</option>
+                              </select>
+                              <span className="text-[10px] text-slate-400 font-medium mt-1 block">
+                                Drives the live countdown timestamp on your card.
+                              </span>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+                                Primary Pass Tier Name
+                              </label>
+                              <input
+                                type="text"
+                                value={primaryTier?.tierName || 'Starter Pass'}
+                                onChange={(e) => {
+                                  if (pricingTiers.length > 0) {
+                                    handleTierChange(0, 'tierName', e.target.value);
+                                  }
+                                }}
+                                placeholder="e.g. Starter Pass"
+                                className="w-full bg-white border border-slate-200 text-slate-900 text-xs font-bold p-3 rounded-xl focus:outline-none focus:border-[#FF6B35]"
+                              />
+                              <span className="text-[10px] text-slate-400 font-medium mt-1 block">
+                                Pill label shown next to ₹{primaryTier?.price || 1999} on your card.
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Column: Live Card Preview (5 cols) */}
+                        <div className="lg:col-span-5 flex flex-col items-center">
+                          <div className="w-full">
+                            <div className="flex items-center justify-between mb-2 px-1">
+                              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                <Eye className="w-3.5 h-3.5 text-[#FF6B35]" />
+                                Homepage Deal Card Preview
+                              </span>
+                              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                Real-Time Sync
+                              </span>
+                            </div>
+
+                            <LiveCategoryPreviewCard
+                              category={formData.category}
+                              title={formData.title}
+                              tagline={formData.tagline}
+                              vendorLogo={formData.vendorLogo}
+                              vendorName={formData.vendorName}
+                              heroImage={formData.heroImage}
+                              campaignDurationDays={formData.campaignDurationDays || 14}
+                              price={primaryTier?.price || 1999}
+                              originalPrice={primaryTier?.originalPrice || 24000}
+                              tierName={primaryTier?.tierName || 'Starter Pass'}
+                              totalCodes={primaryTier?.totalCodes || 180}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
