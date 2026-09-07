@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import HeroDealSlider from '../components/HeroDealSlider';
+import StackDealHero from '../components/StackDealHero';
 import AppSumoDealCard from '../components/AppSumoDealCard';
 import CompareTray from '../components/CompareTray';
 import DealMirrorSliderSection from '../components/DealMirrorSliderSection';
 import EndingSoonSliderSection from '../components/EndingSoonSliderSection';
 import LTDCheckoutModal from '../components/LTDCheckoutModal';
-import SalesTicker from '../components/SalesTicker';
 import HomeFAQ from '../components/HomeFAQ';
 import DynamicPromoBanner from '../components/DynamicPromoBanner';
 import UpcomingDealsSection from '../components/UpcomingDealsSection';
@@ -253,11 +252,11 @@ export default function Home() {
       {/* ── 2. Upcoming Deal Drop Alert Bar (right below navbar) ── */}
       <UpcomingDropBar />
 
-      {/* ── 3. Hero Carousel Slider with Live MongoDB Deals ── */}
-      <HeroDealSlider deals={deals} onBuyClick={handleBuy} />
+      {/* ── 3. NEW: Premium Dark Hero with Featured Deal + Live Ticker ── */}
+      <StackDealHero deals={deals} />
 
       {/* ── 4. Main Content ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full space-y-14">
+      <main id="featured-deals" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1 w-full space-y-14">
         
         {/* ── 4A. High-Impact VIP Launch Radar Teaser (Drives visitors to explore 25+ drops and subscribe) ── */}
         <UpcomingTeaserBanner />
