@@ -915,11 +915,11 @@ export default function Navbar() {
           onClick={() => setAiModalOpen(true)}
           className="fixed bottom-6 right-6 z-40 bg-white/95 hover:bg-white backdrop-blur-md text-slate-900 border-2 border-[#FF6B35] px-4 py-2.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_35px_rgba(255,107,53,0.3)] flex items-center gap-2.5 font-black text-xs transition-all hover:scale-105 cursor-pointer group"
         >
-          <div className="w-7 h-7 rounded-lg bg-[#FFF4EE] border border-[#FFE2D5] p-0.5 flex items-center justify-center shadow-xs shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[#FFF4EE] border border-[#FFE2D5] p-1 flex items-center justify-center shadow-xs shrink-0 overflow-hidden">
             <img
               src="/stackdeal-icon.png"
               alt="StackDeal"
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain rounded-full"
             />
           </div>
           <div className="flex flex-col items-start leading-tight">
