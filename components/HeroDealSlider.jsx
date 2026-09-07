@@ -246,12 +246,6 @@ export default function HeroDealSlider({ deals = [] }) {
             →
           </button>
           </div>
-          {/* Hover-to-pause hint */}
-          <span className={`text-[10px] font-medium transition-opacity duration-300 ${
-            isPaused ? 'text-[#111] opacity-80' : 'text-[#888] opacity-60'
-          }`}>
-            {isPaused ? '⏸ Paused' : '⏵ Hover to pause'}
-          </span>
         </div>
 
       </div>
