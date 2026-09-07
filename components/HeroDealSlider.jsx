@@ -171,12 +171,6 @@ const TOP_CATEGORIES = [
     categoryKey: 'Analytics',
     image: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&w=300&h=300&q=80',
   },
-  {
-    id: 'min-50-cashback',
-    name: 'Min 50% Cashback',
-    categoryKey: 'Min 50%',
-    isMinCashback: true,
-  },
 ];
 
 export default function HeroDealSlider({
@@ -389,23 +383,8 @@ export default function HeroDealSlider({
                   </div>
                 )}
 
-                {/* ── 2B. "Min 50% Cashback" Red Circular Badge (Exact match to screenshot) ── */}
-                {cat.isMinCashback && (
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-white border-2 border-red-500 text-center flex flex-col items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md transition-all duration-200">
-                    <span className="text-[10px] sm:text-[11px] lg:text-xs font-bold text-red-600 leading-tight">
-                      Min
-                    </span>
-                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-red-600 leading-none tracking-tighter">
-                      50%
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold text-red-600 uppercase tracking-tight">
-                      Cashback
-                    </span>
-                  </div>
-                )}
-
-                {/* ── 2C. Photographic Circular Categories (Fashion, Credit Cards, Mobiles, etc.) ── */}
-                {!cat.isMostPopular && !cat.isMinCashback && (
+                {/* ── 2B. Software Circular Categories ── */}
+                {!cat.isMostPopular && (
                   <div className={`relative w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-slate-100 border border-slate-200/90 shadow-2xs overflow-hidden aspect-square shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
                     isSelected ? 'ring-4 ring-blue-400/40 border-blue-500 scale-105' : ''
                   }`}>
