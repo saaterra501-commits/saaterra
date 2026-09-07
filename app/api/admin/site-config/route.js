@@ -17,8 +17,7 @@ const DEFAULT_CATEGORIES = [
 ];
 
 const DEFAULT_TOP_CATEGORIES = [
-  { id: 'top-1', name: 'Most Popular', categoryKey: 'All', isMostPopular: true, order: 1, active: true },
-  { id: 'top-2', name: 'WhatsApp Bots', categoryKey: 'WhatsApp Bots', image: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=300&h=300&q=80', isMostPopular: false, order: 2, active: true },
+  { id: 'top-2', name: 'WhatsApp Bots', categoryKey: 'WhatsApp Bots', image: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=300&h=300&q=80', isMostPopular: false, order: 1, active: true },
   { id: 'top-3', name: 'AI & GEO SEO', categoryKey: 'AI & GEO SEO', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&h=300&q=80', isMostPopular: false, order: 3, active: true },
   { id: 'top-4', name: 'Lead Scrapers', categoryKey: 'Lead Scrapers', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&h=300&q=80', isMostPopular: false, order: 4, active: true },
   { id: 'top-5', name: 'CRM & Sales', categoryKey: 'CRM & Sales', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=300&h=300&q=80', isMostPopular: false, order: 5, active: true },
@@ -86,7 +85,10 @@ export async function POST(req) {
 
     // Fetch existing config to handle auto-sync between categories and topCategories
     const existing = await SiteConfig.findOne({ key: 'global_config' }).lean();
-    let topCats = body.topCategories || existing?.topCategories || DEFAULT_TOP_CATEGORIES;
+    let rawTopCats = body.topCategories || existing?.topCategories || DEFAULT_TOP_CATEGORIES;
+    let topCats = rawTopCats.filter(
+      (t) => !t.isMostPopular && (t.name || '').trim().toLowerCase() !== 'most popular' && t.id !== 'top-1' && t.id !== 'most-popular'
+    );
 
     // If categories are being updated, ensure each category is also synchronized to topCategories
     if (body.categories && Array.isArray(body.categories)) {

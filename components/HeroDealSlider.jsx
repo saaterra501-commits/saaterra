@@ -119,12 +119,6 @@ const SOFTWARE_BANNERS = [
 
 const TOP_CATEGORIES = [
   {
-    id: 'most-popular',
-    name: 'Most Popular',
-    categoryKey: 'All',
-    isMostPopular: true,
-  },
-  {
     id: 'whatsapp-bots',
     name: 'WhatsApp Bots',
     categoryKey: 'WhatsApp Bots',
@@ -190,9 +184,11 @@ export default function HeroDealSlider({
   const [canScrollCatRight, setCanScrollCatRight] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Dynamic Top Categories from Admin Config or curated fallback
+  // Dynamic Top Categories from Admin Config or curated fallback (excluding "Most Popular")
   const baseTopCats = (customTopCategories && Array.isArray(customTopCategories) && customTopCategories.length > 0)
-    ? customTopCategories.filter((c) => c.active !== false).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+    ? customTopCategories
+        .filter((c) => c.active !== false && !c.isMostPopular && (c.name || '').trim().toLowerCase() !== 'most popular' && c.id !== 'top-1' && c.id !== 'most-popular')
+        .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
     : TOP_CATEGORIES;
 
   // Build lookup map of allCategories for rich category metadata (image, themeColor, etc.)
@@ -208,7 +204,6 @@ export default function HeroDealSlider({
 
   // Ensure every top category inherits image / themeColor from allCategories if missing
   const displayTopCategories = baseTopCats.map((tc) => {
-    if (tc.isMostPopular) return tc;
     const catLookupKey = (tc.categoryKey || tc.name || '').trim().toLowerCase();
     const matchedCat = allCatMap.get(catLookupKey);
     return {
@@ -546,52 +541,36 @@ export default function HeroDealSlider({
                   onClick={() => handleCategoryClick(cat.categoryKey)}
                   className="flex flex-col items-center flex-shrink-0 group cursor-pointer text-center focus:outline-hidden"
                 >
-                  {/* ── 2A. "MOST POPULAR" Blue Circular Badge ── */}
-                  {cat.isMostPopular && (
-                    <div className={`w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-[#0052cc] border-2 border-blue-400 text-yellow-300 font-black text-center flex flex-col items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
-                      activeCat === 'All' ? 'ring-4 ring-blue-300 scale-105' : ''
-                    }`}>
-                      <span className="text-[12px] sm:text-[14px] lg:text-[15px] leading-tight font-black tracking-tight text-yellow-300">
-                        MOST
-                      </span>
-                      <span className="text-[12px] sm:text-[14px] lg:text-[15px] leading-tight font-black tracking-tight text-yellow-300">
-                        POPULAR
-                      </span>
-                    </div>
-                  )}
-
-                  {/* ── 2B. Software Circular Categories ── */}
-                  {!cat.isMostPopular && (
-                    <div className={`relative w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-slate-100 border border-slate-200/90 shadow-2xs overflow-hidden aspect-square shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
-                      isSelected ? 'ring-4 ring-blue-400/40 border-blue-500 scale-105' : ''
-                    }`}>
-                      {cat.image ? (
-                        <img
-                          src={cat.image}
-                          alt={cat.name}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover aspect-square block group-hover:scale-110 transition-transform duration-300"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            const fallback = e.target.parentElement?.querySelector('.cat-badge-fallback');
-                            if (fallback) fallback.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div
-                        className={`cat-badge-fallback w-full h-full items-center justify-center font-black text-white text-base sm:text-lg lg:text-xl shadow-inner ${
-                          cat.image ? 'hidden' : 'flex'
-                        }`}
-                        style={{
-                          background: cat.themeColor
-                            ? `linear-gradient(135deg, ${cat.themeColor}, #0F172A)`
-                            : 'linear-gradient(135deg, #FF6B35, #0052cc)',
+                  {/* Software Circular Category */}
+                  <div className={`relative w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-slate-100 border border-slate-200/90 shadow-2xs overflow-hidden aspect-square shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
+                    isSelected ? 'ring-4 ring-blue-400/40 border-blue-500 scale-105' : ''
+                  }`}>
+                    {cat.image ? (
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover aspect-square block group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const fallback = e.target.parentElement?.querySelector('.cat-badge-fallback');
+                          if (fallback) fallback.style.display = 'flex';
                         }}
-                      >
-                        <span>{cat.name?.slice(0, 2).toUpperCase() || 'SD'}</span>
-                      </div>
+                      />
+                    ) : null}
+                    <div
+                      className={`cat-badge-fallback w-full h-full items-center justify-center font-black text-white text-base sm:text-lg lg:text-xl shadow-inner ${
+                        cat.image ? 'hidden' : 'flex'
+                      }`}
+                      style={{
+                        background: cat.themeColor
+                          ? `linear-gradient(135deg, ${cat.themeColor}, #0F172A)`
+                          : 'linear-gradient(135deg, #FF6B35, #0052cc)',
+                      }}
+                    >
+                      <span>{cat.name?.slice(0, 2).toUpperCase() || 'SD'}</span>
                     </div>
-                  )}
+                  </div>
 
                   {/* Category Label Below */}
                   <span className={`text-xs sm:text-[13px] lg:text-sm font-bold mt-2.5 max-w-[85px] sm:max-w-[105px] leading-tight transition-colors ${
