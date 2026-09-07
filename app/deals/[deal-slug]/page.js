@@ -1,6 +1,7 @@
 import dbConnect from '@/lib/dbConnect';
 import Deal from '@/models/Deal';
 import DealDetailClient from '@/components/DealDetailClient';
+import { calculateDealStock } from '@/lib/dealStock';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,7 @@ export default async function DealPage({ params }) {
     const dealDoc = await Deal.findOne({ slug }).lean();
     if (dealDoc) {
       deal = JSON.parse(JSON.stringify(dealDoc));
+      deal = await calculateDealStock(deal);
     }
   } catch (err) {
     console.error('Server-side deal fetch error:', err);

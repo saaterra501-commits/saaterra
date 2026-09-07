@@ -84,6 +84,18 @@ const LTDOrderSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  isRealVendorKey: {
+    type: Boolean,
+    default: true,
+  },
+  vendorRedeemUrl: {
+    type: String,
+    default: '',
+  },
+  vendorInstructions: {
+    type: String,
+    default: '',
+  },
   status: {
     type: String,
     enum: ['created', 'paid', 'refunded', 'failed'],

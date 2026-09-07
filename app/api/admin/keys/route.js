@@ -27,15 +27,32 @@ export async function GET(req) {
     const statsByDeal = {};
     deals.forEach((d) => {
       const idStr = String(d._id);
+      const tiersObj = {
+        'Tier 1': { available: 0, assigned: 0, total: 0 },
+        'Tier 2': { available: 0, assigned: 0, total: 0 },
+        'Tier 3': { available: 0, assigned: 0, total: 0 },
+      };
+
+      // Also incorporate in-deal tier codes from Deal Editor Tab 6
+      if (Array.isArray(d.pricingTiers)) {
+        d.pricingTiers.forEach((pt) => {
+          if (pt.tierName) {
+            const tierCodesCount = Array.isArray(pt.licenseCodes) ? pt.licenseCodes.length : 0;
+            tiersObj[pt.tierName] = {
+              available: tierCodesCount,
+              assigned: pt.soldCount || 0,
+              total: tierCodesCount + (pt.soldCount || 0),
+            };
+          }
+        });
+      }
+
       statsByDeal[idStr] = {
         dealId: idStr,
         title: d.title,
         slug: d.slug,
-        tiers: {
-          'Tier 1': { available: 0, assigned: 0, total: 0 },
-          'Tier 2': { available: 0, assigned: 0, total: 0 },
-          'Tier 3': { available: 0, assigned: 0, total: 0 },
-        },
+        tiers: tiersObj,
+        pricingTiers: d.pricingTiers || [],
         hasLowStock: false,
       };
     });

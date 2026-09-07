@@ -9,7 +9,7 @@ import StackDealAtmCard from '../../components/StackDealAtmCard';
 import Link from 'next/link';
 import {
   Trash2, Plus, Minus, Tag, Check, ShieldCheck, Zap, FileText,
-  ArrowRight, Crown, AlertCircle, ShoppingBag, Gift, Sparkles, RefreshCw
+  ArrowRight, Crown, AlertCircle, ShoppingBag, Gift, Sparkles, RefreshCw, Ban
 } from 'lucide-react';
 import {
   getCartItems,
@@ -112,6 +112,13 @@ function CartContent() {
           const chosenTier = tierParam || d.pricingTiers?.[0]?.tierName || 'Starter Pass (5-Year Access)';
           const chosenPrice = priceParam ? Number(priceParam) : (d.pricingTiers?.[0]?.price || d.price || 1999);
           
+          const matchedTierObj = d.pricingTiers?.find(t => t.tierName?.toLowerCase() === chosenTier?.toLowerCase()) || d.pricingTiers?.[0];
+          const isSoldOut = Boolean(
+            d.isAllSoldOut ||
+            matchedTierObj?.isSoldOut ||
+            (matchedTierObj?.availableStock !== undefined && matchedTierObj.availableStock <= 0)
+          );
+
           dealToAdd = {
             id: `${d.slug || d.id}-${chosenTier.replace(/\s+/g, '-').toLowerCase()}`,
             slug: d.slug,
@@ -122,6 +129,7 @@ function CartContent() {
             screenshot: d.heroImage || d.screenshot || d.screenshots?.[0] || 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=400&auto=format&fit=crop&q=80',
             vendorName: d.vendorName || 'SaaS Partner',
             quantity: 1,
+            isSoldOut,
           };
         }
       } catch (err) {
@@ -143,7 +151,7 @@ function CartContent() {
         if (tierParam) matched.tierName = tierParam;
         if (priceParam) matched.price = Number(priceParam);
 
-        dealToAdd = { ...matched, quantity: 1 };
+        dealToAdd = { ...matched, quantity: 1, isSoldOut: false };
       }
 
       if (dealToAdd) {
@@ -162,6 +170,49 @@ function CartContent() {
 
     loadCartDeal();
   }, [dealParam, tierParam, priceParam]);
+
+  // Live stock verification for all cart items
+  useEffect(() => {
+    if (!cartItems || cartItems.length === 0) return;
+
+    let isMounted = true;
+    async function verifyLiveStock() {
+      try {
+        let changed = false;
+        const checkedItems = await Promise.all(
+          cartItems.map(async (item) => {
+            try {
+              const res = await fetch(`/api/deals/${item.slug}`);
+              const data = await res.json();
+              if (data?.success && data?.deal) {
+                const d = data.deal;
+                const matched = d.pricingTiers?.find(
+                  (t) => t.tierName?.toLowerCase() === item.tierName?.toLowerCase()
+                ) || d.pricingTiers?.[0];
+                const isSoldOut = Boolean(
+                  d.isAllSoldOut ||
+                  matched?.isSoldOut ||
+                  (matched?.availableStock !== undefined && matched.availableStock <= 0)
+                );
+                if (Boolean(item.isSoldOut) !== isSoldOut) {
+                  changed = true;
+                }
+                return { ...item, isSoldOut };
+              }
+            } catch (e) {}
+            return item;
+          })
+        );
+        if (changed && isMounted) {
+          setCartItems(checkedItems);
+          saveCartItems(checkedItems);
+        }
+      } catch (err) {}
+    }
+
+    verifyLiveStock();
+    return () => { isMounted = false; };
+  }, [cartItems.length]);
 
   // Update item quantity
   const updateQuantity = (id, delta) => {
@@ -306,9 +357,16 @@ function CartContent() {
                             className="w-14 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
                           />
                           <div className="min-w-0">
-                            <span className="text-[9px] font-black text-[#FF6B35] bg-blue-50 border border-blue-100 px-2 py-0.5 rounded uppercase block w-fit mb-0.5">
-                              {item.tierName}
-                            </span>
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-[9px] font-black text-[#FF6B35] bg-blue-50 border border-blue-100 px-2 py-0.5 rounded uppercase block w-fit">
+                                {item.tierName}
+                              </span>
+                              {item.isSoldOut && (
+                                <span className="text-[9px] font-black text-red-700 bg-red-100 border border-red-300 px-2 py-0.5 rounded uppercase flex items-center gap-1">
+                                  <Ban className="w-2.5 h-2.5 text-red-600" /> Sold Out
+                                </span>
+                              )}
+                            </div>
                             <Link
                               href={`/deals/${item.slug}`}
                               className="font-bold text-slate-950 text-xs sm:text-sm hover:text-[#FF6B35] transition-colors line-clamp-1"
@@ -547,14 +605,35 @@ function CartContent() {
                   </div>
                 </div>
 
-                {/* Primary Checkout Button */}
-                <button
-                  onClick={() => setShowCheckoutModal(true)}
-                  className="w-full py-4 bg-[#FF6B35] hover:bg-[#1a5ecc] text-white font-black text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>Proceed to Checkout (Razorpay UPI / Cards)</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {/* Primary Checkout Button or Disabled Sold-Out Button */}
+                {cartItems.some(i => i.isSoldOut) ? (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      disabled
+                      className="w-full py-4 bg-slate-100 border-2 border-slate-300 text-slate-400 font-black text-sm rounded-2xl cursor-not-allowed flex items-center justify-center gap-2 shadow-inner"
+                    >
+                      <Ban className="w-4 h-4 text-red-500" />
+                      <span>Limit Puri Ho Gayi Hai (Sold Out)</span>
+                    </button>
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-center">
+                      <p className="text-xs font-black text-red-700">
+                        🚫 Cart me maujood software ki limit puri ho chuki hai.
+                      </p>
+                      <p className="text-[11px] text-red-600 font-semibold mt-0.5">
+                        Kripya sold out software ko cart se remove karein.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowCheckoutModal(true)}
+                    className="w-full py-4 bg-[#FF6B35] hover:bg-[#1a5ecc] text-white font-black text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Proceed to Checkout (Razorpay UPI / Cards)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
 
                 <div className="text-center text-[11px] text-slate-500 font-medium">
                   Need help with your order? Reach us at{' '}

@@ -18,6 +18,8 @@ const DealSchema = new mongoose.Schema(
     vendorLogo: { type: String, default: 'https://cdn-icons-png.flaticon.com/512/3670/3670051.png' },
     vendorLocation: { type: String, default: 'New Delhi, India' },
     websiteUrl: { type: String, default: '' },
+    vendorRedeemUrl: { type: String, default: '' },
+    vendorRedeemInstructions: { type: String, default: '' },
     foundedDate: { type: String, default: 'April 2022' },
     teamSize: { type: String, default: '1-10 employees' },
     founderName: { type: String, default: 'Ujjwal Sharma' },
