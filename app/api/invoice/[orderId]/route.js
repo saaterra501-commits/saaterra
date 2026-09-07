@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import dbConnect from '@/lib/dbConnect';
 import LTDOrder from '@/models/LTDOrder';
 import Deal from '@/models/Deal';
@@ -8,6 +10,18 @@ export async function GET(req, { params }) {
     await dbConnect();
     const resolvedParams = await params;
     const orderId = resolvedParams?.orderId;
+
+    // Load StackDeal logo as base64 data URI for reliable offline and print rendering
+    let logoDataUri = '/stackdeal-logo.png';
+    try {
+      const logoPath = path.join(process.cwd(), 'public', 'stackdeal-logo.png');
+      if (fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath);
+        logoDataUri = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+      }
+    } catch (logoErr) {
+      console.warn('[Invoice] Error reading stackdeal-logo.png:', logoErr.message);
+    }
 
     let order = null;
     if (orderId) {
@@ -48,8 +62,9 @@ export async function GET(req, { params }) {
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F1729; margin: 0; padding: 40px 20px; background: #f8fafc; }
     .invoice-card { max-width: 820px; margin: 0 auto; border: 1px solid #E2E8F0; border-radius: 16px; padding: 40px; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #F1F5F9; padding-bottom: 24px; }
-    .logo { font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
-    .logo span { color: #059669; }
+    .logo-area { display: flex; flex-direction: column; align-items: flex-start; }
+    .invoice-logo { height: 44px; width: auto; max-width: 220px; object-fit: contain; display: block; }
+    .logo-subtext { margin: 8px 0 0; font-size: 11px; color: #64748B; font-weight: 600; letter-spacing: 0.1px; }
     .invoice-title { text-align: right; }
     .invoice-title h1 { margin: 0; font-size: 22px; font-weight: 900; color: #059669; }
     .invoice-title p { margin: 4px 0 0; font-size: 12px; color: #64748B; font-weight: 700; }
@@ -69,17 +84,18 @@ export async function GET(req, { params }) {
     .print-btn { background: #059669; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
     @media print {
       body { background: #fff; padding: 0; }
-      .invoice-card { border: none; box-shadow: none; padding: 0; }
-      .no-print { display: none; }
+      .invoice-card { border: none; box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
+      .no-print { display: none !important; }
+      img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
 <body>
   <div class="invoice-card">
     <div class="header">
-      <div>
-        <div class="logo">Stack<span>Deal</span></div>
-        <p style="font-size: 11px; color: #64748B; margin: 4px 0 0; font-weight: 700;">Curated SaaS 5-Year Passes for Indian Founders</p>
+      <div class="logo-area">
+        <img src="${logoDataUri}" alt="StackDeal" class="invoice-logo" />
+        <p class="logo-subtext">Curated SaaS 5-Year Passes for Indian Founders</p>
       </div>
       <div class="invoice-title">
         <h1>TAX INVOICE</h1>
