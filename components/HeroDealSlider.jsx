@@ -2,96 +2,116 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import {
+  ChevronRight, ChevronLeft, MessageSquare, Search, Sparkles,
+  Users, BarChart3, CheckCircle2, Zap, ShieldCheck, ArrowRight
+} from 'lucide-react';
 
-const CASHKARO_BANNERS = [
+const SOFTWARE_BANNERS = [
   {
-    id: 'flipkart-deal',
-    brandName: 'Flipkart',
-    logoType: 'flipkart',
-    discount: '50-90% Off',
-    subtitle: 'Across Categories',
-    cashbackTag: 'CK',
-    cashbackText: 'Upto 6.5% Cashback',
+    id: 'chat-chacha',
+    softwareName: 'Chat Chacha',
+    badgeText: 'META CLOUD API',
+    badgeBg: 'bg-[#25D366] text-slate-950',
+    iconColor: 'text-[#25D366]',
+    icon: MessageSquare,
+    discount: '50-92% Off',
+    subtitle: 'WhatsApp AI Cart Recovery & Broadcasts',
+    dealTag: 'SD',
+    dealText: '₹1,999 / 5-Year Access Pass',
     pillBg: 'bg-[#002B7A]',
     gradient: 'from-[#0070F3] via-[#0056D2] to-[#003DB3]',
     href: '/deals/chat-chacha',
-    products: {
-      type: 'flipkart',
-      shoeImg: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=350&q=80',
-      bagImg: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=250&q=80',
-      watchImg: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=200&q=80',
+    techMockup: {
+      type: 'chat',
+      badge: '98% Open Rate',
+      metric: 'Auto Recovery',
+      image: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?auto=format&fit=crop&w=350&q=80',
     },
   },
   {
-    id: 'amazon-deal',
-    brandName: 'amazon.in',
-    logoType: 'amazon',
+    id: 'seo-rocket',
+    softwareName: 'AI SEO Radar',
+    badgeText: 'GOOGLE & PERPLEXITY',
+    badgeBg: 'bg-[#FFD000] text-slate-950',
+    iconColor: 'text-[#FF7A00]',
+    icon: Search,
     discount: 'Upto 80% Off',
-    subtitle: 'Across Categories',
-    cashbackTag: 'CK',
-    cashbackText: 'Upto 5% Rewards',
+    subtitle: 'Agency Keyword Tracking & SERP Audits',
+    dealTag: 'SD',
+    dealText: '18% GST Input Tax Credit',
     pillBg: 'bg-[#004080]',
     gradient: 'from-[#FF7A00] via-[#FF6600] to-[#E65100]',
     href: '/deals/seo-rocket',
-    products: {
-      type: 'amazon',
-      headphoneImg: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&q=80',
-      phoneImg: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=250&q=80',
-      sneakerImg: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=250&q=80',
+    techMockup: {
+      type: 'seo',
+      badge: '#1 Indian Agency',
+      metric: 'Realtime SERPs',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=350&q=80',
     },
   },
   {
-    id: 'nykaa-deal',
-    brandName: 'NYKAA',
-    logoType: 'nykaa',
-    tagBadge: 'PAY DAY SALE',
-    discount: 'Upto 50% Off',
-    subtitle: 'On Selected Products',
-    cashbackTag: 'CK',
-    cashbackText: 'Upto 4% Cashback',
+    id: 'nuwatomic-geo',
+    softwareName: 'Nuwatomic GEO',
+    badgeText: 'CHATGPT & CLAUDE',
+    badgeBg: 'bg-[#00897B] text-white',
+    iconColor: 'text-white',
+    icon: Sparkles,
+    discount: 'Upto 90% Off',
+    subtitle: 'Generative Engine (GEO) Brand Citations',
+    dealTag: 'SD',
+    dealText: '60-Day Money-Back Guarantee',
     pillBg: 'bg-[#003B6F]',
     gradient: 'from-[#D8FAF4] via-[#86E7D8] to-[#20C997]',
     textColor: 'text-slate-900',
-    href: '/deals/geo-citation',
-    products: {
-      type: 'nykaa',
-      serumImg: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=300&q=80',
-      lotionImg: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=250&q=80',
-      perfumeImg: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=200&q=80',
+    href: '/deals/nuwatomic-geo-seo',
+    techMockup: {
+      type: 'geo',
+      badge: 'LLM Citations',
+      metric: 'AI Audit Suite',
+      image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=350&q=80',
     },
   },
   {
-    id: 'myntra-deal',
-    brandName: 'Myntra',
-    logoType: 'myntra',
-    discount: '40-80% Off',
-    subtitle: 'Fashion & Footwear Deals',
-    cashbackTag: 'CK',
-    cashbackText: 'Upto 8% Cashback',
+    id: 'emailextractor-pro',
+    softwareName: 'EmailExtractor Pro',
+    badgeText: 'B2B LEAD FINDER',
+    badgeBg: 'bg-[#E9D5FF] text-[#4C1D95]',
+    iconColor: 'text-[#7C3AED]',
+    icon: Users,
+    discount: 'Flat 85% Off',
+    subtitle: 'Google Maps & LinkedIn Verified Leads',
+    dealTag: 'SD',
+    dealText: 'Instant UPI Key Activation',
     pillBg: 'bg-[#4A0033]',
-    gradient: 'from-[#FF3F6C] via-[#E72B57] to-[#C2185B]',
-    href: '/deals',
-    products: {
-      type: 'myntra',
-      shoeImg: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=300&q=80',
-      bagImg: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=250&q=80',
+    gradient: 'from-[#7C3AED] via-[#6D28D9] to-[#4C1D95]',
+    href: '/deals/emailextractor-pro-ai',
+    techMockup: {
+      type: 'leads',
+      badge: '99% Deliverability',
+      metric: 'B2B Verified',
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=350&q=80',
     },
   },
   {
-    id: 'croma-deal',
-    brandName: 'Croma',
-    logoType: 'croma',
-    discount: 'Upto 65% Off',
-    subtitle: 'Laptops, TVs & Electronics',
-    cashbackTag: 'CK',
-    cashbackText: 'Upto 3.5% Cashback',
+    id: 'omnisales-crm',
+    softwareName: 'OmniSales CRM',
+    badgeText: 'SALES PIPELINE',
+    badgeBg: 'bg-[#004D40] text-white',
+    iconColor: 'text-[#009688]',
+    icon: BarChart3,
+    discount: 'Upto 75% Off',
+    subtitle: 'Omnichannel B2B CRM & WhatsApp Pipeline',
+    dealTag: 'SD',
+    dealText: 'Zero Monthly Subscriptions',
     pillBg: 'bg-[#002D33]',
     gradient: 'from-[#009688] via-[#00796B] to-[#004D40]',
     href: '/deals',
-    products: {
-      type: 'croma',
-      laptopImg: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=300&q=80',
+    techMockup: {
+      type: 'crm',
+      badge: 'Deal Closer',
+      metric: 'Automation',
+      image: 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=350&q=80',
     },
   },
 ];
@@ -215,7 +235,7 @@ export default function HeroDealSlider({
   return (
     <section className="cashkaro-exact-hero w-full bg-white pt-6 pb-8 select-none overflow-hidden">
       
-      {/* ── 1. FULL SCREEN MULTI-CARD BANNER CAROUSEL ── */}
+      {/* ── 1. FULL SCREEN MULTI-CARD BANNER CAROUSEL (CashKaro Card Layout With StackDeal Software) ── */}
       <div
         className="relative w-full px-4 sm:px-8 lg:px-12 xl:px-16"
         onMouseEnter={() => setIsPaused(true)}
@@ -232,7 +252,7 @@ export default function HeroDealSlider({
           </button>
         )}
 
-        {/* Right Arrow Button (Exact floating circular white button with chevron from screenshot) */}
+        {/* Right Arrow Button (Floating circular white button with chevron) */}
         <button
           onClick={() => handleScroll(460)}
           className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-800 shadow-xl border border-slate-200/90 flex items-center justify-center hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all z-30 cursor-pointer absolute right-6 sm:right-10 xl:right-14 top-1/2 -translate-y-1/2"
@@ -246,153 +266,93 @@ export default function HeroDealSlider({
           ref={trackRef}
           className="flex items-center gap-4 sm:gap-6 overflow-x-auto scroll-smooth scrollbar-none py-2 px-1 w-full"
         >
-          {CASHKARO_BANNERS.map((banner) => (
-            <Link
-              key={banner.id}
-              href={banner.href}
-              className={`relative flex-shrink-0 w-[340px] sm:w-[410px] lg:w-[450px] xl:w-[480px] h-[195px] sm:h-[220px] lg:h-[235px] rounded-[22px] bg-gradient-to-r ${banner.gradient} p-5 sm:p-7 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 overflow-hidden flex flex-col justify-between cursor-pointer group`}
-            >
-              {/* Subtle ambient lighting */}
-              <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none" />
+          {SOFTWARE_BANNERS.map((banner) => {
+            const IconComponent = banner.icon;
 
-              {/* ── Card Header (Logo / Brand) ── */}
-              <div className="z-10 flex items-center gap-2">
-                {banner.logoType === 'flipkart' && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xl sm:text-2xl font-black italic tracking-tight text-white drop-shadow-xs">
-                      Flipkart
-                    </span>
-                    <span className="w-5 h-5 rounded bg-[#FFE500] text-[#0052cc] flex items-center justify-center text-[10px] font-black italic shadow-xs">
-                      f
-                    </span>
+            return (
+              <Link
+                key={banner.id}
+                href={banner.href}
+                className={`relative flex-shrink-0 w-[340px] sm:w-[410px] lg:w-[450px] xl:w-[480px] h-[195px] sm:h-[220px] lg:h-[235px] rounded-[22px] bg-gradient-to-r ${banner.gradient} p-5 sm:p-7 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 overflow-hidden flex flex-col justify-between cursor-pointer group`}
+              >
+                {/* Subtle ambient lighting */}
+                <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none" />
+
+                {/* ── Card Header (Software Logo & Verified Tag) ── */}
+                <div className="z-10 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white shadow-xs flex items-center justify-center shrink-0">
+                    <IconComponent className={`w-4 h-4 ${banner.iconColor}`} />
                   </div>
-                )}
 
-                {banner.logoType === 'amazon' && (
-                  <div className="flex flex-col">
-                    <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-xs">
-                      amazon<span className="text-white/80 font-bold text-sm">.in</span>
-                    </span>
-                    <svg className="w-16 h-3 text-[#FF9900] -mt-1" viewBox="0 0 100 20" fill="currentColor">
-                      <path d="M5 5 Q50 20 95 5 Q50 15 5 5" stroke="currentColor" strokeWidth="2" fill="none" />
-                    </svg>
-                  </div>
-                )}
-
-                {banner.logoType === 'nykaa' && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl sm:text-2xl font-black italic tracking-widest text-[#E80071] drop-shadow-xs">
-                      NYKAA
-                    </span>
-                    <span className="bg-[#20C997] text-white text-[9px] font-black px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">
-                      PAY DAY SALE
-                    </span>
-                  </div>
-                )}
-
-                {banner.logoType === 'myntra' && (
-                  <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-xs">
-                    Myntra
+                  <span className={`text-xl sm:text-2xl font-black italic tracking-tight drop-shadow-xs ${banner.textColor || 'text-white'}`}>
+                    {banner.softwareName}
                   </span>
-                )}
 
-                {banner.logoType === 'croma' && (
-                  <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-xs">
-                    croma
-                  </span>
-                )}
-              </div>
-
-              {/* ── Card Body (Discount & Subtitle) ── */}
-              <div className="z-10 my-auto">
-                <h3 className={`text-2xl sm:text-3xl lg:text-[36px] font-black tracking-tight leading-none drop-shadow-xs ${banner.textColor || 'text-white'}`}>
-                  {banner.discount}
-                </h3>
-                <p className={`text-xs sm:text-sm font-semibold mt-2 line-clamp-1 ${banner.textColor ? 'text-slate-800' : 'text-white/90'}`}>
-                  {banner.subtitle}
-                </p>
-              </div>
-
-              {/* ── Card Footer (Exact [CK] Pill Badge from Screenshot) ── */}
-              <div className="z-10 flex items-center justify-between">
-                <div className={`inline-flex items-center gap-2 ${banner.pillBg} text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs border border-white/15`}>
-                  <span className="w-5 h-5 rounded bg-[#0066FF] text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-xs">
-                    {banner.cashbackTag}
-                  </span>
-                  <span className="font-extrabold text-[11px] sm:text-xs tracking-tight">
-                    {banner.cashbackText}
+                  <span className={`text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded shadow-xs uppercase tracking-wider ${banner.badgeBg}`}>
+                    {banner.badgeText}
                   </span>
                 </div>
-              </div>
 
-              {/* ── Right Side Cutout Product Photography Collage (Exact Match) ── */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-[150px] sm:w-[185px] h-[150px] sm:h-[175px] pointer-events-none flex items-center justify-center">
-                {banner.logoType === 'flipkart' && (
+                {/* ── Card Body (Discount & Subtitle) ── */}
+                <div className="z-10 my-auto">
+                  <h3 className={`text-2xl sm:text-3xl lg:text-[36px] font-black tracking-tight leading-none drop-shadow-xs ${banner.textColor || 'text-white'}`}>
+                    {banner.discount}
+                  </h3>
+                  <p className={`text-xs sm:text-sm font-semibold mt-2 line-clamp-1 ${banner.textColor ? 'text-slate-800' : 'text-white/90'}`}>
+                    {banner.subtitle}
+                  </p>
+                </div>
+
+                {/* ── Card Footer (Exact [SD] Pill Badge from Screenshot Layout) ── */}
+                <div className="z-10 flex items-center justify-between">
+                  <div className={`inline-flex items-center gap-2 ${banner.pillBg} text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-xs border border-white/15`}>
+                    <span className="w-5 h-5 rounded bg-[#0066FF] text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-xs">
+                      {banner.dealTag}
+                    </span>
+                    <span className="font-extrabold text-[11px] sm:text-xs tracking-tight">
+                      {banner.dealText}
+                    </span>
+                  </div>
+
+                  <span className="text-[11px] font-bold text-white/90 underline group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                    View Deal →
+                  </span>
+                </div>
+
+                {/* ── Right Side Cutout Product Photography Collage (SaaS Dashboard & UI Mockups) ── */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-[150px] sm:w-[185px] h-[150px] sm:h-[175px] pointer-events-none flex items-center justify-end">
+                  {/* Outer Frame Mockup */}
                   <div className="relative w-full h-full flex items-center justify-end">
-                    {/* Backpack */}
-                    <div className="absolute right-14 top-1 w-20 sm:w-24 h-28 sm:h-32 rounded-xl overflow-hidden shadow-xl transform rotate-3">
-                      <img src={banner.products.bagImg} alt="Bag" className="w-full h-full object-cover" />
+                    {/* Background Software Screenshot */}
+                    <div className="absolute right-12 top-2 w-24 sm:w-28 h-28 sm:h-32 rounded-xl overflow-hidden shadow-2xl border border-white/30 transform rotate-3">
+                      <img
+                        src={banner.techMockup.image}
+                        alt={banner.softwareName}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    {/* Blue Running Shoe */}
-                    <div className="absolute right-0 bottom-1 w-24 sm:w-28 h-20 sm:h-24 rounded-xl overflow-hidden shadow-2xl transform -rotate-12 z-10 border-2 border-white/40">
-                      <img src={banner.products.shoeImg} alt="Shoe" className="w-full h-full object-cover" />
+
+                    {/* Floating Feature Glass Pill */}
+                    <div className="absolute right-1 bottom-3 z-10 bg-slate-950/90 text-white border border-white/30 backdrop-blur-md px-2.5 py-1.5 rounded-xl shadow-xl transform -rotate-3 group-hover:rotate-0 transition-transform">
+                      <span className="text-[10px] font-black flex items-center gap-1 text-[#63f477]">
+                        <CheckCircle2 className="w-3 h-3 text-[#63f477]" />
+                        {banner.techMockup.badge}
+                      </span>
+                      <span className="text-[9px] text-slate-300 font-semibold block mt-0.5">
+                        {banner.techMockup.metric}
+                      </span>
                     </div>
-                    {/* Luxury Watch */}
-                    <div className="absolute right-18 bottom-0 w-12 sm:w-14 h-12 sm:h-14 rounded-full overflow-hidden shadow-lg z-20 border-2 border-white">
-                      <img src={banner.products.watchImg} alt="Watch" className="w-full h-full object-cover" />
+
+                    {/* Top Sparkle Circle */}
+                    <div className="absolute right-16 -top-1 w-9 h-9 rounded-full bg-white/25 backdrop-blur-md border border-white flex items-center justify-center text-white text-sm shadow-md">
+                      ⚡
                     </div>
                   </div>
-                )}
+                </div>
 
-                {banner.logoType === 'amazon' && (
-                  <div className="relative w-full h-full flex items-center justify-end">
-                    {/* Delivery Box / Headphones */}
-                    <div className="absolute right-8 top-1 w-20 sm:w-24 h-20 sm:h-24 rounded-2xl overflow-hidden shadow-xl transform -rotate-6">
-                      <img src={banner.products.headphoneImg} alt="Headphones" className="w-full h-full object-cover" />
-                    </div>
-                    {/* White Sneaker */}
-                    <div className="absolute right-0 bottom-2 w-24 sm:w-28 h-20 sm:h-24 rounded-xl overflow-hidden shadow-2xl transform rotate-6 z-10 border-2 border-white/40">
-                      <img src={banner.products.sneakerImg} alt="Sneaker" className="w-full h-full object-cover" />
-                    </div>
-                    {/* Smartphone */}
-                    <div className="absolute right-18 bottom-1 w-11 sm:w-13 h-18 sm:h-22 rounded-lg overflow-hidden shadow-lg z-20 border-2 border-white">
-                      <img src={banner.products.phoneImg} alt="Mobile" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                )}
-
-                {banner.logoType === 'nykaa' && (
-                  <div className="relative w-full h-full flex items-center justify-end">
-                    {/* Golden Cosmetic Bottle */}
-                    <div className="absolute right-8 top-1 w-16 sm:w-20 h-28 sm:h-34 rounded-xl overflow-hidden shadow-xl transform rotate-6">
-                      <img src={banner.products.serumImg} alt="Serum" className="w-full h-full object-cover" />
-                    </div>
-                    {/* Skincare Bottle */}
-                    <div className="absolute right-0 bottom-2 w-16 sm:w-20 h-20 sm:h-24 rounded-xl overflow-hidden shadow-2xl transform -rotate-6 z-10 border-2 border-white/60">
-                      <img src={banner.products.lotionImg} alt="Lotion" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                )}
-
-                {banner.logoType === 'myntra' && (
-                  <div className="relative w-full h-full flex items-center justify-end">
-                    <div className="absolute right-4 top-2 w-28 h-28 rounded-xl overflow-hidden shadow-xl transform rotate-6">
-                      <img src={banner.products.shoeImg} alt="Fashion" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                )}
-
-                {banner.logoType === 'croma' && (
-                  <div className="relative w-full h-full flex items-center justify-end">
-                    <div className="absolute right-4 top-2 w-32 h-28 rounded-xl overflow-hidden shadow-xl transform -rotate-6">
-                      <img src={banner.products.laptopImg} alt="Laptop" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
