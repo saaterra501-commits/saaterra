@@ -2,50 +2,74 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ShieldCheck, Tag, Zap, Star, Sparkles, ChevronRight } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Tag, Zap, Star, Check, Sparkles, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 
 const DEFAULT_SLIDES = [
   {
     id: 'chat-chacha',
     slug: 'chat-chacha',
     badge: '🔥 Bestseller Deal',
+    category: 'WhatsApp Bots',
+    rating: 4.9,
+    reviewsCount: 42,
     title: 'Chat Chacha — WhatsApp AI Marketing & Automation',
-    description: 'Recover abandoned carts, broadcast bulk offers, and automate 24/7 customer support with Meta Cloud API. One-time payment, zero recurring bills.',
+    description: 'Recover abandoned carts, broadcast bulk offers, and automate 24/7 customer support with Meta Cloud API. Pay once in INR, zero monthly dollar bills.',
+    highlights: [
+      'Official Meta Cloud API verified setup & template approvals',
+      'Automate cart recovery messages with 98% open rates',
+      'Official 18% GST tax invoice & 60-day refund guarantee',
+    ],
     price: 1999,
     originalPrice: 24000,
     discountPct: 92,
     accessText: '/ 5-Year Access',
     buttonText: 'Get This Deal',
     href: '/deals/chat-chacha',
-    image: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?q=80&w=1000&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?q=80&w=1200&auto=format&fit=crop',
   },
   {
     id: 'seo-rocket',
     slug: 'seo-rocket',
     badge: '⚡ Hot Deal',
+    category: 'AI & GEO SEO',
+    rating: 4.8,
+    reviewsCount: 38,
     title: 'AI Keyword & Competitor Radar',
-    description: 'Track local Indian agency rankings, discover high-intent keywords, and automate client SEO audits without monthly subscription costs.',
+    description: 'Track local Indian agency rankings, discover high-intent keywords, and automate client SEO audits without expensive monthly recurring subscriptions.',
+    highlights: [
+      'Track Google & AI engine rankings in real time',
+      'Automated white-label client PDF audit reports',
+      'Full API webhook integrations with WordPress & Webflow',
+    ],
     price: 2499,
     originalPrice: 32000,
     discountPct: 92,
     accessText: '/ 5-Year Access',
     buttonText: 'Explore Deal',
     href: '/deals/seo-rocket',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1000&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&auto=format&fit=crop',
   },
   {
     id: 'geo-citation',
     slug: 'geo-citation',
     badge: '⭐ Most Popular',
+    category: 'Generative Search',
+    rating: 4.9,
+    reviewsCount: 51,
     title: 'Generative Engine Optimization (GEO) Suite',
-    description: 'Audit AI search presence across ChatGPT, Perplexity and Gemini. Generate white-label client reports and dominate conversational search.',
+    description: 'Audit AI search presence across ChatGPT, Perplexity and Gemini. Generate white-label client reports and dominate conversational search results.',
+    highlights: [
+      'Generative Engine Optimization (GEO) auditing suite',
+      'Monitor brand sentiment across all major LLMs',
+      '5-Year Pass including all future model updates',
+    ],
     price: 3499,
     originalPrice: 42000,
     discountPct: 91,
     accessText: '/ 5-Year Access',
     buttonText: 'View Deal',
     href: '/deals/geo-citation',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop',
   },
 ];
 
@@ -55,7 +79,7 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
   const [fadeActive, setFadeActive] = useState(true);
   const fadeTimeoutRef = useRef(null);
 
-  // Map dynamic deals from MongoDB/API with fallback
+  // Map dynamic deals from MongoDB/API with graceful fallback
   const slides = (deals && deals.length > 0)
     ? deals.slice(0, 6).map((d, idx) => {
         const starterTier = d.pricingTiers && d.pricingTiers.length > 0 ? d.pricingTiers[0] : null;
@@ -64,12 +88,20 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
         const discountPct = Number(d.discountPct ?? Math.round(((originalPrice - price) / (originalPrice || 1)) * 100));
         const defaultSlide = DEFAULT_SLIDES[idx % DEFAULT_SLIDES.length];
 
+        const highlights = Array.isArray(d.tldr) && d.tldr.length > 0
+          ? d.tldr.slice(0, 3)
+          : defaultSlide.highlights;
+
         return {
           id: d.slug || d.id || `deal-${idx}`,
           slug: d.slug || d.id,
-          badge: d.badge || (idx === 0 ? '🔥 Featured Deal' : idx === 1 ? '🚀 New Drop' : '⭐ Popular Deal'),
+          badge: d.badge || (idx === 0 ? '🔥 Bestseller Deal' : idx === 1 ? '⚡ Hot Deal' : '⭐ Popular Deal'),
+          category: d.category || defaultSlide.category,
+          rating: d.rating || 4.9,
+          reviewsCount: d.reviewsCount || 40 + (idx * 5),
           title: d.title || defaultSlide.title,
           description: d.tagline || defaultSlide.description,
+          highlights,
           price,
           originalPrice,
           discountPct,
@@ -82,10 +114,7 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
       })
     : DEFAULT_SLIDES;
 
-  // Right side: show up to 3 OTHER deals from the list
-  const sideDeals = slides.filter((_, i) => i !== currentSlide).slice(0, 3);
-
-  // Slim green strip configuration
+  // Slim green strip ticker configuration
   const [stripConfig, setStripConfig] = useState({
     enabled: true,
     isSlim: true,
@@ -112,14 +141,14 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
     loadConfig();
   }, []);
 
-  // Smooth fade transition helper
+  // Smooth Full Screen Fade transition helper
   const triggerFadeTo = (nextIdx) => {
     if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
     setFadeActive(false);
     fadeTimeoutRef.current = setTimeout(() => {
       setCurrentSlide(nextIdx);
       setFadeActive(true);
-    }, 250);
+    }, 280);
   };
 
   const showSlide = (idx) => {
@@ -133,7 +162,7 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
   const nextSlide = () => showSlide(currentSlide + 1);
   const previousSlide = () => showSlide(currentSlide - 1);
 
-  // Auto-advance interval set to 8 seconds (8000ms) for comfortable reading
+  // Auto-advance interval set to 8 seconds (8000ms) with silent hover-pause
   useEffect(() => {
     if (isPaused || slides.length <= 1) return;
     const interval = setInterval(() => {
@@ -146,20 +175,20 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
 
   return (
     <section
-      className="stackdeal-slider relative w-full overflow-hidden select-none"
+      className="stackdeal-fullscreen-slider relative w-full overflow-hidden select-none"
       style={{
-        background: 'linear-gradient(135deg, #ffffff 0%, #f9fbfe 45%, #ecfdf5 100%)',
+        background: 'radial-gradient(120% 120% at 50% 0%, #ffffff 0%, #f7faff 45%, #eefcf5 100%)',
       }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* ── 1. SLIM ROTATED GREEN STRIP ── */}
+      {/* ── 1. SLIM ROTATED GREEN TICKER STRIP ── */}
       {stripConfig.enabled !== false && (
         <div
           className={`deal-strip w-[112%] -ml-[6%] ${
             stripConfig.isSlim !== false ? 'h-[20px] sm:h-[22px]' : 'h-[30px]'
           } bg-[#63f477] flex items-center overflow-hidden relative z-20 mt-[10px] sm:mt-[14px] shadow-xs border-y border-emerald-400/40`}
-          style={{ transform: 'rotate(-2.5deg)' }}
+          style={{ transform: 'rotate(-2deg)' }}
         >
           <div className="strip-content flex items-center gap-[28px] sm:gap-[36px] whitespace-nowrap text-[10px] sm:text-[11px] font-extrabold text-slate-950 animate-marquee tracking-wide">
             {[1, 2, 3, 4].map((_, i) => (
@@ -178,84 +207,89 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
         </div>
       )}
 
-      {/* ── 2. MAIN HERO SECTION (Split Layout: Fade Left + Static Right) ── */}
-      <div className="max-w-[1280px] mx-auto pt-[28px] sm:pt-[42px] px-4 sm:px-6 lg:px-8 pb-[45px] sm:pb-[55px]">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-8 lg:gap-12 items-start">
-          
-          {/* ── LEFT COLUMN: FADING FEATURED DEAL ── */}
-          <div
-            className="flex flex-col justify-between transition-all duration-300 ease-out"
-            style={{
-              opacity: fadeActive ? 1 : 0,
-              transform: fadeActive ? 'translateY(0)' : 'translateY(6px)',
-            }}
-          >
-            <div>
-              {/* Badge & Rating Row */}
-              <div className="flex items-center gap-3 flex-wrap mb-3.5">
-                <span className="inline-flex items-center gap-1.5 bg-slate-950 text-white px-3.5 py-1.5 rounded-full text-[12px] font-black tracking-wide shadow-sm">
+      {/* ── 2. FULL SCREEN FADING HERO WRAPPER ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-10 sm:pb-14 relative">
+        
+        <div
+          className="transition-all duration-300 ease-out"
+          style={{
+            opacity: fadeActive ? 1 : 0,
+            transform: fadeActive ? 'scale(1) translateY(0)' : 'scale(0.99) translateY(8px)',
+          }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            
+            {/* ── LEFT COLUMN: DEAL HEADLINE & PURCHASE CONTROLS (7 Cols) ── */}
+            <div className="lg:col-span-7 flex flex-col justify-center space-y-5">
+              
+              {/* Badges Row */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 bg-slate-950 text-white px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide shadow-xs">
                   {active.badge}
                 </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full">
-                  <Sparkles className="w-3 h-3 text-emerald-600" />
-                  Verified Indian Vendor
+
+                <span className="inline-flex items-center gap-1 bg-white border border-slate-200/90 text-slate-800 px-3 py-1 rounded-full text-xs font-bold shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  {active.category}
+                </span>
+
+                <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200/70 text-amber-900 px-2.5 py-1 rounded-full text-xs font-extrabold">
+                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  {active.rating} ({active.reviewsCount} verified reviews)
                 </span>
               </div>
 
-              {/* Title */}
+              {/* Main Title */}
               <Link href={active.href} className="group block">
-                <h1 className="text-[30px] sm:text-[44px] font-black text-slate-950 tracking-[-1.2px] leading-[1.12] mb-3 group-hover:text-blue-600 transition-colors">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-[-1.5px] leading-[1.08] group-hover:text-blue-600 transition-colors">
                   {active.title}
                 </h1>
               </Link>
 
-              {/* Tagline / Description */}
-              <p className="text-[15px] sm:text-[17px] text-slate-600 leading-[1.6] max-w-[620px] mb-5 font-normal">
+              {/* Tagline / Value Proposition */}
+              <p className="text-base sm:text-lg text-slate-600 leading-[1.6] max-w-2xl font-normal">
                 {active.description}
               </p>
 
-              {/* Price & Savings Block */}
-              <div className="flex items-center gap-3.5 flex-wrap mb-5">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-[32px] sm:text-[40px] font-black text-slate-950 tracking-tight">
+              {/* 3 Key Benefit Bullets */}
+              <div className="space-y-2 py-1">
+                {active.highlights.map((highlight, idx) => (
+                  <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm font-semibold text-slate-800">
+                    <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </div>
+                    <span>{highlight}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Price & Savings Display */}
+              <div className="pt-2">
+                <div className="flex flex-wrap items-baseline gap-3">
+                  <span className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight">
                     ₹{Number(active.price).toLocaleString('en-IN')}
                   </span>
-                  <span className="text-[13px] sm:text-[14px] font-extrabold text-slate-500">
+                  <span className="text-sm sm:text-base font-extrabold text-slate-500">
                     {active.accessText}
                   </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-[15px] text-slate-400 line-through font-semibold">
+                  <span className="text-base sm:text-lg text-slate-400 line-through font-semibold">
                     ₹{Number(active.originalPrice).toLocaleString('en-IN')}
                   </span>
-                  <span className="bg-red-50 text-red-600 border border-red-200/80 text-[11px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider">
+                  <span className="bg-red-50 text-red-600 border border-red-200/80 text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">
                     {active.discountPct}% OFF
                   </span>
                 </div>
+                <p className="text-[11px] font-bold text-emerald-700 mt-1 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                  Instant saving of ₹{Number(active.originalPrice - active.price).toLocaleString('en-IN')} vs recurring monthly bills
+                </p>
               </div>
 
-              {/* Trust & Guarantee Badges */}
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6 text-[12px] text-slate-600 font-semibold border-t border-slate-200/60 pt-3.5">
-                <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  60-Day Money-Back Guarantee
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-blue-600 shrink-0" />
-                  B2B 18% GST Tax Invoice
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-amber-500 shrink-0" />
-                  Instant UPI Activation
-                </span>
-              </div>
-
-              {/* CTA Action Buttons */}
-              <div className="flex items-center gap-3.5 flex-wrap">
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-1">
                 <Link
                   href={active.href}
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#FFC700] hover:bg-[#e6b300] text-slate-950 font-black text-[15px] rounded-xl transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(255,199,0,0.35)] active:translate-y-0 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#FFC700] hover:bg-[#e6b300] text-slate-950 font-black text-base rounded-xl transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(255,199,0,0.4)] active:translate-y-0 cursor-pointer"
                 >
                   <span>{active.buttonText}</span>
                   <ArrowRight className="w-4 h-4 font-black" />
@@ -263,125 +297,134 @@ export default function HeroDealSlider({ deals = [], onBuyClick }) {
 
                 <Link
                   href={active.href}
-                  className="inline-flex items-center justify-center gap-1.5 px-6 py-3.5 bg-white border border-slate-200 hover:border-slate-400 text-slate-800 font-bold text-[14px] rounded-xl transition-all hover:bg-slate-50 cursor-pointer shadow-xs"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-white border border-slate-200/90 hover:border-slate-400 text-slate-800 font-bold text-sm rounded-xl transition-all hover:bg-slate-50 cursor-pointer shadow-xs"
                 >
-                  <span>View Details</span>
+                  <span>View Details & Tiers</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
                 </Link>
               </div>
-            </div>
 
-            {/* Slider Navigation Dots & Arrows */}
-            <div className="flex items-center gap-3 pt-6 mt-4">
-              <button
-                onClick={previousSlide}
-                className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-950 hover:text-white text-slate-700 flex items-center justify-center transition-colors cursor-pointer text-sm font-black shadow-2xs"
-                aria-label="Previous Slide"
-              >
-                ←
-              </button>
-
-              <div className="flex items-center gap-1.5">
-                {slides.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => showSlide(i)}
-                    className={`transition-all duration-300 cursor-pointer border-0 ${
-                      i === currentSlide
-                        ? 'w-7 h-2 rounded-full bg-slate-950'
-                        : 'w-2 h-2 rounded-full bg-slate-300 hover:bg-slate-400'
-                    }`}
-                    aria-label={`Slide ${i + 1}`}
-                  />
-                ))}
+              {/* Trust Features Strip */}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2 text-xs font-bold text-slate-500">
+                <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  60-Day Money-Back Guarantee
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-blue-700">
+                  <Tag className="w-4 h-4 text-blue-600" />
+                  B2B 18% GST Invoice
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-slate-700">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  UPI, Cards & NetBanking
+                </span>
               </div>
 
-              <button
-                onClick={nextSlide}
-                className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-950 hover:text-white text-slate-700 flex items-center justify-center transition-colors cursor-pointer text-sm font-black shadow-2xs"
-                aria-label="Next Slide"
-              >
-                →
-              </button>
-
-              <span className="text-[11px] font-bold text-slate-400 ml-1">
-                {currentSlide + 1} / {slides.length}
-              </span>
-            </div>
-          </div>
-
-          {/* ── RIGHT COLUMN: STATIC DEAL CARDS (Always visible) ── */}
-          <div className="flex flex-col gap-3 lg:border-l lg:border-slate-200/70 lg:pl-8">
-            <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                More Live Deals
-              </span>
-              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                {slides.length} Available
-              </span>
             </div>
 
-            {/* Static Deal Mini Cards */}
-            <div className="space-y-3">
-              {sideDeals.map((deal, idx) => (
-                <Link
-                  key={deal.id || idx}
-                  href={deal.href}
-                  className="group flex items-center gap-3.5 bg-white border border-slate-200/80 hover:border-slate-400/80 rounded-2xl p-3 shadow-2xs hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
-                >
-                  {/* Thumbnail Image */}
-                  <div className="w-[74px] h-[64px] rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-100">
+            {/* ── RIGHT COLUMN: FULL-SCREEN SOFTWARE MOCKUP (5 Cols) ── */}
+            <div className="lg:col-span-5 relative">
+              <Link href={active.href} className="group block relative">
+                {/* Glow Backdrop */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-amber-500/10 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
+
+                {/* Device/Browser Window Container */}
+                <div className="relative bg-white rounded-2xl border border-slate-200/90 shadow-2xl overflow-hidden group-hover:border-slate-300 transition-all duration-300 group-hover:-translate-y-1">
+                  
+                  {/* Browser Bar */}
+                  <div className="bg-slate-100/90 px-4 py-2.5 border-b border-slate-200/80 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                    </div>
+                    <span className="text-[11px] font-mono font-medium text-slate-400 truncate max-w-[200px]">
+                      stackdeal.in/deals/{active.slug}
+                    </span>
+                    <div className="w-3"></div>
+                  </div>
+
+                  {/* Software Graphic Preview */}
+                  <div className="h-[280px] sm:h-[350px] w-full bg-slate-900/5 overflow-hidden flex items-center justify-center p-2">
                     <img
-                      src={deal.image}
-                      alt={deal.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      src={active.image}
+                      alt={active.title}
+                      className="w-full h-full object-cover rounded-lg group-hover:scale-102 transition-transform duration-500"
                       onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=300&auto=format&fit=crop';
+                        e.target.src = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop';
                       }}
                     />
                   </div>
 
-                  {/* Details */}
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-black text-amber-600 uppercase tracking-wide">
-                      {deal.badge}
+                  {/* Bottom Ribbon */}
+                  <div className="bg-slate-50 px-4 py-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
+                    <span className="text-slate-600 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#FFC700]" />
+                      Verified Indian Founder Pass
                     </span>
-                    <h3 className="text-[13px] font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1 mt-0.5">
-                      {deal.title}
-                    </h3>
-
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[14px] font-black text-slate-950">
-                        ₹{Number(deal.price).toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-[11px] text-slate-400 line-through">
-                        ₹{Number(deal.originalPrice).toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-[9px] font-black bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded">
-                        {deal.discountPct}% OFF
-                      </span>
-                    </div>
+                    <span className="text-blue-600 group-hover:underline flex items-center gap-1">
+                      See Live Demo →
+                    </span>
                   </div>
 
-                  {/* Arrow Indicator */}
-                  <div className="w-7 h-7 rounded-full bg-slate-50 group-hover:bg-slate-950 text-slate-400 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                    <ChevronRight className="w-4 h-4" />
-                  </div>
-                </Link>
-              ))}
+                </div>
+              </Link>
             </div>
 
-            {/* View All Deals Button */}
-            <Link
-              href="/deals"
-              className="mt-1 w-full py-2.5 px-4 bg-white hover:bg-slate-50 border border-dashed border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-950 font-black text-[12px] rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <span>Explore All 5-Year Passes</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+          </div>
+        </div>
+
+        {/* ── 3. BOTTOM CONTROLS & DEAL PILLS ── */}
+        <div className="mt-8 sm:mt-12 pt-6 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+          
+          {/* Slide Pill Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 scrollbar-none">
+            {slides.map((s, idx) => (
+              <button
+                key={s.id || idx}
+                onClick={() => showSlide(idx)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-2 border shrink-0 ${
+                  idx === currentSlide
+                    ? 'bg-slate-950 text-white border-slate-950 shadow-sm'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-slate-900'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${idx === currentSlide ? 'bg-[#FFC700]' : 'bg-slate-300'}`} />
+                <span className="truncate max-w-[140px] sm:max-w-[180px]">{s.title.split('—')[0].trim()}</span>
+                <span className={`text-[10px] font-black ${idx === currentSlide ? 'text-amber-300' : 'text-slate-400'}`}>
+                  ₹{Number(s.price).toLocaleString('en-IN')}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation Arrows & Counter */}
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs font-bold text-slate-400">
+              Deal <span className="text-slate-900 font-black">{currentSlide + 1}</span> of {slides.length}
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={previousSlide}
+                className="w-9 h-9 rounded-full border border-slate-200 bg-white hover:bg-slate-950 hover:text-white text-slate-700 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+                aria-label="Previous Deal"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={nextSlide}
+                className="w-9 h-9 rounded-full border border-slate-200 bg-white hover:bg-slate-950 hover:text-white text-slate-700 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+                aria-label="Next Deal"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
         </div>
+
       </div>
 
       <style jsx>{`
