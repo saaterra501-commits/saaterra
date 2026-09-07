@@ -108,11 +108,26 @@ export async function GET() {
         config = DEFAULT_CONFIG;
       }
     } else {
+      let needsSave = false;
+      const updateFields = {};
+
       if (!config.categories || config.categories.length === 0) {
         config.categories = DEFAULT_CONFIG.categories;
+        updateFields.categories = DEFAULT_CONFIG.categories;
+        needsSave = true;
       }
       if (!config.topCategories || config.topCategories.length === 0) {
         config.topCategories = DEFAULT_CONFIG.topCategories;
+        updateFields.topCategories = DEFAULT_CONFIG.topCategories;
+        needsSave = true;
+      }
+
+      if (needsSave) {
+        try {
+          await SiteConfig.collection.updateOne({ key: 'global_config' }, { $set: updateFields });
+        } catch (saveErr) {
+          console.error('Error auto-persisting categories to DB:', saveErr);
+        }
       }
     }
 

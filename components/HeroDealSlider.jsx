@@ -181,15 +181,37 @@ export default function HeroDealSlider({
   onSelectCategory,
   customTopCategories = null,
   customSliderBanners = null,
+  allCategories = null,
 }) {
   const trackRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
   // Dynamic Top Categories from Admin Config or curated fallback
-  const displayTopCategories = (customTopCategories && Array.isArray(customTopCategories) && customTopCategories.length > 0)
+  const baseTopCats = (customTopCategories && Array.isArray(customTopCategories) && customTopCategories.length > 0)
     ? customTopCategories.filter((c) => c.active !== false).sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
     : TOP_CATEGORIES;
+
+  // Ensure any active categories from platform categories not yet in topCategories are seamlessly included
+  const displayTopCategories = [...baseTopCats];
+  if (allCategories && Array.isArray(allCategories)) {
+    const existingKeys = new Set(displayTopCategories.map((c) => (c.categoryKey || c.name || '').toLowerCase()));
+    allCategories.filter((c) => c.active !== false).forEach((cat) => {
+      const key = (cat.name || '').trim().toLowerCase();
+      if (key && !existingKeys.has(key)) {
+        displayTopCategories.push({
+          id: cat.id || `top-${cat.slug || cat.name}`,
+          name: cat.name,
+          categoryKey: cat.name,
+          image: cat.image || '',
+          themeColor: cat.themeColor || '#FF6B35',
+          isMostPopular: false,
+          order: Number(cat.order) || 99,
+        });
+        existingKeys.add(key);
+      }
+    });
+  }
 
   // Dynamic Hero Slider Banners from Admin Selected Deals or curated fallback
   const sliderDeals = deals.filter((d) => d.showOnHeroSlider);
@@ -439,11 +461,30 @@ export default function HeroDealSlider({
                   <div className={`relative w-20 h-20 sm:w-24 sm:h-24 lg:w-26 lg:h-26 xl:w-28 xl:h-28 rounded-full bg-slate-100 border border-slate-200/90 shadow-2xs overflow-hidden aspect-square shrink-0 group-hover:scale-105 group-hover:shadow-md transition-all duration-200 ${
                     isSelected ? 'ring-4 ring-blue-400/40 border-blue-500 scale-105' : ''
                   }`}>
-                    <img
-                      src={cat.image}
-                      alt={cat.name}
-                      className="w-full h-full object-cover aspect-square block group-hover:scale-110 transition-transform duration-300"
-                    />
+                    {cat.image ? (
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="w-full h-full object-cover aspect-square block group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const fallback = e.target.parentElement.querySelector('.cat-badge-fallback');
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`cat-badge-fallback w-full h-full items-center justify-center font-black text-white text-base sm:text-lg lg:text-xl shadow-inner ${
+                        cat.image ? 'hidden' : 'flex'
+                      }`}
+                      style={{
+                        background: cat.themeColor
+                          ? `linear-gradient(135deg, ${cat.themeColor}, #0F172A)`
+                          : 'linear-gradient(135deg, #FF6B35, #0052cc)',
+                      }}
+                    >
+                      <span>{cat.name?.slice(0, 2).toUpperCase() || 'SD'}</span>
+                    </div>
                   </div>
                 )}
 

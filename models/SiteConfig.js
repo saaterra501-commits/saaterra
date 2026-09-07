@@ -148,7 +148,12 @@ const SiteConfigSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    strict: false,
   }
 );
 
-export default mongoose.models.SiteConfig || mongoose.model('SiteConfig', SiteConfigSchema);
+if (mongoose.models && mongoose.models.SiteConfig) {
+  delete mongoose.models.SiteConfig;
+}
+
+export default mongoose.model('SiteConfig', SiteConfigSchema);

@@ -317,6 +317,7 @@ export default function Home() {
         activeCat={activeCat}
         onSelectCategory={setActiveCat}
         customTopCategories={siteConfig?.topCategories}
+        allCategories={siteConfig?.categories}
       />
 
       {/* ── 4. Main Content ── */}

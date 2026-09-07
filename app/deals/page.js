@@ -129,14 +129,28 @@ export default function DealsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [siteConfig, setSiteConfig] = useState(null);
 
   useEffect(() => {
-    async function fetchDeals() {
+    async function fetchData() {
       try {
-        const res = await fetch('/api/deals');
-        const data = await res.json();
-        if (data?.success && data?.deals && data.deals.length > 0) {
-          setDeals(data.deals);
+        const [dealsRes, configRes] = await Promise.all([
+          fetch('/api/deals'),
+          fetch('/api/site-config'),
+        ]);
+
+        if (dealsRes.ok) {
+          const data = await dealsRes.json();
+          if (data?.success && data?.deals && data.deals.length > 0) {
+            setDeals(data.deals);
+          }
+        }
+
+        if (configRes.ok) {
+          const cfgData = await configRes.json();
+          if (cfgData?.success && cfgData?.config) {
+            setSiteConfig(cfgData.config);
+          }
         }
       } catch (err) {
         console.error('Error fetching deals catalog:', err);
@@ -144,7 +158,7 @@ export default function DealsPage() {
         setLoading(false);
       }
     }
-    fetchDeals();
+    fetchData();
 
     // Read initial search query & category from URL
     if (typeof window !== 'undefined') {
@@ -176,7 +190,11 @@ export default function DealsPage() {
 
   const endingSoonCount = deals.filter(isDealEndingSoon).length;
 
-  const dynamicCategories = ['All', ...new Set(deals.map((d) => d.category).filter(Boolean))];
+  const configCatNames = siteConfig?.categories
+    ? siteConfig.categories.filter((c) => c.active !== false).map((c) => c.name)
+    : [];
+  const dealCatNames = deals.map((d) => d.category).filter(Boolean);
+  const dynamicCategories = ['All', ...new Set([...configCatNames, ...dealCatNames])];
 
   const filteredDeals = deals.filter((d) => {
     const matchesCat = activeCat === 'All' || d.category === activeCat;

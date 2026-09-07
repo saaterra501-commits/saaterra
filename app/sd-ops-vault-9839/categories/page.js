@@ -22,6 +22,7 @@ export default function AdminCategoriesPage() {
     name: '',
     slug: '',
     description: '',
+    image: '',
     themeColor: '#FF6B35',
     icon: 'Zap',
     active: true,
@@ -93,6 +94,7 @@ export default function AdminCategoriesPage() {
       name: catModal.name.trim(),
       slug,
       description: catModal.description.trim(),
+      image: (catModal.image || '').trim(),
       themeColor: catModal.themeColor || '#FF6B35',
       icon: catModal.icon || 'Zap',
       active: catModal.active !== false,
@@ -106,7 +108,7 @@ export default function AdminCategoriesPage() {
     }
 
     setCategories(list);
-    setCatModal({ open: false, isEdit: false, idx: -1, id: '', name: '', slug: '', description: '', themeColor: '#FF6B35', icon: 'Zap', active: true, order: 1 });
+    setCatModal({ open: false, isEdit: false, idx: -1, id: '', name: '', slug: '', description: '', image: '', themeColor: '#FF6B35', icon: 'Zap', active: true, order: 1 });
     await persistCategories(list);
   };
 
@@ -250,6 +252,7 @@ export default function AdminCategoriesPage() {
                         name: cat.name || '',
                         slug: cat.slug || '',
                         description: cat.description || '',
+                        image: cat.image || '',
                         themeColor: cat.themeColor || '#FF6B35',
                         icon: cat.icon || 'Zap',
                         active: cat.active !== false,
@@ -351,6 +354,20 @@ export default function AdminCategoriesPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Homepage Circular Image URL (Optional)</label>
+                <input
+                  type="text"
+                  value={catModal.image || ''}
+                  onChange={(e) => setCatModal({ ...catModal, image: e.target.value })}
+                  placeholder="https://images.unsplash.com/... (optional)"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#FF6B35]"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Optional: If left blank, a clean circular badge with your brand theme color and category initials will be used automatically on the homepage.
+                </p>
+              </div>
+
               <div className="flex items-center gap-2 pt-1">
                 <input
                   type="checkbox"
@@ -360,14 +377,14 @@ export default function AdminCategoriesPage() {
                   className="w-4 h-4 rounded text-[#FF6B35] cursor-pointer"
                 />
                 <label htmlFor="catActiveDedicated" className="text-xs text-slate-300 cursor-pointer font-bold">
-                  Active on Platform
+                  Active on Platform (Main Web & Filters)
                 </label>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <button
-                onClick={() => setCatModal({ open: false, isEdit: false, idx: -1, id: '', name: '', slug: '', description: '', themeColor: '#FF6B35', icon: 'Zap', active: true, order: 1 })}
+                onClick={() => setCatModal({ open: false, isEdit: false, idx: -1, id: '', name: '', slug: '', description: '', image: '', themeColor: '#FF6B35', icon: 'Zap', active: true, order: 1 })}
                 className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-xs rounded-xl cursor-pointer"
               >
                 Cancel

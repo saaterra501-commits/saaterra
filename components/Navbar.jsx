@@ -31,6 +31,7 @@ export default function Navbar() {
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
+  const [navCategories, setNavCategories] = useState(CATEGORIES);
 
   const catRef = useRef(null);
   const userRef = useRef(null);
@@ -79,10 +80,29 @@ export default function Navbar() {
 
     async function loadCatalog() {
       try {
-        const res = await fetch('/api/deals');
-        const data = await res.json();
-        if (isMounted && data?.deals && Array.isArray(data.deals)) {
-          setDealsCatalog(data.deals);
+        const [dealsRes, configRes] = await Promise.all([
+          fetch('/api/deals'),
+          fetch('/api/site-config'),
+        ]);
+
+        if (dealsRes.ok) {
+          const data = await dealsRes.json();
+          if (isMounted && data?.deals && Array.isArray(data.deals)) {
+            setDealsCatalog(data.deals);
+          }
+        }
+
+        if (configRes.ok) {
+          const cfgData = await configRes.json();
+          if (isMounted && cfgData?.config?.categories && Array.isArray(cfgData.config.categories)) {
+            const dynamicList = cfgData.config.categories
+              .filter((c) => c.active !== false)
+              .map((c) => ({
+                label: c.name,
+                href: `/deals?cat=${encodeURIComponent(c.name)}`,
+              }));
+            if (dynamicList.length > 0) setNavCategories(dynamicList);
+          }
         }
       } catch (err) {
         // Silently handled
@@ -323,13 +343,13 @@ export default function Navbar() {
             </button>
 
             {catOpen && (
-              <div className="absolute left-0 top-full w-52 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 space-y-0.5 z-50">
-                {CATEGORIES.map((c) => (
+              <div className="absolute left-0 top-full w-56 max-h-80 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-xl p-2 space-y-0.5 z-50">
+                {navCategories.map((c) => (
                   <Link
                     key={c.href}
                     href={c.href}
                     onClick={() => setCatOpen(false)}
-                    className="block px-3.5 py-2.5 rounded-xl hover:bg-slate-100 font-bold text-slate-800 text-xs transition-colors"
+                    className="block px-3.5 py-2 rounded-xl hover:bg-slate-100 font-bold text-slate-800 text-xs transition-colors"
                   >
                     {c.label}
                   </Link>

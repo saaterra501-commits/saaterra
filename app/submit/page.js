@@ -236,7 +236,9 @@ export default function VendorSubmitPage() {
     termsAgreed: true,
   });
 
-  // ── 4. Restore Draft from LocalStorage on Mount ──
+  const [platformCategories, setPlatformCategories] = useState([]);
+
+  // ── 4. Restore Draft & Load Platform Categories ──
   useEffect(() => {
     try {
       const saved = localStorage.getItem('stackdeal_vendor_submission_draft_v4');
@@ -250,6 +252,17 @@ export default function VendorSubmitPage() {
     } catch (e) {
       console.warn('Could not restore draft:', e);
     }
+
+    async function loadPlatformCategories() {
+      try {
+        const res = await fetch('/api/site-config');
+        const data = await res.json();
+        if (data?.success && data?.config?.categories) {
+          setPlatformCategories(data.config.categories.filter((c) => c.active !== false));
+        }
+      } catch (e) {}
+    }
+    loadPlatformCategories();
   }, []);
 
   // ── AI Listing Auto-Generator States & Handler ──
@@ -1184,49 +1197,70 @@ export default function VendorSubmitPage() {
 
                             {/* Visual Category Cards / Chips */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                              {Object.entries(CATEGORY_THEMES).map(([catKey, catData]) => {
-                                const isSelected = formData.category === catKey;
-                                const CatIcon = catData.icon;
+                              {(() => {
+                                const displayCategoryThemes = { ...CATEGORY_THEMES };
+                                if (platformCategories && platformCategories.length > 0) {
+                                  platformCategories.forEach((cat) => {
+                                    if (!displayCategoryThemes[cat.name]) {
+                                      displayCategoryThemes[cat.name] = {
+                                        id: cat.name,
+                                        label: cat.name,
+                                        shortLabel: cat.name,
+                                        badgeText: cat.name.toUpperCase(),
+                                        icon: Zap,
+                                        iconName: 'Zap',
+                                        themeColor: cat.themeColor || '#FF6B35',
+                                        pillBg: 'bg-orange-50 text-orange-800 border-orange-200',
+                                        description: cat.description || `${cat.name} software deals & tools`,
+                                      };
+                                    }
+                                  });
+                                }
 
-                                return (
-                                  <button
-                                    key={catKey}
-                                    type="button"
-                                    onClick={() => handleInputChange('category', catKey)}
-                                    className={`p-3 rounded-2xl border-2 text-left transition-all duration-200 flex items-start gap-3 cursor-pointer ${
-                                      isSelected
-                                        ? `${catData.pillBg} shadow-md scale-[1.01] ring-2 ring-offset-1`
-                                        : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                                    }`}
-                                    style={{
-                                      borderColor: isSelected ? catData.themeColor : undefined,
-                                    }}
-                                  >
-                                    <div
-                                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs text-white"
-                                      style={{ backgroundColor: catData.themeColor }}
+                                return Object.entries(displayCategoryThemes).map(([catKey, catData]) => {
+                                  const isSelected = formData.category === catKey;
+                                  const CatIcon = catData.icon || Zap;
+
+                                  return (
+                                    <button
+                                      key={catKey}
+                                      type="button"
+                                      onClick={() => handleInputChange('category', catKey)}
+                                      className={`p-3 rounded-2xl border-2 text-left transition-all duration-200 flex items-start gap-3 cursor-pointer ${
+                                        isSelected
+                                          ? `${catData.pillBg} shadow-md scale-[1.01] ring-2 ring-offset-1`
+                                          : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                      }`}
+                                      style={{
+                                        borderColor: isSelected ? catData.themeColor : undefined,
+                                      }}
                                     >
-                                      <CatIcon className="w-4 h-4 text-white" />
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center justify-between gap-1">
-                                        <span className="text-xs font-black text-slate-900 truncate">
-                                          {catData.shortLabel}
-                                        </span>
-                                        {isSelected && (
-                                          <span className="w-4 h-4 rounded-full bg-slate-950 text-white flex items-center justify-center text-[9px] font-black shrink-0">
-                                            ✓
-                                          </span>
-                                        )}
+                                      <div
+                                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs text-white"
+                                        style={{ backgroundColor: catData.themeColor || '#FF6B35' }}
+                                      >
+                                        <CatIcon className="w-4 h-4 text-white" />
                                       </div>
-                                      <p className="text-[10px] text-slate-500 font-medium line-clamp-1 mt-0.5">
-                                        {catData.description}
-                                      </p>
-                                    </div>
-                                  </button>
-                                );
-                              })}
+
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-1">
+                                          <span className="text-xs font-black text-slate-900 truncate">
+                                            {catData.shortLabel || catKey}
+                                          </span>
+                                          {isSelected && (
+                                            <span className="w-4 h-4 rounded-full bg-slate-950 text-white flex items-center justify-center text-[9px] font-black shrink-0">
+                                              ✓
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 font-medium line-clamp-1 mt-0.5">
+                                          {catData.description}
+                                        </p>
+                                      </div>
+                                    </button>
+                                  );
+                                });
+                              })()}
                             </div>
 
                             {/* Accessible Select Dropdown as fallback */}
@@ -1236,12 +1270,22 @@ export default function VendorSubmitPage() {
                                 onChange={(e) => handleInputChange('category', e.target.value)}
                                 className="w-full bg-white border border-slate-200 text-slate-800 text-xs font-bold p-2.5 rounded-xl cursor-pointer focus:outline-none focus:border-[#FF6B35]"
                               >
-                                <option value="WhatsApp Bots">💬 WhatsApp Tools & Bots (Emerald Theme)</option>
-                                <option value="AI & GEO SEO">🤖 AI & GEO SEO (Purple Theme)</option>
-                                <option value="Lead Scrapers">🎯 Lead Scraping & B2B (Cyan / Sky Theme)</option>
-                                <option value="CRM & Sales">📊 CRM & Sales Automation (Orange Theme)</option>
-                                <option value="Video & Design">🎨 Video & Design Tools (Pink Theme)</option>
-                                <option value="Analytics">📈 Analytics & Reporting (Teal Theme)</option>
+                                {platformCategories.length > 0 ? (
+                                  platformCategories.map((c) => (
+                                    <option key={c.id || c.name} value={c.name}>
+                                      {c.name}
+                                    </option>
+                                  ))
+                                ) : (
+                                  <>
+                                    <option value="WhatsApp Bots">💬 WhatsApp Tools & Bots (Emerald Theme)</option>
+                                    <option value="AI & GEO SEO">🤖 AI & GEO SEO (Purple Theme)</option>
+                                    <option value="Lead Scrapers">🎯 Lead Scraping & B2B (Cyan / Sky Theme)</option>
+                                    <option value="CRM & Sales">📊 CRM & Sales Automation (Orange Theme)</option>
+                                    <option value="Video & Design">🎨 Video & Design Tools (Pink Theme)</option>
+                                    <option value="Analytics">📈 Analytics & Reporting (Teal Theme)</option>
+                                  </>
+                                )}
                               </select>
                             </div>
                           </div>
