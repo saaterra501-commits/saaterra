@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   X, ShieldCheck, Zap, CheckCircle2, Copy, ArrowRight,
   Sparkles, CreditCard, Lock, Clock, Flame, Check, Gift,
-  User, Mail, Phone, ExternalLink, FileText, AlertCircle
+  User, Mail, Phone, ExternalLink, FileText, AlertCircle, Ban
 } from 'lucide-react';
 import AuthModal from './AuthModal';
 
@@ -40,10 +40,14 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
       .catch(() => {});
   }, []);
 
-  // Pricing calculations
+  // Pricing & Stock calculations
   let tierPrice = 1999;
   let tierTitle = 'Starter Pass';
   let tierCredits = '1 User · Standard Access';
+  let isTierSoldOut = Boolean(
+    deal?.isAllSoldOut ||
+    (deal?.totalAvailableStock !== undefined && deal.totalAvailableStock <= 0)
+  );
 
   if (deal?.pricingTiers && deal.pricingTiers.length > 0) {
     const matched = deal.pricingTiers.find((t) =>
@@ -53,22 +57,30 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
       (selectedTier?.toLowerCase().includes('tier 3') && (t.tierName?.toLowerCase().includes('agency') || t.tierName?.toLowerCase().includes('lifetime') || t.tierName?.toLowerCase().includes('scale')))
     );
 
+    let matchedTierObj = matched;
     if (matched) {
       tierPrice = matched.price || tierPrice;
       tierTitle = matched.tierName || tierTitle;
       tierCredits = matched.features?.[0]?.text || tierCredits;
     } else {
       if (selectedTier === 'Tier 2' && deal.pricingTiers[1]) {
+        matchedTierObj = deal.pricingTiers[1];
         tierPrice = deal.pricingTiers[1].price;
         tierTitle = deal.pricingTiers[1].tierName;
       } else if (selectedTier === 'Tier 3' && (deal.pricingTiers[2] || deal.pricingTiers[1])) {
         const t = deal.pricingTiers[2] || deal.pricingTiers[1];
+        matchedTierObj = t;
         tierPrice = t.price;
         tierTitle = t.tierName;
       } else {
+        matchedTierObj = deal.pricingTiers[0];
         tierPrice = deal.pricingTiers[0].price;
         tierTitle = deal.pricingTiers[0].tierName;
       }
+    }
+
+    if (matchedTierObj && (matchedTierObj.isSoldOut || (matchedTierObj.availableStock !== undefined && matchedTierObj.availableStock <= 0))) {
+      isTierSoldOut = true;
     }
   } else {
     tierPrice = deal?.tier1Price || 1999;
@@ -109,6 +121,11 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
   const handleInitiateRazorpay = async () => {
     setErrorMessage('');
 
+    if (isTierSoldOut) {
+      setErrorMessage('Limit Puri Ho Gayi Hai (Sold Out): Saari official vendor keys bik chuki hain. Payment band kar di gayi hai.');
+      return;
+    }
+
     const emailToUse = buyerEmail || currentUser?.email;
     if (!emailToUse || !emailToUse.includes('@')) {
       setErrorMessage('Please enter a valid email address to receive your license key.');
@@ -137,7 +154,9 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
 
       const orderData = await orderRes.json();
       if (!orderData.success) {
-        throw new Error(orderData.message || 'Failed to create Razorpay order');
+        setErrorMessage(orderData.message || 'Failed to create Razorpay order');
+        setLoading(false);
+        return;
       }
 
       // 2. Ensure script is loaded
@@ -304,16 +323,28 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
                 </div>
               </div>
 
-              {/* Savings Banner */}
-              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-bold text-amber-800">
-                  <Flame className="w-3.5 h-3.5 text-amber-500" />
-                  You save ₹{savingsAmt.toLocaleString('en-IN')} today!
-                </span>
-                <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
-                  90% OFF
-                </span>
-              </div>
+              {/* Savings Banner or Sold Out Banner */}
+              {isTierSoldOut ? (
+                <div className="mt-3 bg-red-100 border border-red-300 rounded-xl p-3 flex items-start gap-2.5">
+                  <Ban className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-black text-xs text-red-900">Limit Puri Ho Gayi Hai (Sold Out)</div>
+                    <div className="text-[11px] font-semibold text-red-700 mt-0.5">
+                      Saare official vendor license keys bik chuke hain. Payment band kar di gayi hai.
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-amber-800">
+                    <Flame className="w-3.5 h-3.5 text-amber-500" />
+                    You save ₹{savingsAmt.toLocaleString('en-IN')} today!
+                  </span>
+                  <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
+                    90% OFF
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Buyer Contact Details Inputs */}
@@ -401,25 +432,41 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
               ))}
             </div>
 
-            {/* CTA Button */}
-            <button
-              onClick={handleInitiateRazorpay}
-              disabled={loading}
-              className="w-full btn-primary justify-center py-4 text-sm rounded-2xl cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-emerald-700/20"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Connecting to Razorpay...</span>
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  <span>Pay ₹{tierPrice.toLocaleString('en-IN')} via Razorpay</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
+            {/* CTA Button or Disabled Sold-Out Button */}
+            {isTierSoldOut ? (
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  disabled
+                  className="w-full py-4 text-sm rounded-2xl bg-slate-100 border-2 border-slate-300 text-slate-400 font-black cursor-not-allowed flex items-center justify-center gap-2 shadow-inner"
+                >
+                  <Ban className="w-4 h-4 text-red-500" />
+                  <span>Limit Puri Ho Gayi Hai (Sold Out)</span>
+                </button>
+                <p className="text-[11px] font-bold text-red-600 text-center">
+                  Saari vendor keys khatm hain · Payment band hai
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={handleInitiateRazorpay}
+                disabled={loading}
+                className="w-full btn-primary justify-center py-4 text-sm rounded-2xl cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-emerald-700/20"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Connecting to Razorpay...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pay ₹{tierPrice.toLocaleString('en-IN')} via Razorpay</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Trust footer */}
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400 font-medium pt-1">
@@ -505,6 +552,21 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
 
             {/* Actions & Links */}
             <div className="space-y-2.5">
+              {verifiedOrder?.vendorRedeemUrl ? (
+                <a
+                  href={verifiedOrder.vendorRedeemUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-emerald-500 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors text-xs font-bold shadow-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🚀</span>
+                    <span>Activate Pass on Vendor Website</span>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-white" />
+                </a>
+              ) : null}
+
               <a
                 href={`/redeem?code=${encodeURIComponent(assignedCode)}`}
                 target="_blank"
@@ -512,8 +574,8 @@ export default function LTDCheckoutModal({ deal, selectedTier = 'Tier 1', onClos
                 className="flex items-center justify-between p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-900 transition-colors text-xs font-bold"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-base">🚀</span>
-                  <span>How to Activate & Redeem on Vendor Portal</span>
+                  <span className="text-base">🔑</span>
+                  <span>StackDeal Pass Verification Portal</span>
                 </div>
                 <ExternalLink className="w-4 h-4 text-emerald-600" />
               </a>

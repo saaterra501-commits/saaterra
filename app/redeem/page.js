@@ -69,6 +69,13 @@ function RedeemContent() {
             {redeemResult.licenseCode}
           </div>
 
+          {redeemResult.vendorInstructions && (
+            <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100 text-xs text-emerald-900 text-left">
+              <span className="font-bold block mb-1">📋 Vendor Activation Steps:</span>
+              <span>{redeemResult.vendorInstructions}</span>
+            </div>
+          )}
+
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             {redeemResult.vendorWebsite && (
               <a

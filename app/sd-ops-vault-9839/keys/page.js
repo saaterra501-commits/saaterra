@@ -417,7 +417,14 @@ export default function AdminKeysPage() {
                 <select
                   required
                   value={uploadDealId}
-                  onChange={(e) => setUploadDealId(e.target.value)}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setUploadDealId(newId);
+                    const sel = deals.find((d) => String(d._id) === String(newId));
+                    if (sel?.pricingTiers?.[0]?.tierName) {
+                      setUploadTier(sel.pricingTiers[0].tierName);
+                    }
+                  }}
                   className="w-full bg-[#070B16] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
                 >
                   {deals.map((d) => (
@@ -429,15 +436,23 @@ export default function AdminKeysPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Tier *</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Target Pricing Plan / Tier *</label>
                 <select
                   value={uploadTier}
                   onChange={(e) => setUploadTier(e.target.value)}
                   className="w-full bg-[#070B16] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
                 >
-                  <option value="Tier 1">Tier 1 (Starter Pass)</option>
-                  <option value="Tier 2">Tier 2 (Pro Pass)</option>
-                  <option value="Tier 3">Tier 3 (Agency Pass)</option>
+                  {(() => {
+                    const sel = deals.find((d) => String(d._id) === String(uploadDealId));
+                    const list = sel?.pricingTiers && sel.pricingTiers.length > 0
+                      ? sel.pricingTiers
+                      : [{ tierName: 'Tier 1' }, { tierName: 'Tier 2' }, { tierName: 'Tier 3' }];
+                    return list.map((t, i) => (
+                      <option key={t.tierName || i} value={t.tierName || `Tier ${i + 1}`}>
+                        {t.tierName || `Tier ${i + 1}`} {t.price ? `(₹${t.price})` : ''}
+                      </option>
+                    ));
+                  })()}
                 </select>
               </div>
 

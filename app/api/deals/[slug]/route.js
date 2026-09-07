@@ -1,23 +1,18 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Deal from '@/models/Deal';
+import { calculateDealStock } from '@/lib/dealStock';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(req, { params }) {
   try {
     const { slug } = await params;
     const cleanSlug = slug?.toLowerCase();
+    console.log('[API /deals/[slug]] HIT for cleanSlug:', cleanSlug);
 
-    // 1. Check in-memory STORED_DEALS first
-    if (global.STORED_DEALS && global.STORED_DEALS.length > 0) {
-      const memoryDeal = global.STORED_DEALS.find(
-        (d) => d.slug?.toLowerCase() === cleanSlug || String(d.id) === cleanSlug
-      );
-      if (memoryDeal) {
-        return NextResponse.json({ success: true, deal: formatDeal(memoryDeal) });
-      }
-    }
-
-    // 2. Check MongoDB Atlas (saasgrid)
+    // 1. Check MongoDB Atlas (saasgrid) - Primary source of truth
     try {
       const conn = await dbConnect();
       if (conn) {
@@ -29,11 +24,25 @@ export async function GET(req, { params }) {
         }).lean();
 
         if (dealFromDb) {
-          return NextResponse.json({ success: true, deal: formatDeal(dealFromDb) });
+          const formatted = formatDeal(dealFromDb);
+          const stockEnriched = await calculateDealStock(formatted);
+          return NextResponse.json({ success: true, deal: stockEnriched });
         }
       }
     } catch (dbErr) {
       console.warn('MongoDB Atlas find error for slug:', slug, dbErr.message);
+    }
+
+    // 2. Check in-memory STORED_DEALS fallback
+    if (global.STORED_DEALS && global.STORED_DEALS.length > 0) {
+      const memoryDeal = global.STORED_DEALS.find(
+        (d) => d.slug?.toLowerCase() === cleanSlug || String(d.id) === cleanSlug
+      );
+      if (memoryDeal) {
+        const formatted = formatDeal(memoryDeal);
+        const stockEnriched = await calculateDealStock(formatted);
+        return NextResponse.json({ success: true, deal: stockEnriched });
+      }
     }
 
     // 3. Fallback to sample deals if known
@@ -130,7 +139,8 @@ export async function GET(req, { params }) {
       reviews: [],
     };
 
-    return NextResponse.json({ success: true, deal: defaultDeal });
+    const stockEnriched = await calculateDealStock(defaultDeal);
+    return NextResponse.json({ success: true, deal: stockEnriched });
 
   } catch (err) {
     console.error('API /deals/[slug] error:', err);
@@ -255,7 +265,9 @@ function formatDeal(raw) {
     const campaignEndDate = raw.campaignEndDate ? new Date(raw.campaignEndDate).toISOString() : new Date(launchTime + durationDays * 24 * 60 * 60 * 1000).toISOString();
 
     return {
-      id: raw._id || raw.id || raw.slug,
+      _id: raw._id ? String(raw._id) : (raw.id || raw.slug),
+      id: raw._id ? String(raw._id) : (raw.id || raw.slug),
+      licenseKeys: raw.licenseKeys || [],
       slug: raw.slug,
       title: raw.title || 'SaaS 5-Year Pass',
       tagline: raw.tagline || '5-Year Access Pass for Indian Agencies',

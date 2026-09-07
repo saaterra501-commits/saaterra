@@ -3,6 +3,9 @@ import dbConnect from '@/lib/dbConnect';
 import LTDOrder from '@/models/LTDOrder';
 import Deal from '@/models/Deal';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(req) {
   try {
     await dbConnect();
@@ -47,7 +50,9 @@ export async function POST(req) {
       dealTitle: order.dealTitle || deal?.title || '5-Year SaaS Pass',
       tier: order.tier || 'Starter Pass',
       purchasedAt: order.purchasedAt,
-      vendorWebsite: deal?.websiteUrl || '',
+      vendorWebsite: order.vendorRedeemUrl || deal?.vendorRedeemUrl || deal?.websiteUrl || '',
+      vendorInstructions: order.vendorInstructions || deal?.vendorRedeemInstructions || 'Enter this license key in your software account on the vendor portal to activate your 5-Year Pass.',
+      isRealVendorKey: order.isRealVendorKey !== false,
       message: isAlreadyRedeemed
         ? 'License code is already activated and verified.'
         : 'License successfully activated! Your 5-Year Pass is live.',

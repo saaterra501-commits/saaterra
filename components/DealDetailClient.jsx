@@ -9,7 +9,7 @@ import Link from 'next/link';
 import {
   Sparkles, Flame, ShieldCheck, Clock, Check, X, MessageSquare, ThumbsUp,
   User, Play, Star, ChevronDown, ChevronRight, Copy, Share2, HelpCircle, ArrowRight,
-  ExternalLink, Search, Filter, Globe, Building2, MapPin, Calendar, Users, ShoppingCart
+  ExternalLink, Search, Filter, Globe, Building2, MapPin, Calendar, Users, ShoppingCart, Ban
 } from 'lucide-react';
 import { addToCart, isInCart } from '@/lib/cart';
 
@@ -416,6 +416,11 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
     tierName: 'Starter Pass', price: 1999, originalPrice: 24000
   };
 
+  const currentTierIsSoldOut = Boolean(
+    currentTier.isSoldOut ||
+    (currentTier.availableStock !== undefined && currentTier.availableStock <= 0)
+  );
+
   const discountPct = Math.round((1 - currentTier.price / (currentTier.originalPrice || currentTier.price * 10)) * 100);
 
   const toggleFeatures = (idx) => {
@@ -676,47 +681,73 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
                     onChange={(e) => setSelectedTierIndex(Number(e.target.value))}
                     className="w-full p-3 bg-[#F8FAFC] border-2 border-slate-200 text-slate-900 font-bold text-xs rounded-xl focus:outline-none focus:border-[#2475FF] cursor-pointer"
                   >
-                    {deal.pricingTiers?.map((t, idx) => (
-                      <option key={idx} value={idx}>
-                        {t.tierName} — ₹{t.price.toLocaleString('en-IN')}
-                      </option>
-                    ))}
+                    {deal.pricingTiers?.map((t, idx) => {
+                      const tierSold = t.isSoldOut || (t.availableStock !== undefined && t.availableStock <= 0);
+                      return (
+                        <option key={idx} value={idx}>
+                          {t.tierName} — ₹{t.price.toLocaleString('en-IN')} {tierSold ? ' [SOLD OUT — 0 LEFT]' : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
                 {/* Action Buttons: Buy Now & Add to Cart */}
                 <div className="space-y-2.5">
-                  <Link
-                    href={`/cart?deal=${deal.slug || 'chat-chacha'}&tier=${encodeURIComponent(currentTier.tierName)}&price=${currentTier.price}`}
-                    onClick={() => addToCart(deal, selectedTierIndex)}
-                    className="w-full py-3.5 bg-[#FF6B35] hover:bg-[#E85A24] text-white font-black text-sm rounded-xl shadow-lg transition-all transform hover:scale-[1.01] cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <span>Buy now</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
+                  {currentTierIsSoldOut ? (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        disabled
+                        className="w-full py-4 bg-slate-100 border-2 border-slate-300 text-slate-400 font-black text-sm rounded-xl cursor-not-allowed flex items-center justify-center gap-2 shadow-inner"
+                      >
+                        <Ban className="w-4 h-4 text-red-500" />
+                        <span>Limit Puri Ho Gayi Hai (Sold Out)</span>
+                      </button>
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-center">
+                        <p className="text-xs font-black text-red-700">
+                          🚫 All official vendor keys for this pass have been claimed.
+                        </p>
+                        <p className="text-[11px] text-red-600 font-semibold mt-0.5">
+                          Payment has been automatically disabled to protect buyers.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Link
+                        href={`/cart?deal=${deal.slug || 'chat-chacha'}&tier=${encodeURIComponent(currentTier.tierName)}&price=${currentTier.price}`}
+                        onClick={() => addToCart(deal, selectedTierIndex)}
+                        className="w-full py-3.5 bg-[#FF6B35] hover:bg-[#E85A24] text-white font-black text-sm rounded-xl shadow-lg transition-all transform hover:scale-[1.01] cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>Buy now</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
 
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    title={isAddedToCart ? 'Already added! Click to view Cart' : 'Save this software to your Cart'}
-                    className={`w-full py-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      isAddedToCart
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700 hover:bg-emerald-100 shadow-xs'
-                        : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800 shadow-xs'
-                    }`}
-                  >
-                    {isAddedToCart ? (
-                      <>
-                        <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
-                        <span>Added to Cart ✔ (View in Cart →)</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-4 h-4 text-[#FF6B35]" />
-                        <span>Add to Cart (Save for Later)</span>
-                      </>
-                    )}
-                  </button>
+                      <button
+                        type="button"
+                        onClick={handleAddToCart}
+                        title={isAddedToCart ? 'Already added! Click to view Cart' : 'Save this software to your Cart'}
+                        className={`w-full py-3 rounded-xl border-2 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          isAddedToCart
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700 hover:bg-emerald-100 shadow-xs'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-800 shadow-xs'
+                        }`}
+                      >
+                        {isAddedToCart ? (
+                          <>
+                            <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                            <span>Added to Cart ✔ (View in Cart →)</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingCart className="w-4 h-4 text-[#FF6B35]" />
+                            <span>Add to Cart (Save for Later)</span>
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Trust Bullet Items */}
@@ -867,18 +898,31 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
 
           return (
             <div className={`${gridColsClass} gap-8 items-stretch`}>
-              {activePricingTiers.map((tier, idx) => (
+              {activePricingTiers.map((tier, idx) => {
+                const tierSoldOut = Boolean(
+                  tier.isSoldOut || (tier.availableStock !== undefined && tier.availableStock <= 0)
+                );
+
+                return (
                 <div
                   key={idx}
                   className={`bg-white rounded-3xl p-8 shadow-xl flex flex-col justify-between relative border-2 ${
-                    tier.isRecommended ? 'border-[#2475FF] ring-4 ring-[#2475FF]/10' : 'border-slate-200'
+                    tierSoldOut
+                      ? 'border-red-200 bg-red-50/20'
+                      : tier.isRecommended
+                      ? 'border-[#2475FF] ring-4 ring-[#2475FF]/10'
+                      : 'border-slate-200'
                   }`}
                 >
-                  {tier.isRecommended && (
+                  {tierSoldOut ? (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
+                      <Ban className="w-3 h-3" /> Limit Puri Ho Gayi
+                    </div>
+                  ) : tier.isRecommended ? (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#2475FF] text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
                       <Sparkles className="w-3 h-3" /> Recommended
                     </div>
-                  )}
+                  ) : null}
 
                   <div className="space-y-6">
                     <div className="text-center space-y-2 border-b border-slate-100 pb-6">
@@ -888,21 +932,44 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
                         <span className="text-slate-500 font-bold text-xs">/ 5-year access</span>
                       </div>
 
-                      {/* Per-Tier Pass Inventory Scarcity Badge */}
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 text-amber-900 rounded-full text-[11px] font-black mt-2">
-                        <Flame className="w-3 h-3 text-amber-500" />
-                        <span>Limited: {tier.totalCodes || 100} Passes Available</span>
-                      </div>
+                      {/* Per-Tier Pass Inventory Scarcity or Sold Out Badge */}
+                      {tierSoldOut ? (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-100 border border-red-300 text-red-700 rounded-full text-[11px] font-black mt-2">
+                          <Ban className="w-3.5 h-3.5 text-red-600" />
+                          <span>Limit Puri Ho Gayi Hai (Sold Out)</span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 text-amber-900 rounded-full text-[11px] font-black mt-2">
+                          <Flame className="w-3 h-3 text-amber-500" />
+                          <span>Limited: {tier.availableStock ?? tier.totalCodes ?? 100} Passes Available</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Primary Orange Buy Button */}
-                    <Link
-                      href={`/cart?deal=${deal.slug || 'chat-chacha'}&tier=${encodeURIComponent(tier.tierName)}&price=${tier.price}`}
-                      className="w-full py-3.5 bg-[#FF6B35] hover:bg-[#E85A24] text-white font-black text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <span>Buy now</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
+                    {/* Buy Button or Disabled Sold-Out Button */}
+                    {tierSoldOut ? (
+                      <div className="space-y-1.5">
+                        <button
+                          type="button"
+                          disabled
+                          className="w-full py-3.5 bg-slate-100 border-2 border-slate-300 text-slate-400 font-black text-sm rounded-xl cursor-not-allowed flex items-center justify-center gap-2 shadow-inner"
+                        >
+                          <Ban className="w-4 h-4 text-red-500" />
+                          <span>Limit Puri Ho Gayi Hai (Sold Out)</span>
+                        </button>
+                        <p className="text-[11px] font-bold text-red-600 text-center">
+                          Saari real license keys bik chuki hain · Payment band hai
+                        </p>
+                      </div>
+                    ) : (
+                      <Link
+                        href={`/cart?deal=${deal.slug || 'chat-chacha'}&tier=${encodeURIComponent(tier.tierName)}&price=${tier.price}`}
+                        className="w-full py-3.5 bg-[#FF6B35] hover:bg-[#E85A24] text-white font-black text-sm rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>Buy now</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    )}
 
                 {/* Feature Checklist */}
                 <div className="space-y-3 pt-2">
@@ -937,8 +1004,9 @@ export default function DealDetailClient({ initialDeal, dealSlug, params }) {
               </div>
 
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </div>
           );
         })()}
 

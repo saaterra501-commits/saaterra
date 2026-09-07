@@ -3,8 +3,9 @@ import mongoose from 'mongoose';
 const LTDCodeSchema = new mongoose.Schema({
   dealId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'LTDDeal',
+    ref: 'Deal',
     required: true,
+    index: true,
   },
   code: {
     type: String,
@@ -14,13 +15,14 @@ const LTDCodeSchema = new mongoose.Schema({
   },
   tier: {
     type: String,
-    enum: ['Tier 1', 'Tier 2', 'Tier 3'],
     default: 'Tier 1',
+    trim: true,
   },
   status: {
     type: String,
     enum: ['available', 'assigned', 'refunded'],
     default: 'available',
+    index: true,
   },
   assignedUserId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -43,6 +45,7 @@ const LTDCodeSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+LTDCodeSchema.index({ dealId: 1, status: 1 });
 LTDCodeSchema.index({ dealId: 1, tier: 1, status: 1 });
 
 export default mongoose.models.LTDCode || mongoose.model('LTDCode', LTDCodeSchema);

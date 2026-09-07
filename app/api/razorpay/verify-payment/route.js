@@ -7,8 +7,12 @@ import Deal from '@/models/Deal';
 import LTDOrder from '@/models/LTDOrder';
 import Notification from '@/models/Notification';
 import User from '@/models/User';
+import LTDCode from '@/models/LTDCode';
 import fs from 'fs';
 import path from 'path';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 function getRazorpayCredentials() {
   let keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
@@ -61,6 +65,7 @@ export async function POST(req) {
       razorpay_signature,
       dealId,
       tier = 'Tier 1',
+      amount,
       gstNumber = '',
       userEmail = 'buyer@stackdeal.in',
       userName = 'Verified Agency Founder',
@@ -202,7 +207,9 @@ export async function POST(req) {
       );
     }
 
-    const expectedPrice = amount ? Number(amount) : (matchedTier ? matchedTier.price : (deal?.pricingTiers?.[0]?.price || 1999));
+    const expectedPrice = (typeof amount !== 'undefined' && amount !== null && !isNaN(Number(amount)))
+      ? Number(amount)
+      : (matchedTier ? matchedTier.price : (deal?.pricingTiers?.[0]?.price || 1999));
     const expectedPaise = Math.round(expectedPrice * 100);
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -254,21 +261,12 @@ export async function POST(req) {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // 🔑 LICENSE ALLOCATION & ATOMIC STORAGE
+    // 🔑 REAL LICENSE KEY ALLOCATION (Inventory-First, Atomic, Concurrency-Safe)
     // ──────────────────────────────────────────────────────────────────────────
     let licenseCode = null;
-    if (matchedTier && matchedTier.licenseCodes && matchedTier.licenseCodes.length > 0) {
-      licenseCode = matchedTier.licenseCodes.shift();
-    } else if (deal.licenseKeys && deal.licenseKeys.length > 0) {
-      licenseCode = deal.licenseKeys.shift();
-    }
-
-    if (!licenseCode) {
-      licenseCode = `SD-${deal.slug.toUpperCase().replace(/[^A-Z0-9]/g, '')}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-    }
-
-    const refundDeadline = new Date();
-    refundDeadline.setDate(refundDeadline.getDate() + 60);
+    let isRealVendorKey = false;
+    const vendorRedeemUrl = deal.vendorRedeemUrl || deal.websiteUrl || '';
+    const vendorInstructions = deal.vendorRedeemInstructions || 'Log in or create an account on the vendor platform and enter this license key under Billing/Account to activate your 5-Year Pass.';
 
     let attachedUserId = userId;
     if (!attachedUserId && userEmail) {
@@ -278,27 +276,138 @@ export async function POST(req) {
       } catch (uErr) {}
     }
 
-    // Save Order
-    const order = await LTDOrder.create({
-      orderId: razorpay_order_id,
-      dealId: deal._id,
-      dealSlug: deal.slug,
-      dealTitle: deal.title,
-      userId: attachedUserId || null,
-      userEmail: userEmail.toLowerCase().trim(),
-      userName: userName.trim(),
-      userPhone: userPhone.trim(),
-      tier: matchedTier?.tierName || tier,
-      amountPaid: expectedPrice, // strictly server-enforced price
-      currency: 'INR',
-      paymentGateway: 'razorpay',
-      paymentId: razorpay_payment_id,
-      razorpaySignature: razorpay_signature || '',
-      licenseCode,
-      gstNumber: gstNumber.trim(),
-      status: 'paid',
-      refundDeadline,
-    });
+    // A. Priority 1: Check Dedicated Real License Vault (LTDCode collection)
+    try {
+      const tierCandidates = [
+        matchedTier?.tierName,
+        tier,
+        'Tier 1',
+        'Starter Pass',
+      ].filter(Boolean);
+
+      const claimedCode = await LTDCode.findOneAndUpdate(
+        {
+          dealId: deal._id,
+          status: 'available',
+          $or: [
+            { tier: { $in: tierCandidates } },
+            { tier: { $regex: new RegExp(tier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') } },
+            { tier: 'Tier 1' },
+            { tier: { $exists: false } },
+          ],
+        },
+        {
+          $set: {
+            status: 'assigned',
+            assignedUserId: attachedUserId || null,
+            assignedUserEmail: userEmail.toLowerCase().trim(),
+            orderId: razorpay_order_id,
+            assignedAt: new Date(),
+          },
+        },
+        { new: true, returnDocument: 'after' }
+      );
+
+      if (claimedCode && claimedCode.code) {
+        licenseCode = claimedCode.code.trim();
+        isRealVendorKey = true;
+      }
+    } catch (vaultErr) {
+      console.warn('LTDCode vault query notice:', vaultErr.message);
+    }
+
+    // Fetch all used license codes in the entire database to avoid collision
+    const existingOrdersWithKeys = await LTDOrder.find({}).select('licenseCode').lean();
+    const usedKeySet = new Set(
+      existingOrdersWithKeys.map((o) => (o.licenseCode ? o.licenseCode.trim().toUpperCase() : ''))
+    );
+
+    // B. Priority 2: Check Deal Pricing Tier real codes (Deal Editor Tab 6)
+    if (!licenseCode && matchedTier && Array.isArray(matchedTier.licenseCodes) && matchedTier.licenseCodes.length > 0) {
+      const unusedTierCodes = matchedTier.licenseCodes.filter(
+        (c) => c && !usedKeySet.has(c.trim().toUpperCase())
+      );
+      if (unusedTierCodes.length > 0) {
+        licenseCode = unusedTierCodes[0].trim();
+        matchedTier.licenseCodes = matchedTier.licenseCodes.filter((c) => c.trim() !== licenseCode);
+        deal.markModified('pricingTiers');
+        isRealVendorKey = true;
+        Deal.updateOne(
+          { _id: deal._id },
+          { $pull: { 'pricingTiers.$[].licenseCodes': licenseCode } }
+        ).catch(() => {});
+      }
+    }
+
+    // C. Priority 3: Check Deal global licenseKeys array
+    if (!licenseCode && Array.isArray(deal.licenseKeys) && deal.licenseKeys.length > 0) {
+      const unusedDealCodes = deal.licenseKeys.filter(
+        (c) => c && !usedKeySet.has(c.trim().toUpperCase())
+      );
+      if (unusedDealCodes.length > 0) {
+        licenseCode = unusedDealCodes[0].trim();
+        deal.licenseKeys = deal.licenseKeys.filter((c) => c.trim() !== licenseCode);
+        deal.markModified('licenseKeys');
+        isRealVendorKey = true;
+        Deal.updateOne(
+          { _id: deal._id },
+          { $pull: { licenseKeys: licenseCode } }
+        ).catch(() => {});
+      }
+    }
+
+    // D. Strict Enforcement: NO Auto-Generated Fallback Keys!
+    // As per policy: Only real vendor/admin keys may be issued.
+    if (!licenseCode) {
+      console.error('SOLD OUT: No real vendor license keys remaining for deal:', deal?.title, tier);
+      return NextResponse.json({
+        success: false,
+        message: 'Limit Puri Ho Gayi Hai (Sold Out): Saari official vendor license keys khatm ho chuki hain. System dwara koi auto-generated key nahi di jayegi.',
+        isSoldOut: true,
+      }, { status: 400 });
+    }
+
+    const refundDeadline = new Date();
+    refundDeadline.setDate(refundDeadline.getDate() + 60);
+
+    // Save Order - Concurrency Safe with Real License Key
+    let order = null;
+    try {
+      order = await LTDOrder.create({
+        orderId: razorpay_order_id,
+        dealId: deal._id,
+        dealSlug: deal.slug,
+        dealTitle: deal.title,
+        userId: attachedUserId || null,
+        userEmail: userEmail.toLowerCase().trim(),
+        userName: userName.trim(),
+        userPhone: userPhone.trim(),
+        tier: matchedTier?.tierName || tier,
+        amountPaid: expectedPrice, // strictly server-enforced price
+        currency: 'INR',
+        paymentGateway: 'razorpay',
+        paymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature || '',
+        licenseCode,
+        isRealVendorKey: true,
+        vendorRedeemUrl,
+        vendorInstructions,
+        gstNumber: gstNumber.trim(),
+        status: 'paid',
+        refundDeadline,
+      });
+    } catch (createErr) {
+      if (createErr.code === 11000) {
+        console.error('CONCURRENCY COLLISION: License key already claimed by another user:', licenseCode);
+        return NextResponse.json({
+          success: false,
+          message: 'Yeh license key kisi anya buyer dwara claim ki ja chuki hai aur inventory limit puri ho chuki hai. Kripya support@stackdeal.in se sampark karein refund hetu.',
+          isSoldOut: true,
+        }, { status: 409 });
+      } else {
+        throw createErr;
+      }
+    }
 
     // Update Deal Metrics
     deal.soldCount = (deal.soldCount || 0) + 1;
@@ -323,6 +432,8 @@ export async function POST(req) {
           dealSlug: deal.slug,
           orderId: order.orderId,
           amountPaid: expectedPrice,
+          isRealVendorKey,
+          vendorRedeemUrl,
         },
       });
     } catch (notifErr) {
@@ -341,7 +452,8 @@ export async function POST(req) {
         });
 
         const invoiceUrl = `https://stackdeal.in/api/invoice/${order.orderId}`;
-        const redeemUrl = `https://stackdeal.in/redeem?code=${encodeURIComponent(licenseCode)}`;
+        const stackdealRedeemUrl = `https://stackdeal.in/redeem?code=${encodeURIComponent(licenseCode)}`;
+        const activationActionUrl = vendorRedeemUrl || stackdealRedeemUrl;
 
         const emailHtml = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #090d16; color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
@@ -351,18 +463,29 @@ export async function POST(req) {
             </div>
             <div style="padding: 28px 24px;">
               <p style="color: #94a3b8; font-size: 15px; margin: 0 0 20px 0;">Hello <strong>${userName || 'Founder'}</strong>,</p>
+              <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+                Thank you for purchasing <strong>${deal.title} (${matchedTier?.tierName || tier})</strong> on StackDeal. Your payment of <strong>₹${expectedPrice.toLocaleString('en-IN')}</strong> has been confirmed.
+              </p>
               <div style="background: #131b2e; border: 1px solid #059669; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
-                <span style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #34d399; margin-bottom: 8px;">Official License Pass Key</span>
-                <code style="display: inline-block; background: #000000; color: #10b981; font-size: 20px; font-weight: 800; padding: 10px 20px; border-radius: 8px; border: 1px dashed rgba(52, 211, 153, 0.4);">${licenseCode}</code>
+                <span style="display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #34d399; margin-bottom: 8px;">Official Software License Key</span>
+                <code style="display: inline-block; background: #000000; color: #10b981; font-size: 22px; font-weight: 800; padding: 10px 24px; border-radius: 8px; border: 1px dashed rgba(52, 211, 153, 0.4); letter-spacing: 1px;">${licenseCode}</code>
+              </div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #f1f5f9;">Activation Instructions:</h4>
+                <p style="margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.5;">${vendorInstructions}</p>
               </div>
               <div style="text-align: center; margin-bottom: 24px;">
-                <a href="${redeemUrl}" style="display: inline-block; background: #059669; color: #ffffff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-right: 8px;">
-                  🚀 Activate Pass Now &rarr;
+                <a href="${activationActionUrl}" style="display: inline-block; background: #059669; color: #ffffff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-right: 8px; margin-bottom: 8px;">
+                  🚀 Activate Software Pass &rarr;
                 </a>
                 <a href="${invoiceUrl}" style="display: inline-block; background: rgba(255,255,255,0.1); color: #ffffff; font-weight: 600; font-size: 14px; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
                   📄 Download Tax Invoice
                 </a>
               </div>
+              <p style="font-size: 12px; color: #64748b; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px; margin: 0;">
+                Order ID: <code>${order.orderId}</code> • Payment ID: <code>${razorpay_payment_id}</code><br/>
+                Every deal on StackDeal includes a 60-Day Money-Back Guarantee.
+              </p>
             </div>
           </div>
         `;
@@ -381,13 +504,18 @@ export async function POST(req) {
     return NextResponse.json({
       success: true,
       licenseCode,
+      isRealVendorKey,
+      vendorRedeemUrl,
+      vendorInstructions,
       orderId: order.orderId,
       paymentId: razorpay_payment_id,
       dealTitle: deal.title,
       tier: matchedTier?.tierName || tier,
       amountPaid: expectedPrice,
       invoiceUrl: `/api/invoice/${order.orderId}`,
-      message: 'Razorpay Payment Successful! 5-Year Pass Code Unlocked.',
+      message: isRealVendorKey
+        ? 'Payment Successful! Official Vendor License Key allocated.'
+        : 'Payment Successful! 5-Year Access Pass Unlocked.',
     });
   } catch (error) {
     console.error('verify-payment fatal error:', error);

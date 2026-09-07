@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import dbConnect from '@/lib/dbConnect';
 import Deal from '@/models/Deal';
+import { getTierRealStock } from '@/lib/dealStock';
 import fs from 'fs';
 import path from 'path';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 function getRazorpayCredentials() {
   let keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
@@ -120,6 +124,16 @@ export async function POST(req) {
           selectedTierName = deal.pricingTiers[0].tierName;
         }
       }
+    }
+
+    // 🛑 REAL INVENTORY CHECK: Reject checkout if real vendor keys are exhausted
+    const availableStock = await getTierRealStock(deal, selectedTierName);
+    if (availableStock <= 0) {
+      return NextResponse.json({
+        success: false,
+        message: 'Limit Puri Ho Gayi Hai (Sold Out): Saari official vendor keys bik chuki hain. Is software ke liye payment band kar di gayi hai.',
+        isSoldOut: true,
+      }, { status: 400 });
     }
 
     const { keyId, keySecret } = getRazorpayCredentials();
