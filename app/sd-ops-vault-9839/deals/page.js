@@ -48,6 +48,7 @@ export default function AdminDealsPage() {
   const [statusMsg, setStatusMsg] = useState('');
   const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Pending' | 'Active'
   const [uploadingField, setUploadingField] = useState(null);
+  const [siteCategories, setSiteCategories] = useState([]);
 
   // Preview Modal State
   const [previewDeal, setPreviewDeal] = useState(null);
@@ -207,6 +208,16 @@ export default function AdminDealsPage() {
 
   useEffect(() => {
     fetchAdminDeals();
+    async function loadSiteCategories() {
+      try {
+        const res = await fetch('/api/site-config');
+        const data = await res.json();
+        if (data?.config?.categories) {
+          setSiteCategories(data.config.categories);
+        }
+      } catch (e) {}
+    }
+    loadSiteCategories();
   }, []);
 
   const handleStatusChange = async (slug, newStatus) => {
@@ -558,11 +569,14 @@ export default function AdminDealsPage() {
 
   const pendingDeals = deals.filter((d) => d.status === 'Pending');
   const activeDeals = deals.filter((d) => d.status === 'Active' || !d.status);
+  const sliderDeals = deals.filter((d) => d.showOnHeroSlider);
 
   const filteredDeals = statusFilter === 'Pending'
     ? pendingDeals
     : statusFilter === 'Active'
     ? activeDeals
+    : statusFilter === 'Slider'
+    ? sliderDeals
     : deals;
 
   return (
@@ -741,12 +755,22 @@ export default function AdminDealsPage() {
                     onChange={(e) => setEditingDeal({ ...editingDeal, category: e.target.value })}
                     className="w-full bg-white/5 border border-white/15 text-white text-xs font-bold p-3 rounded-xl focus:outline-none focus:border-[#2475FF] cursor-pointer"
                   >
-                    <option value="WhatsApp Bots" className="bg-slate-900">💬 WhatsApp Tools & Bots</option>
-                    <option value="AI & GEO SEO" className="bg-slate-900">🤖 AI & GEO SEO</option>
-                    <option value="Lead Scrapers" className="bg-slate-900">🎯 Lead Scraping & B2B</option>
-                    <option value="CRM & Sales" className="bg-slate-900">📊 CRM & Sales Automation</option>
-                    <option value="Video & Design" className="bg-slate-900">🎨 Video & Design Tools</option>
-                    <option value="Analytics" className="bg-slate-900">📈 Analytics & Reporting</option>
+                    {siteCategories.length > 0 ? (
+                      siteCategories.map((c) => (
+                        <option key={c.id || c.name} value={c.name} className="bg-slate-900">
+                          {c.name}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="WhatsApp Bots" className="bg-slate-900">💬 WhatsApp Tools & Bots</option>
+                        <option value="AI & GEO SEO" className="bg-slate-900">🤖 AI & GEO SEO</option>
+                        <option value="Lead Scrapers" className="bg-slate-900">🎯 Lead Scraping & B2B</option>
+                        <option value="CRM & Sales" className="bg-slate-900">📊 CRM & Sales Automation</option>
+                        <option value="Video & Design" className="bg-slate-900">🎨 Video & Design Tools</option>
+                        <option value="Analytics" className="bg-slate-900">📈 Analytics & Reporting</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -1469,6 +1493,16 @@ export default function AdminDealsPage() {
             >
               <Check className="w-3.5 h-3.5" />
               <span>Active Live ({activeDeals.length})</span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter('Slider')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                statusFilter === 'Slider' ? 'bg-amber-400 text-slate-950 font-black shadow' : 'bg-white/5 text-amber-300 hover:bg-white/10'
+              }`}
+            >
+              <Star className="w-3.5 h-3.5 fill-amber-400" />
+              <span>Hero Slider ({sliderDeals.length})</span>
             </button>
           </div>
         </div>

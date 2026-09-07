@@ -14,6 +14,9 @@ import {
   CheckCircle2,
   RefreshCw,
   Mail,
+  Star,
+  Layers,
+  Grid,
 } from 'lucide-react';
 
 export default function VaultDashboardPage() {
@@ -146,6 +149,69 @@ export default function VaultDashboardPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* ── Quick Admin Control Hub: Slider, Categories & Top Categories ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link
+          href="/sd-ops-vault-9839/hero-slider"
+          className="group bg-gradient-to-br from-amber-950/30 to-[#070B16] border border-amber-500/30 hover:border-amber-400/60 p-5 rounded-2xl transition-all shadow-md space-y-2 cursor-pointer"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center">
+              <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-amber-400 transition-colors" />
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-white group-hover:text-amber-300 transition-colors">
+              🌟 Hero Slider Software
+            </h4>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Select & control which deals appear on the main Hero Banner Carousel.
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/sd-ops-vault-9839/categories"
+          className="group bg-gradient-to-br from-orange-950/30 to-[#070B16] border border-orange-500/30 hover:border-orange-400/60 p-5 rounded-2xl transition-all shadow-md space-y-2 cursor-pointer"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-[#FF6B35]/20 text-[#FF6B35] flex items-center justify-center">
+              <Layers className="w-5 h-5" />
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-[#FF6B35] transition-colors" />
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-white group-hover:text-[#FF6B35] transition-colors">
+              📁 Platform Deal Categories
+            </h4>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Add, edit, and manage software categories with custom brand colors.
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/sd-ops-vault-9839/top-categories"
+          className="group bg-gradient-to-br from-emerald-950/30 to-[#070B16] border border-emerald-500/30 hover:border-emerald-400/60 p-5 rounded-2xl transition-all shadow-md space-y-2 cursor-pointer"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-[#25D366]/20 text-[#25D366] flex items-center justify-center">
+              <Grid className="w-5 h-5" />
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-[#25D366] transition-colors" />
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-white group-hover:text-[#25D366] transition-colors">
+              🎯 Top Categories (Circular Row)
+            </h4>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Customize circular category images & badges below homepage hero slider.
+            </p>
+          </div>
+        </Link>
       </div>
 
       {/* Recent Orders & GST Invoices */}
