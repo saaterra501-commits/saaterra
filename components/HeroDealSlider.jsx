@@ -125,11 +125,11 @@ export default function HeroDealSlider({ deals = [] }) {
       {stripConfig.enabled !== false && (
         <div
           className={`deal-strip w-[110%] -ml-[5%] ${
-            stripConfig.isSlim !== false ? 'h-[32px] sm:h-[36px]' : 'h-[52px] sm:h-[62px]'
+            stripConfig.isSlim !== false ? 'h-[20px] sm:h-[22px]' : 'h-[32px] sm:h-[36px]'
           } bg-[#63f477] flex items-center overflow-hidden relative z-20 mt-[12px] sm:mt-[15px] shadow-xs`}
           style={{ transform: 'rotate(-3deg)' }}
         >
-          <div className="strip-content flex items-center gap-[32px] sm:gap-[40px] whitespace-nowrap text-[12px] sm:text-[13px] font-bold text-[#111] animate-marquee tracking-wide">
+          <div className="strip-content flex items-center gap-[32px] sm:gap-[40px] whitespace-nowrap text-[10px] sm:text-[11px] font-bold text-[#111] animate-marquee tracking-wide">
             {[1, 2, 3, 4].map((_, i) => (
               <div key={i} className="flex items-center gap-[32px] sm:gap-[40px] shrink-0">
                 {(stripConfig.items || []).map((item, itemIdx) => (
